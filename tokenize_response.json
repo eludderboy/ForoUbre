@@ -1,0 +1,29 @@
+{
+  "data": {
+    "tokenizeCreditCard": {
+      "token": "tokencc_bd_66d8nm_ttt8m2_dzdbq5_64pvqr_y76",
+      "creditCard": {
+        "bin": "424242",
+        "brandCode": "VISA",
+        "last4": "4242",
+        "cardholderName": null,
+        "expirationMonth": "12",
+        "expirationYear": "2025",
+        "binData": {
+          "prepaid": "UNKNOWN",
+          "healthcare": "UNKNOWN",
+          "debit": "UNKNOWN",
+          "durbinRegulated": "UNKNOWN",
+          "commercial": "UNKNOWN",
+          "payroll": "UNKNOWN",
+          "issuingBank": null,
+          "countryOfIssuance": null,
+          "productId": null
+        }
+      }
+    }
+  },
+  "extensions": {
+    "requestId": "1f75a9db-9eed-495e-bd5c-70f58da8eb3c"
+  }
+}
