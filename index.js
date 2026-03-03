@@ -41,6 +41,10 @@ io.on("connection", (socket) => {
     io.to(`user_${destinatarioId}`).emit("nuevoMensaje", { convId, mensaje });
   });
 
+  socket.on("mensajesLeidos", ({ convId, destinatarioId }) => {
+  io.to(`user_${destinatarioId}`).emit("mensajesLeidos", { convId });
+});
+
   socket.on("escribiendo", ({ convId, nombre, destinatarioId }) => {
     io.to(`user_${destinatarioId}`).emit("usuarioEscribiendo", { convId, nombre });
   });
