@@ -795,7 +795,7 @@ function renderConvItem(c) {
   if (c.ultimoMensaje) {
     const esM = c.ultimoMensaje.autor?.toString() === yo._id || c.ultimoMensaje.autor === yo._id;
     const txt = c.ultimoMensaje.texto || "";
-    const med = c.ultimoMensaje.media?.tipo;
+    const med = c.ultimoMensaje.mediaTipo;
     if (med === "imagen")      preview = `${esM?"Tú":""}📷 Foto`;
     else if (med === "video")  preview = `${esM?"Tú":""}🎥 Video`;
     else if (txt)              preview = `${esM ? "Tú: " : ""}${txt}`;
@@ -1023,19 +1023,19 @@ function renderGrupoMensajes(grupo) {
     const soloMedia = msg.media?.url && !msg.texto;
     bubble.className = `msg-bubble${soloMedia ? " msg-media-only" : ""}`;
 
-    if (msg.media?.url) {
-      if (msg.media.tipo === "video") {
-        bubble.innerHTML += `
-          <video src="${msg.media.url}" class="msg-media-video" controls playsinline
-                 onclick="event.stopPropagation()"></video>
-        `;
-      } else {
-        bubble.innerHTML += `
-          <img src="${msg.media.url}" class="msg-media-img" alt="foto"
-               onclick="verMedia('${msg.media.url}','imagen')"/>
-        `;
-      }
-    }
+    if (msg.mediaUrl) {
+  if (msg.mediaTipo === "video") {
+    bubble.innerHTML += `
+      <video src="${msg.mediaUrl}" class="msg-media-video" controls playsinline
+             onclick="event.stopPropagation()"></video>
+    `;
+  } else {
+    bubble.innerHTML += `
+      <img src="${msg.mediaUrl}" class="msg-media-img" alt="foto"
+           onclick="verMedia('${msg.mediaUrl}','imagen')"/>
+    `;
+  }
+                     }
     if (msg.texto) {
       bubble.innerHTML += `<span>${escHtml(msg.texto)}</span>`;
     }
