@@ -1,92 +1,218 @@
-const express = require("express");
-const jwt     = require("jsonwebtoken");
-const User    = require("../models/User");
-const auth    = require("../middleware/authMiddleware");
+const express  = require("express");
+const multer   = require("multer");
+const jwt      = require("jsonwebtoken");
+const User     = require("../models/User");
+const auth     = require("../middleware/authMiddleware");
+const { uploadFile, deleteFile } = require("../utils/gridfs");
 
 const router = express.Router();
 
-// ── Generar token ──
-const generarToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+// Multer memory storage para avatares
+const uploadAvatar = multer({
+  storage:    multer.memoryStorage(),
+  limits:     { fileSize: 3 * 1024 * 1024 }, // 3 MB
+  fileFilter: (req, file, cb) => {
+    const ok = [
+      "image/jpeg","image/png","image/gif","image/webp",
+      "video/mp4","video/webm"
+    ].includes(file.mimetype);
+    cb(null, ok);
+  }
+});
 
-// ── REGISTER ──
-router.post("/register", async (req, res) => {
+const generarToken = (id) =>
+  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
+
+const avatarPorDefecto = (nombre) =>
+  `https://api.dicebear.com/7.x/thumbs/svg?seed=${encodeURIComponent(nombre)}`;
+
+// ── POST /api/auth/register ──
+router.post("/register", uploadAvatar.single("avatar"), async (req, res) => {
   try {
     const { nombre, handle, email, password } = req.body;
 
     if (!nombre || !handle || !email || !password)
-      return res.status(400).json({ mensaje: "Todos los campos son obligatorios" });
+      return res.status(400).json({ mensaje: "Todos los campos son requeridos" });
+
+    if (nombre.length < 2 || nombre.length > 50)
+      return res.status(400).json({ mensaje: "Nombre: 2–50 caracteres" });
+
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(handle))
+      return res.status(400).json({ mensaje: "Handle inválido (3–20 chars, solo letras/números/_)" });
 
     if (password.length < 6)
-      return res.status(400).json({ mensaje: "La contraseña debe tener al menos 6 caracteres" });
+      return res.status(400).json({ mensaje: "Contraseña mínimo 6 caracteres" });
 
-    const existeHandle = await User.findOne({ handle });
-    if (existeHandle)
-      return res.status(400).json({ mensaje: "Ese @handle ya está en uso" });
+    const existe = await User.findOne({
+      $or: [{ email: email.toLowerCase() }, { handle: handle.toLowerCase() }]
+    });
+    if (existe) {
+      return res.status(400).json({
+        mensaje: existe.email === email.toLowerCase()
+          ? "El email ya está registrado"
+          : "El handle ya está en uso"
+      });
+    }
 
-    const existeEmail = await User.findOne({ email });
-    if (existeEmail)
-      return res.status(400).json({ mensaje: "Ese email ya está registrado" });
+    // Avatar
+    let avatar     = avatarPorDefecto(nombre);
+    let avatarTipo = "imagen";
 
-    const avatarDefault = `https://api.dicebear.com/7.x/thumbs/svg?seed=${handle}`;
+    if (req.file) {
+      const fileId = await uploadFile(req.file);
+      avatar       = `/api/images/${fileId}`;
+      avatarTipo   = req.file.mimetype.startsWith("video/") ? "video" : "imagen";
+    }
 
     const usuario = await User.create({
-      nombre,
-      handle,
-      email,
+      nombre:  nombre.trim(),
+      handle:  handle.trim().toLowerCase(),
+      email:   email.trim().toLowerCase(),
       password,
-      avatar: avatarDefault
+      avatar,
+      avatarTipo
     });
 
     res.status(201).json({
       token: generarToken(usuario._id),
       usuario: {
-        _id: usuario._id,
-        nombre: usuario.nombre,
-        handle: usuario.handle,
-        avatar: usuario.avatar
+        _id:             usuario._id,
+        nombre:          usuario.nombre,
+        handle:          usuario.handle,
+        avatar:          usuario.avatar,
+        avatarTipo:      usuario.avatarTipo,
+        personalizacion: usuario.personalizacion
       }
     });
   } catch (err) {
+    if (err.code === "LIMIT_FILE_SIZE")
+      return res.status(400).json({ mensaje: "Avatar máximo 3MB" });
     console.error(err);
-    res.status(500).json({ mensaje: "Error del servidor" });
+    res.status(500).json({ mensaje: "Error al registrar" });
   }
 });
 
-// ── LOGIN ──
+// ── POST /api/auth/login ──
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-
     if (!email || !password)
-      return res.status(400).json({ mensaje: "Email y contraseña son obligatorios" });
+      return res.status(400).json({ mensaje: "Email y contraseña requeridos" });
 
-    const usuario = await User.findOne({ email });
-    if (!usuario)
-      return res.status(401).json({ mensaje: "Credenciales incorrectas" });
-
-    const ok = await usuario.compararPassword(password);
-    if (!ok)
+    const usuario = await User.findOne({ email: email.toLowerCase() });
+    if (!usuario || !(await usuario.compararPassword(password)))
       return res.status(401).json({ mensaje: "Credenciales incorrectas" });
 
     res.json({
       token: generarToken(usuario._id),
       usuario: {
-        _id: usuario._id,
-        nombre: usuario.nombre,
-        handle: usuario.handle,
-        avatar: usuario.avatar
+        _id:             usuario._id,
+        nombre:          usuario.nombre,
+        handle:          usuario.handle,
+        avatar:          usuario.avatar,
+        avatarTipo:      usuario.avatarTipo,
+        personalizacion: usuario.personalizacion
       }
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ mensaje: "Error del servidor" });
+    res.status(500).json({ mensaje: "Error al iniciar sesión" });
   }
 });
 
-// ── ME (verificar sesión) ──
-router.get("/me", auth, (req, res) => {
-  res.json(req.usuario);
+// ── GET /api/auth/yo ──
+router.get("/yo", auth, async (req, res) => {
+  try {
+    const usuario = await User.findById(req.usuario._id).select("-password");
+    if (!usuario) return res.status(404).json({ mensaje: "No encontrado" });
+    res.json(usuario);
+  } catch (err) {
+    res.status(500).json({ mensaje: "Error" });
+  }
+});
+
+// ── PUT /api/auth/perfil ──
+router.put("/perfil", auth, uploadAvatar.single("avatar"), async (req, res) => {
+  try {
+    const { nombre, bio } = req.body;
+
+    if (nombre && (nombre.length < 2 || nombre.length > 50))
+      return res.status(400).json({ mensaje: "Nombre: 2–50 caracteres" });
+
+    const update = {};
+    if (nombre !== undefined) update.nombre = nombre.trim();
+    if (bio    !== undefined) update.bio    = bio.trim().slice(0, 160);
+
+    if (req.file) {
+      // Borrar avatar viejo de GridFS si era interno
+      const viejo = await User.findById(req.usuario._id).select("avatar");
+      if (viejo?.avatar?.startsWith("/api/images/"))
+        await deleteFile(viejo.avatar);
+
+      const fileId   = await uploadFile(req.file);
+      update.avatar    = `/api/images/${fileId}`;
+      update.avatarTipo = req.file.mimetype.startsWith("video/") ? "video" : "imagen";
+    }
+
+    const usuario = await User.findByIdAndUpdate(
+      req.usuario._id,
+      { $set: update },
+      { new: true }
+    ).select("-password");
+
+    res.json({
+      usuario: {
+        _id:             usuario._id,
+        nombre:          usuario.nombre,
+        handle:          usuario.handle,
+        avatar:          usuario.avatar,
+        avatarTipo:      usuario.avatarTipo,
+        bio:             usuario.bio,
+        personalizacion: usuario.personalizacion
+      }
+    });
+  } catch (err) {
+    if (err.code === "LIMIT_FILE_SIZE")
+      return res.status(400).json({ mensaje: "Avatar máximo 3MB" });
+    console.error(err);
+    res.status(500).json({ mensaje: "Error al actualizar perfil" });
+  }
+});
+
+// ── PUT /api/auth/personalizacion 
+// ── PUT /api/auth/personalizacion ──
+router.put("/personalizacion", auth, async (req, res) => {
+  try {
+    const campos = [
+      "marco", "marcoColor",
+      "bannerPreset", "bannerColor1", "bannerColor2",
+      "nombreEfecto", "nombreGradiente", "nombreColor", "gradColor1", "gradColor2",
+      "badge", "temaColor"
+    ];
+
+    // ✅ Dot notation → actualiza SOLO los campos enviados
+    // ❌ Antes: $set: { personalizacion: { marco: "x" } } → borraba todo lo demás
+    const setUpdate = {};
+    campos.forEach(campo => {
+      if (req.body[campo] !== undefined) {
+        setUpdate[`personalizacion.${campo}`] = req.body[campo];
+      }
+    });
+
+    if (!Object.keys(setUpdate).length)
+      return res.status(400).json({ mensaje: "Nada que actualizar" });
+
+    const usuario = await User.findByIdAndUpdate(
+      req.usuario._id,
+      { $set: setUpdate },
+      { new: true, runValidators: false }
+    ).select("-password");
+
+    res.json({ usuario });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ mensaje: "Error al guardar personalización" });
+  }
 });
 
 module.exports = router;

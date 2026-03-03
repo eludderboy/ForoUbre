@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Foro Ubre — Perfil</title>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <aside class="sidebar">
+    <div class="logo">
+      <i class="ri-leaf-fill"></i>
+      <span>Foro Ubre</span>
+    </div>
+    <nav>
+      <a href="/"             class="nav-item">
+        <span class="nav-icon"><i class="ri-home-5-line"></i></span>
+        <span>Inicio</span>
+      </a>
+      <a href="explore.html"  class="nav-item">
+        <span class="nav-icon"><i class="ri-search-line"></i></span>
+        <span>Explorar</span>
+      </a>
+      <a href="videos.html"   class="nav-item">
+        <span class="nav-icon"><i class="ri-video-line"></i></span>
+        <span>Videos</span>
+      </a>
+      <a href="messages.html" class="nav-item">
+        <span class="nav-icon"><i class="ri-message-3-line"></i></span>
+        <span>Mensajes</span>
+      </a>
+      <a href="#" class="nav-item active" id="navPerfil">
+        <span class="nav-icon"><i class="ri-user-3-fill"></i></span>
+        <span>Perfil</span>
+      </a>
+    </nav>
+    <button class="btn-post-sidebar" onclick="window.location.href='/'">
+      <i class="ri-quill-pen-line"></i>
+      <span>Nuevo post</span>
+    </button>
+    <div class="sidebar-user" id="sidebarUser"></div>
+  </aside>
+
+  <!-- ══════════════ PERFIL ══════════════ -->
+  <main class="feed">
+
+    <header class="feed-header">
+      <button class="btn-back" onclick="history.back()">
+        <i class="ri-arrow-left-line"></i> Volver
+      </button>
+      <h2 id="headerNombre">Perfil</h2>
+    </header>
+
+    <div id="profileContent">
+      <div class="loading">
+        <i class="ri-loader-4-line spin"></i> Cargando perfil...
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="profile-tabs hidden" id="profileTabs">
+      <button class="tab-btn active" data-tab="posts">
+        <i class="ri-article-line"></i> Posts
+      </button>
+      <button class="tab-btn" data-tab="videos">
+        <i class="ri-video-line"></i> Videos
+      </button>
+      <button class="tab-btn" data-tab="compartidos">
+        <i class="ri-share-forward-line"></i> Compartidos
+      </button>
+    </div>
+
+    <div id="profileFeed"></div>
+
+  </main>
+
+  <!-- ══════════════ ASIDE ══════════════ -->
+  <aside class="trends">
+    <div class="trends-box">
+      <h3><i class="ri-user-follow-line"></i> Sugerencias</h3>
+      <p id="sugerenciasTrends" style="color:var(--text-3);font-size:.82rem">Cargando...</p>
+    </div>
+  </aside>
+
+</div>
+
+<!-- ══════════════ BOTTOM NAV ══════════════ -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a href="/"             class="bottom-nav-btn">
+      <span class="bn-icon"><i class="ri-home-5-line"></i></span>
+      <span>Inicio</span>
+    </a>
+    <a href="explore.html"  class="bottom-nav-btn">
+      <span class="bn-icon"><i class="ri-search-line"></i></span>
+      <span>Buscar</span>
+    </a>
+    <a href="videos.html"   class="bottom-nav-btn">
+      <span class="bn-icon"><i class="ri-video-line"></i></span>
+      <span>Videos</span>
+    </a>
+    <a href="messages.html" class="bottom-nav-btn">
+      <span class="bn-icon"><i class="ri-message-3-line"></i></span>
+      <span>Mensajes</span>
+    </a>
+    <a href="#" class="bottom-nav-btn active" id="bnPerfil">
+      <span class="bn-icon"><i class="ri-user-3-fill"></i></span>
+      <span>Perfil</span>
+    </a>
+  </div>
+</nav>
+
+<!-- ══════════════ MODAL EDITAR PERFIL ══════════════ -->
+<div class="modal-overlay hidden" id="modalEditarPerfil">
+  <div class="modal-box" style="max-width:540px">
+
+    <div class="modal-header">
+      <h3><i class="ri-edit-box-line"></i> Editar perfil</h3>
+      <button class="btn-cerrar-modal" onclick="cerrarModalEditar()">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+
+    <!-- Tabs del modal -->
+    <div class="modal-tabs">
+      <button class="modal-tab-btn active" data-tab="info">
+        <i class="ri-user-line"></i> Info
+      </button>
+      <button class="modal-tab-btn" data-tab="apariencia">
+        <i class="ri-palette-line"></i> Apariencia
+      </button>
+      <button class="modal-tab-btn" data-tab="nombre">
+        <i class="ri-text"></i> Nombre
+      </button>
+      <button class="modal-tab-btn" data-tab="badge">
+        <i class="ri-medal-line"></i> Badge
+      </button>
+    </div>
+
+    <!-- TAB INFO -->
+    <div class="modal-tab-panel active" id="tabInfo">
+      <div class="avatar-picker">
+        <div class="avatar-preview-wrap" id="editAvatarWrap"
+             onclick="document.getElementById('editAvatarInput').click()"
+             style="cursor:pointer">
+          <img   id="editAvatarImg" src="" alt="" class="hidden"/>
+          <video id="editAvatarVid" autoplay loop muted playsinline class="hidden"></video>
+          <div   id="editAvatarHolder" class="avatar-placeholder">
+            <i class="ri-user-3-line" style="font-size:2rem;color:var(--text-3)"></i>
+          </div>
+        </div>
+        <label for="editAvatarInput" class="btn-pick-avatar">
+          <i class="ri-camera-line"></i> Cambiar foto de perfil
+          <small>Imagen, GIF o Video · Máx. 3MB</small>
+        </label>
+        <input type="file" id="editAvatarInput"
+               accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm" hidden/>
+      </div>
+
+      <div class="form-group">
+        <label><i class="ri-user-line"></i> Nombre <small>(2–50)</small></label>
+        <input type="text" id="editNombre" maxlength="50" minlength="2"/>
+        <span class="char-hint"><span id="cEditNombre">50</span> restantes</span>
+      </div>
+
+      <div class="form-group">
+        <label><i class="ri-file-text-line"></i> Bio <small>(máx. 160)</small></label>
+        <textarea id="editBio" maxlength="160" rows="3"
+                  placeholder="Cuéntanos sobre ti..."></textarea>
+        <span class="char-hint"><span id="cEditBio">160</span> restantes</span>
+      </div>
+
+      <div id="editError" class="error-msg hidden">
+        <i class="ri-error-warning-line"></i>
+        <span id="editErrorText"></span>
+      </div>
+
+      <button class="btn-auth" id="btnGuardarInfo">
+        <i class="ri-save-line"></i> Guardar info
+      </button>
+    </div>
+
+    <!-- TAB APARIENCIA -->
+    <div class="modal-tab-panel" id="tabApariencia">
+      <div>
+        <p class="custom-section-title">
+          <i class="ri-focus-3-line"></i> Marco del avatar
+        </p>
+        <div class="marco-options" id="marcoOptions">
+          <button class="option-btn" data-marco="none">Sin marco</button>
+          <button class="option-btn" data-marco="color"><i class="ri-checkbox-blank-circle-line"></i> Color</button>
+          <button class="option-btn" data-marco="neon"><i class="ri-flashlight-line"></i> Neón</button>
+          <button class="option-btn" data-marco="gold"><i class="ri-vip-crown-line"></i> Dorado</button>
+          <button class="option-btn" data-marco="rainbow"><i class="ri-rainbow-line"></i> Arcoíris</button>
+          <button class="option-btn" data-marco="animated"><i class="ri-pulse-line"></i> Pulsante</button>
+          <button class="option-btn" data-marco="dashed"><i class="ri-layout-grid-line"></i> Punteado</button>
+          <button class="option-btn" data-marco="doble"><i class="ri-circle-line"></i> Doble</button>
+        </div>
+        <div class="color-picker-row" style="margin-top:10px">
+          <label><i class="ri-palette-line"></i> Color del marco</label>
+          <input type="color" id="marcoColorPicker" value="#5cdb6f"/>
+        </div>
+      </div>
+
+      <div>
+        <p class="custom-section-title">
+          <i class="ri-image-2-line"></i> Banner del perfil
+        </p>
+        <div class="banner-options" id="bannerOptions">
+          <button class="option-btn" data-banner="default">
+            <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,#0d2010,#1a3a14);vertical-align:middle;margin-right:4px"></span>Verde
+          </button>
+          <button class="option-btn" data-banner="purple">
+            <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,#1a0a2e,#2d1b69);vertical-align:middle;margin-right:4px"></span>Púrpura
+          </button>
+          <button class="option-btn" data-banner="blue">
+            <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,#0a1628,#1a3a6b);vertical-align:middle;margin-right:4px"></span>Azul
+          </button>
+          <button class="option-btn" data-banner="sunset">
+            <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,#2a0a00,#8b3a0a);vertical-align:middle;margin-right:4px"></span>Atardecer
+          </button>
+          <button class="option-btn" data-banner="ocean">
+            <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,#001a2e,#004d6b);vertical-align:middle;margin-right:4px"></span>Océano
+          </button>
+          <button class="option-btn" data-banner="fire">
+            <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,#2a0000,#8b1a00);vertical-align:middle;margin-right:4px"></span>Fuego
+          </button>
+          <button class="option-btn" data-banner="neon">
+            <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,#0a001a,#1a002e);vertical-align:middle;margin-right:4px"></span>Neón
+          </button>
+          <button class="option-btn" data-banner="custom">
+            <i class="ri-palette-line"></i> Personalizado
+          </button>
+        </div>
+        <div id="bannerCustomRow" class="hidden"
+             style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <div class="color-picker-row" style="flex:1;min-width:120px">
+            <label>Color 1</label>
+            <input type="color" id="bannerColor1" value="#0d2010"/>
+          </div>
+          <div class="color-picker-row" style="flex:1;min-width:120px">
+            <label>Color 2</label>
+            <input type="color" id="bannerColor2" value="#1a3a14"/>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-auth" id="btnGuardarApariencia">
+        <i class="ri-save-line"></i> Guardar apariencia
+      </button>
+    </div>
+
+    <!-- TAB NOMBRE -->
+    <div class="modal-tab-panel" id="tabNombre">
+      <div>
+        <p class="custom-section-title">
+          <i class="ri-text"></i> Efecto del nombre
+        </p>
+        <div class="nombre-options" id="nombreOptions">
+          <button class="option-btn" data-efecto="none">Normal</button>
+          <button class="option-btn" data-efecto="gradient"><i class="ri-contrast-2-line"></i> Gradiente</button>
+          <button class="option-btn" data-efecto="glow"><i class="ri-sun-line"></i> Brillo</button>
+          <button class="option-btn" data-efecto="neon"><i class="ri-flashlight-line"></i> Neón</button>
+          <button class="option-btn" data-efecto="color"><i class="ri-palette-line"></i> Color</button>
+          <button class="option-btn" data-efecto="shadow"><i class="ri-contrast-drop-line"></i> Sombra</button>
+        </div>
+      </div>
+
+      <div id="gradienteRow" style="display:none">
+        <p class="custom-section-title" style="margin-top:4px">
+          <i class="ri-contrast-2-line"></i> Preset de gradiente
+        </p>
+        <div class="nombre-options" id="gradOptions">
+          <button class="option-btn" data-grad="green-blue"
+            style="background:linear-gradient(90deg,#5cdb6f,#4dabf7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;border-color:transparent">
+            Verde-Azul
+          </button>
+          <button class="option-btn" data-grad="fire"
+            style="background:linear-gradient(90deg,#ff6b35,#ffd43b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;border-color:transparent">
+            Fuego
+          </button>
+          <button class="option-btn" data-grad="purple"
+            style="background:linear-gradient(90deg,#cc5de8,#845ef7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;border-color:transparent">
+            Púrpura
+          </button>
+          <button class="option-btn" data-grad="sunset"
+            style="background:linear-gradient(90deg,#ff6b6b,#feca57);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;border-color:transparent">
+            Atardecer
+          </button>
+          <button class="option-btn" data-grad="ocean"
+            style="background:linear-gradient(90deg,#54a0ff,#5f27cd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;border-color:transparent">
+            Océano
+          </button>
+          <button class="option-btn" data-grad="custom">
+            <i class="ri-palette-line"></i> Custom
+          </button>
+        </div>
+        <div id="gradCustomRow" class="hidden"
+             style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <div class="color-picker-row" style="flex:1;min-width:120px">
+            <label>Color 1</label>
+            <input type="color" id="gradColor1" value="#5cdb6f"/>
+          </div>
+          <div class="color-picker-row" style="flex:1;min-width:120px">
+            <label>Color 2</label>
+            <input type="color" id="gradColor2" value="#4dabf7"/>
+          </div>
+        </div>
+      </div>
+
+      <div id="nombreColorRow" class="color-picker-row hidden">
+        <label><i class="ri-palette-line"></i> Color del nombre</label>
+        <input type="color" id="nombreColorPicker" value="#5cdb6f"/>
+      </div>
+
+      <div class="preview-nombre">
+        <p style="font-size:.7rem;color:var(--text-3);margin-bottom:8px;
+                  letter-spacing:.5px;text-transform:uppercase;font-weight:700">
+          <i class="ri-eye-line"></i> Vista previa
+        </p>
+        <div id="previewNombre" style="font-weight:800;font-size:1.15rem">Tu Nombre</div>
+      </div>
+
+      <button class="btn-auth" id="btnGuardarNombre">
+        <i class="ri-save-line"></i> Guardar estilo de nombre
+      </button>
+    </div>
+
+    <!-- TAB BADGE -->
+    <div class="modal-tab-panel" id="tabBadge">
+      <p class="custom-section-title">
+        <i class="ri-medal-line"></i> Badge junto al nombre
+      </p>
+      <div style="display:flex;flex-direction:column;gap:4px" id="badgeOptions">
+        <button class="badge-option" data-badge="none">
+          <i class="ri-prohibited-line" style="color:var(--text-3)"></i> Sin badge
+        </button>
+        <button class="badge-option" data-badge="verified">
+          <i class="ri-verified-badge-fill" style="color:#4dabf7;font-size:1.1rem"></i>
+          <div><strong>Verificado</strong><small>Marca azul de verificación</small></div>
+        </button>
+        <button class="badge-option" data-badge="star">
+          <i class="ri-star-fill" style="color:#ffd43b;font-size:1.1rem"></i>
+          <div><strong>Estrella</strong><small>Para los más brillantes</small></div>
+        </button>
+        <button class="badge-option" data-badge="fire">
+          <i class="ri-fire-fill" style="color:#ff6b35;font-size:1.1rem"></i>
+          <div><strong>Fuego</strong><small>Contenido en llamas</small></div>
+        </button>
+        <button class="badge-option" data-badge="crown">
+          <i class="ri-vip-crown-fill" style="color:#ffd43b;font-size:1.1rem"></i>
+          <div><strong>Corona</strong><small>Realeza del foro</small></div>
+        </button>
+        <button class="badge-option" data-badge="dev">
+          <i class="ri-code-box-fill" style="color:#69db7c;font-size:1.1rem"></i>
+          <div><strong>Dev</strong><small>Desarrollador / tech</small></div>
+        </button>
+        <button class="badge-option" data-badge="vip">
+          <span style="background:linear-gradient(90deg,#ffd43b,#ff6b35);color:#050505;
+                       padding:3px 8px;border-radius:6px;font-weight:900;font-size:.75rem">VIP</span>
+          <div><strong>VIP</strong><small>Miembro especial</small></div>
+        </button>
+        <button class="badge-option" data-badge="new">
+          <span style="background:var(--green);color:#050505;
+                       padding:3px 8px;border-radius:6px;font-weight:900;font-size:.75rem">NEW</span>
+          <div><strong>Nuevo</strong><small>Recién llegado</small></div>
+        </button>
+      </div>
+      <button class="btn-auth" id="btnGuardarBadge">
+        <i class="ri-save-line"></i> Guardar badge
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ MODAL IMAGEN ══════════════ -->
+<div class="modal-img" id="modalImg" onclick="cerrarModalImg()">
+  <img id="modalImgSrc" src="" alt=""/>
+</div>
+
+<!-- ══════════════ SCRIPT ══════════════ -->
+<script>
+const API   = "/api";
+const token = localStorage.getItem("fu_token");
+const yo    = JSON.parse(localStorage.getItem("fu_usuario") || "null");
+if (!token || !yo) window.location.href = "/login.html";
+
+const handle = new URLSearchParams(location.search).get("handle") || yo.handle;
+let perfilData     = null;
+let postsCache     = [];
+let avatarEditFile = null;
+
+// ── Nav links ──
+document.getElementById("navPerfil").href = `profile.html?handle=${yo.handle}`;
+document.getElementById("bnPerfil").href  = `profile.html?handle=${yo.handle}`;
+
+// ── Sidebar user ──
+const _avSb = yo.avatarTipo === "video"
+  ? `<video src="${yo.avatar}" autoplay loop muted playsinline
+             style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0"></video>`
+  : `<img src="${yo.avatar}"
+           style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`;
+document.getElementById("sidebarUser").innerHTML = `
+  ${_avSb}
+  <div style="min-width:0">
+    <strong style="font-size:.87rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(yo.nombre)}</strong>
+    <small style="color:var(--text-3)">@${escHtml(yo.handle)}</small>
+  </div>
+`;
+
+// ══════════════════════════════════
+// HELPERS PERSONALIZACIÓN
+// ══════════════════════════════════
+function getMarcoStyle(p) {
+  if (!p || !p.marco || p.marco === "none") return "";
+  if (p.marco === "color")  return `box-shadow:0 0 0 2.5px ${p.marcoColor||'var(--green)'};`;
+  if (p.marco === "neon")   return `box-shadow:0 0 0 2px ${p.marcoColor||'var(--green)'},0 0 14px ${p.marcoColor||'var(--green)'};`;
+  if (p.marco === "gold")   return `box-shadow:0 0 0 2.5px #ffd43b;`;
+  if (p.marco === "dashed") return `outline:2.5px dashed ${p.marcoColor||'var(--green)'};outline-offset:2px;`;
+  if (p.marco === "doble")  return `box-shadow:0 0 0 2px ${p.marcoColor||'var(--green)'},0 0 0 5px ${(p.marcoColor||'#5cdb6f')}30;`;
+  return "";
+}
+
+function renderAvatarEl(autor, size = 44) {
+  const p  = autor.personalizacion || {};
+  const ms = getMarcoStyle(p);
+  const extraClass = p.marco === "rainbow" ? "avatar-rainbow" : p.marco === "animated" ? "avatar-animated" : "";
+  const style = `width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0;${ms}`;
+  if (autor.avatarTipo === "video") {
+    return `<video src="${autor.avatar||''}" autoplay loop muted playsinline class="${extraClass}" style="${style}"></video>`;
+  }
+  return `<img src="${autor.avatar||'https://api.dicebear.com/7.x/thumbs/svg?seed=x'}"
+               class="${extraClass}" style="${style}" alt="" loading="lazy"/>`;
+}
+
+function renderNombreEl(autor) {
+  const p = autor.personalizacion || {};
+  const badges = {
+    verified: `<i class="ri-verified-badge-fill" style="color:#4dabf7;font-size:.85em;margin-left:3px;vertical-align:middle"></i>`,
+    star:     `<i class="ri-star-fill" style="color:#ffd43b;font-size:.85em;margin-left:3px;vertical-align:middle"></i>`,
+    fire:     `<i class="ri-fire-fill" style="color:#ff6b35;font-size:.85em;margin-left:3px;vertical-align:middle"></i>`,
+    crown:    `<i class="ri-vip-crown-fill" style="color:#ffd43b;font-size:.85em;margin-left:3px;vertical-align:middle"></i>`,
+    dev:      `<i class="ri-code-box-fill" style="color:#69db7c;font-size:.85em;margin-left:3px;vertical-align:middle"></i>`,
+    vip:      `<span style="background:linear-gradient(90deg,#ffd43b,#ff6b35);color:#050505;font-size:.58em;padding:1px 6px;border-radius:4px;margin-left:3px;font-weight:900;vertical-align:middle">VIP</span>`,
+    new:      `<span style="background:var(--green);color:#050505;font-size:.58em;padding:1px 6px;border-radius:4px;margin-left:3px;font-weight:900;vertical-align:middle">NEW</span>`
+  };
+  const badgeHTML = (p.badge && p.badge !== "none") ? (badges[p.badge] || "") : "";
+  let style = "font-weight:700;font-size:.92rem;";
+  const grads = {
+    "green-blue": "linear-gradient(90deg,#5cdb6f,#4dabf7)",
+    "fire":       "linear-gradient(90deg,#ff6b35,#ffd43b)",
+    "purple":     "linear-gradient(90deg,#cc5de8,#845ef7)",
+    "sunset":     "linear-gradient(90deg,#ff6b6b,#feca57)",
+    "ocean":      "linear-gradient(90deg,#54a0ff,#5f27cd)",
+    "custom":     `linear-gradient(90deg,${p.gradColor1||'#5cdb6f'},${p.gradColor2||'#4dabf7'})`
+  };
+  const ef = p.nombreEfecto || "none";
+  if (ef === "gradient") {
+    const g = grads[p.nombreGradiente || "green-blue"];
+    style = `font-weight:700;font-size:.92rem;background:${g};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;`;
+  } else if (ef === "glow") {
+    style += `color:${p.nombreColor||'var(--green)'};text-shadow:0 0 10px ${p.nombreColor||'var(--green)'};`;
+  } else if (ef === "neon") {
+    style += `color:${p.nombreColor||'#fff'};text-shadow:0 0 7px ${p.nombreColor||'var(--green)'},0 0 21px ${p.nombreColor||'var(--green)'};`;
+  } else if (ef === "color") {
+    style += `color:${p.nombreColor||'inherit'};`;
+  } else if (ef === "shadow") {
+    style += `text-shadow:2px 2px 4px rgba(0,0,0,.9);`;
+  }
+  return `<strong style="${style}">${escHtml(autor.nombre)}</strong>${badgeHTML}`;
+}
+
+function getBannerStyle(p) {
+  const presets = {
+    default: "linear-gradient(135deg,#0d2010,#1a3a14,#0f2808)",
+    purple:  "linear-gradient(135deg,#1a0a2e,#2d1b69,#1a0a2e)",
+    blue:    "linear-gradient(135deg,#0a1628,#1a3a6b,#0a1628)",
+    sunset:  "linear-gradient(135deg,#2a0a00,#8b3a0a,#4a1500)",
+    ocean:   "linear-gradient(135deg,#001a2e,#004d6b,#001a2e)",
+    fire:    "linear-gradient(135deg,#2a0000,#8b1a00,#4a0a00)",
+    neon:    "linear-gradient(135deg,#0a001a,#1a002e,#001a0a)"
+  };
+  if (!p) return presets.default;
+  if (p.bannerPreset === "custom" && p.bannerColor1)
+    return `linear-gradient(135deg,${p.bannerColor1},${p.bannerColor2||p.bannerColor1})`;
+  return presets[p.bannerPreset] || presets.default;
+}
+
+// ══════════════════════════════════
+// CARGAR PERFIL
+// ══════════════════════════════════
+async function cargarPerfil() {
+  document.getElementById("profileContent").innerHTML = `
+    <div class="loading"><i class="ri-loader-4-line spin"></i> Cargando...</div>
+  `;
+  document.getElementById("profileFeed").innerHTML = "";
+  document.getElementById("profileTabs").classList.add("hidden");
+
+  try {
+    const res  = await fetch(`${API}/profile/${handle}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.mensaje);
+
+    perfilData   = data;
+    postsCache   = data.posts;
+
+    renderPerfil(data.usuario);
+    document.getElementById("headerNombre").textContent = data.usuario.nombre;
+    document.title = `${data.usuario.nombre} — Foro Ubre`;
+
+    // Mostrar tabs y cargar tab por defecto
+    document.getElementById("profileTabs").classList.remove("hidden");
+    setupProfileTabs();
+    renderPostsTab(postsCache);
+
+  } catch (err) {
+    document.getElementById("profileContent").innerHTML = `
+      <div class="empty-state">
+        <div><i class="ri-user-unfollow-line" style="font-size:3rem;color:var(--text-3)"></i></div>
+        <p>${err.message}</p>
+      </div>
+    `;
+  }
+}
+
+// ══════════════════════════════════
+// RENDER PERFIL HEADER
+// ══════════════════════════════════
+function renderPerfil(u) {
+  const p           = u.personalizacion || {};
+  const bannerStyle = getBannerStyle(p);
+  const marcoStyle  = getMarcoStyle(p);
+  const extraClass  = p.marco === "rainbow" ? "avatar-rainbow" : p.marco === "animated" ? "avatar-animated" : "";
+
+  const avatarEl = u.avatarTipo === "video"
+    ? `<video src="${u.avatar}" autoplay loop muted playsinline
+               class="${extraClass}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></video>`
+    : `<img src="${u.avatar}" alt="avatar"
+             class="${extraClass}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+
+  document.getElementById("profileContent").innerHTML = `
+    <div class="profile-banner" style="background:${bannerStyle}"></div>
+    <div class="profile-info">
+      <div class="profile-avatar-wrap" style="${marcoStyle}position:relative">
+        ${avatarEl}
+      </div>
+      <div class="profile-actions">
+        ${u.esTuPerfil ? `
+          <button class="btn-edit-profile" onclick="abrirModalEditar()">
+            <i class="ri-edit-box-line"></i> Editar perfil
+          </button>
+        ` : `
+          <button class="btn-mensaje" onclick="iniciarChat('${u._id}')">
+            <i class="ri-message-3-line"></i> Mensaje
+          </button>
+          <button class="btn-follow ${u.sigues ? 'siguiendo' : ''}"
+                  id="btnFollow" onclick="toggleFollow('${u._id}')">
+            ${u.sigues
+              ? `<i class="ri-user-follow-line"></i> Siguiendo`
+              : `<i class="ri-user-add-line"></i> Seguir`}
+          </button>
+        `}
+      </div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+        ${renderNombreEl(u)}
+      </div>
+      <p class="profile-handle">@${escHtml(u.handle)}</p>
+      ${u.bio ? `<p class="profile-bio">${escHtml(u.bio)}</p>` : ""}
+      <div class="profile-stats">
+        <span><strong>${perfilData.totalPosts}</strong> Posts</span>
+        <span><strong id="statSeguidores">${u.totalSeguidores}</strong> Seguidores</span>
+        <span><strong>${u.totalSiguiendo}</strong> Siguiendo</span>
+      </div>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════
+// TABS
+// ══════════════════════════════════
+function setupProfileTabs() {
+  document.querySelectorAll("#profileTabs .tab-btn").forEach(btn => {
+    btn.addEventListener("click", function() {
+      document.querySelectorAll("#profileTabs .tab-btn").forEach(b => b.classList.remove("active"));
+      this.classList.add("active");
+      cargarTabPerfil(this.dataset.tab);
+    });
+  });
+}
+
+async function cargarTabPerfil(tab) {
+  const feed = document.getElementById("profileFeed");
+
+  if (tab === "posts") {
+    renderPostsTab(postsCache);
+    return;
+  }
+
+  feed.innerHTML = `<div class="loading"><i class="ri-loader-4-line spin"></i> Cargando...</div>`;
+
+  try {
+    if (tab === "videos") {
+      const res  = await fetch(`${API}/videos/user/${handle}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      feed.innerHTML = "";
+      if (!data.length) {
+        feed.innerHTML = `
+          <div class="empty-state">
+            <div><i class="ri-video-line" style="font-size:3rem;color:var(--text-3)"></i></div>
+            <p>Sin videos todavía</p>
+            ${handle === yo.handle ? `
+              <a href="videos.html" style="display:inline-flex;align-items:center;gap:6px;
+                 margin-top:12px;background:var(--green);color:#050505;border-radius:999px;
+                 padding:10px 20px;font-weight:800;text-decoration:none;font-size:.88rem">
+                <i class="ri-video-add-line"></i> Subir primer video
+              </a>` : ""}
+          </div>`;
+      } else {
+        renderVideoGrid(data, feed);
+      }
+
+    } else if (tab === "compartidos") {
+      const res  = await fetch(`${API}/videos/compartidos/${handle}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      feed.innerHTML = "";
+      if (!data.length) {
+        feed.innerHTML = `
+          <div class="empty-state">
+            <div><i class="ri-share-forward-line" style="font-size:3rem;color:var(--text-3)"></i></div>
+            <p>Sin videos compartidos</p>
+          </div>`;
+      } else {
+        renderVideoGrid(data, feed);
+      }
+    }
+  } catch (err) {
+    feed.innerHTML = `<div class="empty-state" style="color:var(--red)">${err.message}</div>`;
+  }
+}
+
+function renderPostsTab(posts) {
+  const feed = document.getElementById("profileFeed");
+  feed.innerHTML = "";
+  if (!posts.length) {
+    feed.innerHTML = `
+      <div class="empty-state">
+        <div><i class="ri-inbox-2-line" style="font-size:3rem;color:var(--text-3)"></i></div>
+        <p>Sin posts todavía</p>
+      </div>`;
+    return;
+  }
+  posts.forEach(p => renderPost(p));
+}
+
+// ══════════════════════════════════
+// GRID DE VIDEOS
+// ══════════════════════════════════
+function renderVideoGrid(videos, container) {
+  const grid = document.createElement("div");
+  grid.style.cssText = `
+    display:               grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:                   3px;
+    padding:               3px;
+  `;
+
+  videos.forEach(v => {
+    const el = document.createElement("div");
+    el.style.cssText = `
+      position:     relative;
+      aspect-ratio: 9/16;
+      background:   #0a0a0a;
+      overflow:     hidden;
+      cursor:       pointer;
+      border-radius:6px;
+    `;
+    el.innerHTML = `
+      <video src="${v.url}"
+             style="width:100%;height:100%;object-fit:cover"
+             preload="metadata" muted playsinline></video>
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55) 0%,transparent 50%);
+                  pointer-events:none"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;padding:6px 8px;
+                  display:flex;align-items:center;gap:8px">
+        <span style="font-size:.72rem;color:#fff;font-weight:700;
+                     display:flex;align-items:center;gap:3px">
+          <i class="ri-heart-fill" style="color:#ff4466"></i>${formatNum(v.totalLikes)}
+        </span>
+        <span style="font-size:.72rem;color:rgba(255,255,255,.7);
+                     display:flex;align-items:center;gap:3px">
+          <i class="ri-eye-line"></i>${formatNum(v.reproducciones)}
+        </span>
+      </div>
+      ${v.compartidos?.includes?.(yo._id) ? `
+        <div style="position:absolute;top:6px;right:6px">
+          <i class="ri-share-forward-fill" style="color:var(--green);font-size:.9rem;
+             filter:drop-shadow(0 1px 3px rgba(0,0,0,.8))"></i>
+        </div>` : ""}
+    `;
+    el.addEventListener("mouseenter", () => {
+      el.querySelector("video")?.play().catch(() => {});
+    });
+    el.addEventListener("mouseleave", () => {
+      const vid = el.querySelector("video");
+      if (vid) { vid.pause(); vid.currentTime = 0; }
+    });
+    el.addEventListener("click", () => window.location.href = "videos.html");
+    grid.appendChild(el);
+  });
+
+  container.appendChild(grid);
+}
+
+// ══════════════════════════════════
+// RENDER POST
+// ══════════════════════════════════
+function renderPost(post) {
+  const feed  = document.getElementById("profileFeed");
+  const esMio = post.autor._id === yo._id;
+
+  const el = document.createElement("div");
+  el.className = "post-card";
+  el.id        = `post-${post._id}`;
+  el.innerHTML = `
+    <div style="flex-shrink:0">${renderAvatarEl(post.autor, 44)}</div>
+    <div class="post-body">
+      <div class="post-user">
+        <span style="display:flex;align-items:center;gap:3px">${renderNombreEl(post.autor)}</span>
+        <span class="handle">@${escHtml(post.autor.handle)}</span>
+        <span class="post-time">· ${tiempoRelativo(post.createdAt)}</span>
+      </div>
+      ${post.texto ? `<p class="post-text">${escHtml(post.texto)}</p>` : ""}
+      ${post.imagen ? `<img src="${post.imagen}" class="post-img" alt="" loading="lazy"
+                           onclick="verImagen('${post.imagen}')"/>` : ""}
+      <div class="post-footer">
+        <button class="post-btn ${post.yaLike ? 'liked' : ''}"
+                onclick="toggleLike('${post._id}', this)">
+          <i class="${post.yaLike ? 'ri-heart-fill' : 'ri-heart-line'}"></i>
+          <span>${post.totalLikes}</span>
+        </button>
+        <button class="post-btn" onclick="toggleComentarios('${post._id}', this)">
+          <i class="ri-chat-1-line"></i>
+          <span id="commentCount-${post._id}">${post.totalComments || 0}</span>
+        </button>
+        <button class="post-btn"><i class="ri-repeat-2-line"></i></button>
+        ${!esMio ? `
+          <button class="post-btn" onclick="iniciarChat('${post.autor._id}')"
+                  title="Mensaje" style="margin-left:auto">
+            <i class="ri-message-3-line"></i>
+          </button>` : `
+          <button class="post-btn delete" onclick="eliminarPost('${post._id}')"
+                  style="margin-left:auto">
+            <i class="ri-delete-bin-6-line"></i>
+          </button>`}
+      </div>
+      <div class="comments-section hidden" id="comments-${post._id}"></div>
+    </div>
+  `;
+  feed.appendChild(el);
+}
+
+// ══════════════════════════════════
+// ACCIONES
+// ══════════════════════════════════
+async function toggleFollow(userId) {
+  const btn = document.getElementById("btnFollow");
+  try {
+    const res  = await fetch(`${API}/profile/${userId}/follow`, {
+      method: "POST", headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.mensaje);
+    btn.className = `btn-follow ${data.sigues ? "siguiendo" : ""}`;
+    btn.innerHTML = data.sigues
+      ? `<i class="ri-user-follow-line"></i> Siguiendo`
+      : `<i class="ri-user-add-line"></i> Seguir`;
+    const stat = document.getElementById("statSeguidores");
+    if (stat) stat.textContent = data.totalSeguidores;
+  } catch(e) { alert(e.message); }
+}
+
+async function iniciarChat(userId) {
+  try {
+    const res  = await fetch(`${API}/messages`, {
+      method:  "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body:    JSON.stringify({ usuarioId: userId })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.mensaje);
+    window.location.href = `messages.html?conv=${data._id}`;
+  } catch(e) { alert(e.message); }
+}
+
+async function toggleLike(postId, btn) {
+  try {
+    const res  = await fetch(`${API}/posts/${postId}/like`, {
+      method: "POST", headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    btn.classList.toggle("liked", data.yaLike);
+    btn.innerHTML = `<i class="${data.yaLike ? 'ri-heart-fill' : 'ri-heart-line'}"></i><span>${data.totalLikes}</span>`;
+  } catch(_) {}
+}
+
+async function eliminarPost(postId) {
+  if (!confirm("¿Eliminar este post?")) return;
+  try {
+    await fetch(`${API}/posts/${postId}`, {
+      method: "DELETE", headers: { Authorization: `Bearer ${token}` }
+    });
+    const el = document.getElementById(`post-${postId}`);
+    if (el) { el.style.transition = "all .3s"; el.style.opacity = "0"; setTimeout(() => el.remove(), 300); }
+    postsCache = postsCache.filter(p => p._id !== postId);
+  } catch(_) {}
+}
+
+// ══════════════════════════════════
+// COMENTARIOS
+// ══════════════════════════════════
+async function toggleComentarios(postId, btn) {
+  const section = document.getElementById(`comments-${postId}`);
+  if (!section) return;
+  if (!section.classList.contains("hidden")) { section.classList.add("hidden"); return; }
+  section.classList.remove("hidden");
+  section.innerHTML = `<div class="loading" style="padding:10px"><i class="ri-loader-4-line spin"></i></div>`;
+
+  try {
+    const res  = await fetch(`${API}/posts/${postId}/comments`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    section.innerHTML = `
+      <div class="comments-list" id="commentsList-${postId}">
+        ${!data.length
+          ? `<p class="no-comments"><i class="ri-chat-3-line"></i> Sin comentarios aún</p>`
+          : data.map(c => renderComentarioHTML(c)).join("")}
+      </div>
+      <div class="comment-input-row">
+        ${renderAvatarEl(yo, 32)}
+        <div class="comment-input-wrap">
+          <input type="text" class="comment-input" id="commentInput-${postId}"
+                 placeholder="Escribe un comentario..." maxlength="280"
+                 onkeydown="if(event.key==='Enter') agregarComentario('${postId}')"/>
+          <button class="btn-send-comment" onclick="agregarComentario('${postId}')">
+            <i class="ri-send-plane-fill"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  } catch(_) {
+    section.innerHTML = `<p style="color:var(--red);padding:10px;font-size:.84rem">Error al cargar</p>`;
+  }
+}
+
+function renderComentarioHTML(c) {
+  return `
+    <div class="comment-item" id="comment-${c._id}">
+      <div style="flex-shrink:0">${renderAvatarEl(c.autor, 32)}</div>
+      <div class="comment-body">
+        <div class="comment-header">
+          ${renderNombreEl(c.autor)}
+          <span class="handle" style="font-size:.73rem">@${escHtml(c.autor.handle)}</span>
+          <span class="post-time">· ${tiempoRelativo(c.createdAt)}</span>
+        </div>
+        <p class="comment-text">${escHtml(c.texto)}</p>
+        <button class="post-btn ${c.yaLike ? 'liked' : ''}"
+                style="padding:2px 6px;font-size:.73rem"
+                onclick="likeComentario('${c._id}', this)">
+          <i class="${c.yaLike ? 'ri-heart-fill' : 'ri-heart-line'}"></i>
+          <span>${c.totalLikes}</span>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+async function agregarComentario(postId) {
+  const inp    = document.getElementById(`commentInput-${postId}`);
+  const texto  = inp?.value.trim();
+  if (!texto) return;
+  inp.value = ""; inp.disabled = true;
+  try {
+    const res  = await fetch(`${API}/posts/${postId}/comments`, {
+      method:  "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body:    JSON.stringify({ texto })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.mensaje);
+    const list = document.getElementById(`commentsList-${postId}`);
+    if (list) { list.querySelector(".no-comments")?.remove(); list.insertAdjacentHTML("beforeend", renderComentarioHTML(data)); }
+    const cnt = document.getElementById(`commentCount-${postId}`);
+    if (cnt) cnt.textContent = parseInt(cnt.textContent || "0") + 1;
+  } catch(e) { alert(e.message); }
+  finally { if (inp) { inp.disabled = false; inp.focus(); } }
+}
+
+async function likeComentario(id, btn) {
+  try {
+    const res  = await fetch(`${API}/posts/comments/${id}/like`, {
+      method: "POST", headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    btn.classList.toggle("liked", data.yaLike);
+    btn.innerHTML = `<i class="${data.yaLike ? 'ri-heart-fill' : 'ri-heart-line'}"></i><span>${data.totalLikes}</span>`;
+  } catch(_) {}
+}
+
+// ══════════════════════════════════
+// MODAL EDITAR PERFIL
+// ══════════════════════════════════
+function abrirModalEditar() {
+  const u = perfilData.usuario;
+  const p = u.personalizacion || {};
+
+  document.getElementById("editNombre").value        = u.nombre;
+  document.getElementById("editBio").value           = u.bio || "";
+  document.getElementById("cEditNombre").textContent = 50 - u.nombre.length;
+  document.getElementById("cEditBio").textContent    = 160 - (u.bio?.length || 0);
+
+  const img  = document.getElementById("editAvatarImg");
+  const vid  = document.getElementById("editAvatarVid");
+  const hold = document.getElementById("editAvatarHolder");
+  hold.classList.add("hidden");
+  if (u.avatarTipo === "video") {
+    img.classList.add("hidden"); vid.src = u.avatar; vid.classList.remove("hidden");
+  } else {
+    vid.classList.add("hidden"); img.src = u.avatar; img.classList.remove("hidden");
+  }
+
+  document.querySelectorAll("#marcoOptions .option-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.marco === (p.marco || "none"))
+  );
+  document.getElementById("marcoColorPicker").value = p.marcoColor || "#5cdb6f";
+
+  document.querySelectorAll("#bannerOptions .option-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.banner === (p.bannerPreset || "default"))
+  );
+  document.getElementById("bannerCustomRow").classList.toggle("hidden", p.bannerPreset !== "custom");
+  if (p.bannerColor1) document.getElementById("bannerColor1").value = p.bannerColor1;
+  if (p.bannerColor2) document.getElementById("bannerColor2").value = p.bannerColor2;
+
+  document.querySelectorAll("#nombreOptions .option-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.efecto === (p.nombreEfecto || "none"))
+  );
+  const ef = p.nombreEfecto || "none";
+  document.getElementById("gradienteRow").style.display = ef === "gradient" ? "block" : "none";
+  document.getElementById("nombreColorRow").classList.toggle("hidden", !["glow","neon","color"].includes(ef));
+
+  document.querySelectorAll("#gradOptions .option-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.grad === (p.nombreGradiente || "green-blue"))
+  );
+  document.getElementById("gradCustomRow").classList.toggle("hidden", p.nombreGradiente !== "custom");
+  if (p.nombreColor) document.getElementById("nombreColorPicker").value = p.nombreColor;
+  if (p.gradColor1)  document.getElementById("gradColor1").value        = p.gradColor1;
+  if (p.gradColor2)  document.getElementById("gradColor2").value        = p.gradColor2;
+
+  document.querySelectorAll(".badge-option").forEach(b =>
+    b.classList.toggle("active", b.dataset.badge === (p.badge || "none"))
+  );
+
+  // Reset a tab info
+  document.querySelectorAll(".modal-tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".modal-tab-panel").forEach(p => p.classList.remove("active"));
+  document.querySelector(".modal-tab-btn[data-tab='info']").classList.add("active");
+  document.getElementById("tabInfo").classList.add("active");
+
+  actualizarPreviewNombre();
+  document.getElementById("modalEditarPerfil").classList.remove("hidden");
+  document.getElementById("editError")?.classList.add("hidden");
+}
+
+function cerrarModalEditar() {
+  document.getElementById("modalEditarPerfil").classList.add("hidden");
+  avatarEditFile = null;
+}
+
+// ── Modal tabs ──
+document.querySelectorAll(".modal-tab-btn").forEach(btn => {
+  btn.addEventListener("click", function() {
+    document.querySelectorAll(".modal-tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".modal-tab-panel").forEach(p => p.classList.remove("active"));
+    this.classList.add("active");
+    const n  = this.dataset.tab;
+    const id = "tab" + n.charAt(0).toUpperCase() + n.slice(1);
+    document.getElementById(id)?.classList.add("active");
+  });
+});
+
+// ── Marco ──
+document.querySelectorAll("#marcoOptions .option-btn").forEach(btn => {
+  btn.addEventListener("click", function() {
+    document.querySelectorAll("#marcoOptions .option-btn").forEach(b => b.classList.remove("active"));
+    this.classList.add("active");
+  });
+});
+
+// ── Banner ──
+document.querySelectorAll("#bannerOptions .option-btn").forEach(btn => {
+  btn.addEventListener("click", function() {
+    document.querySelectorAll("#bannerOptions .option-btn").forEach(b => b.classList.remove("active"));
+    this.classList.add("active");
+    const row = document.getElementById("bannerCustomRow");
+    if (this.dataset.banner === "custom") { row.classList.remove("hidden"); row.style.display = "flex"; }
+    else row.classList.add("hidden");
+  });
+});
+
+// ── Nombre efecto ──
+document.querySelectorAll("#nombreOptions .option-btn").forEach(btn => {
+  btn.addEventListener("click", function() {
+    document.querySelectorAll("#nombreOptions .option-btn").forEach(b => b.classList.remove("active"));
+    this.classList.add("active");
+    const ef = this.dataset.efecto;
+    document.getElementById("gradienteRow").style.display = ef === "gradient" ? "block" : "none";
+    document.getElementById("nombreColorRow").classList.toggle("hidden", !["glow","neon","color"].includes(ef));
+    actualizarPreviewNombre();
+  });
+});
+
+// ── Gradiente ──
+document.querySelectorAll("#gradOptions .option-btn").forEach(btn => {
+  btn.addEventListener("click", function() {
+    document.querySelectorAll("#gradOptions .option-btn").forEach(b => b.classList.remove("active"));
+    this.classList.add("active");
+    const row = document.getElementById("gradCustomRow");
+    if (this.dataset.grad === "custom") { row.classList.remove("hidden"); row.style.display = "flex"; }
+    else row.classList.add("hidden");
+    actualizarPreviewNombre();
+  });
+});
+
+// ── Badge ──
+document.querySelectorAll(".badge-option").forEach(btn => {
+  btn.addEventListener("click", function() {
+    document.querySelectorAll(".badge-option").forEach(b => b.classList.remove("active"));
+    this.classList.add("active");
+  });
+});
+
+// ── Preview nombre ──
+function actualizarPreviewNombre() {
+  const ef     = document.querySelector("#nombreOptions .option-btn.active")?.dataset.efecto || "none";
+  const grad   = document.querySelector("#gradOptions .option-btn.active")?.dataset.grad || "green-blue";
+  const color  = document.getElementById("nombreColorPicker")?.value || "#5cdb6f";
+  const gc1    = document.getElementById("gradColor1")?.value || "#5cdb6f";
+  const gc2    = document.getElementById("gradColor2")?.value || "#4dabf7";
+  const nombre = document.getElementById("editNombre")?.value || yo.nombre || "Tu Nombre";
+  const prev   = document.getElementById("previewNombre");
+  if (!prev) return;
+  const grads  = {
+    "green-blue": "linear-gradient(90deg,#5cdb6f,#4dabf7)",
+    "fire":       "linear-gradient(90deg,#ff6b35,#ffd43b)",
+    "purple":     "linear-gradient(90deg,#cc5de8,#845ef7)",
+    "sunset":     "linear-gradient(90deg,#ff6b6b,#feca57)",
+    "ocean":      "linear-gradient(90deg,#54a0ff,#5f27cd)",
+    "custom":     `linear-gradient(90deg,${gc1},${gc2})`
+  };
+  let css = "font-weight:800;font-size:1.15rem;display:inline-block;transition:all .2s;";
+  if (ef === "gradient") {
+    css += `background:${grads[grad]};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;`;
+  } else if (ef === "glow") {
+    css += `color:${color};text-shadow:0 0 10px ${color};`;
+  } else if (ef === "neon") {
+    css += `color:${color};text-shadow:0 0 7px ${color},0 0 21px ${color};`;
+  } else if (ef === "color") {
+    css += `color:${color};`;
+  } else if (ef === "shadow") {
+    css += `text-shadow:2px 2px 4px rgba(0,0,0,.9);color:var(--text);`;
+  } else {
+    css += `color:var(--text);`;
+  }
+  prev.style.cssText   = css;
+  prev.textContent     = nombre || "Tu Nombre";
+}
+
+document.getElementById("editNombre")?.addEventListener("input", function() {
+  document.getElementById("cEditNombre").textContent = 50 - this.value.length;
+  actualizarPreviewNombre();
+});
+document.getElementById("editBio")?.addEventListener("input", function() {
+  document.getElementById("cEditBio").textContent = 160 - this.value.length;
+});
+document.getElementById("nombreColorPicker")?.addEventListener("input", actualizarPreviewNombre);
+document.getElementById("gradColor1")?.addEventListener("input", actualizarPreviewNombre);
+document.getElementById("gradColor2")?.addEventListener("input", actualizarPreviewNombre);
+
+document.getElementById("editAvatarInput")?.addEventListener("change", function() {
+  const file = this.files[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) { alert("Máximo 3MB"); this.value = ""; return; }
+  avatarEditFile = file;
+  const url  = URL.createObjectURL(file);
+  const img  = document.getElementById("editAvatarImg");
+  const vid  = document.getElementById("editAvatarVid");
+  document.getElementById("editAvatarHolder").classList.add("hidden");
+  if (file.type.startsWith("video/")) {
+    img.classList.add("hidden"); vid.src = url; vid.classList.remove("hidden");
+  } else {
+    vid.classList.add("hidden"); img.src = url; img.classList.remove("hidden");
+  }
+});
+
+// ── Guardar info ──
+document.getElementById("btnGuardarInfo")?.addEventListener("click", async () => {
+  const btn     = document.getElementById("btnGuardarInfo");
+  const errBox  = document.getElementById("editError");
+  const errText = document.getElementById("editErrorText");
+  errBox.classList.add("hidden");
+  btn.innerHTML = '<i class="ri-loader-4-line spin"></i> Guardando...';
+  btn.disabled  = true;
+  try {
+    const fd = new FormData();
+    fd.append("nombre", document.getElementById("editNombre").value.trim());
+    fd.append("bio",    document.getElementById("editBio").value);
+    if (avatarEditFile) fd.append("avatar", avatarEditFile);
+    const res  = await fetch(`${API}/auth/perfil`, {
+      method: "PUT", headers: { Authorization: `Bearer ${token}` }, body: fd
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.mensaje);
+    localStorage.setItem("fu_usuario", JSON.stringify({ ...yo, ...data.usuario }));
+    cerrarModalEditar();
+    cargarPerfil();
+  } catch(e) { errText.textContent = e.message; errBox.classList.remove("hidden"); }
+  finally { btn.innerHTML = '<i class="ri-save-line"></i> Guardar info'; btn.disabled = false; }
+});
+
+// ── Guardar apariencia ──
+document.getElementById("btnGuardarApariencia")?.addEventListener("click", async () => {
+  const btn = document.getElementById("btnGuardarApariencia");
+  btn.innerHTML = '<i class="ri-loader-4-line spin"></i> Guardando...';
+  btn.disabled  = true;
+  const body = {
+    marco:        document.querySelector("#marcoOptions .option-btn.active")?.dataset.marco || "none",
+    marcoColor:   document.getElementById("marcoColorPicker")?.value || "#5cdb6f",
+    bannerPreset: document.querySelector("#bannerOptions .option-btn.active")?.dataset.banner || "default",
+    bannerColor1: document.getElementById("bannerColor1")?.value || "#0d2010",
+    bannerColor2: document.getElementById("bannerColor2")?.value || "#1a3a14"
+  };
+  try {
+    const res = await fetch(`${API}/auth/personalizacion`, {
+      method: "PUT", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error("Error");
+    const stored = JSON.parse(localStorage.getItem("fu_usuario") || "{}");
+    stored.personalizacion = { ...(stored.personalizacion || {}), ...body };
+    localStorage.setItem("fu_usuario", JSON.stringify(stored));
+    cerrarModalEditar(); cargarPerfil();
+  } catch(e) { alert(e.message); }
+  finally { btn.innerHTML = '<i class="ri-save-line"></i> Guardar apariencia'; btn.disabled = false; }
+});
+
+// ── Guardar nombre ──
+document.getElementById("btnGuardarNombre")?.addEventListener("click", async () => {
+  const btn = document.getElementById("btnGuardarNombre");
+  btn.innerHTML = '<i class="ri-loader-4-line spin"></i> Guardando...';
+  btn.disabled  = true;
+  const body = {
+    nombreEfecto:    document.querySelector("#nombreOptions .option-btn.active")?.dataset.efecto || "none",
+    nombreGradiente: document.querySelector("#gradOptions .option-btn.active")?.dataset.grad || "green-blue",
+    nombreColor:     document.getElementById("nombreColorPicker")?.value || "#f0f0f0",
+    gradColor1:      document.getElementById("gradColor1")?.value || "#5cdb6f",
+    gradColor2:      document.getElementById("gradColor2")?.value || "#4dabf7"
+  };
+  try {
+    const res = await fetch(`${API}/auth/personalizacion`, {
+      method: "PUT", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error("Error");
+    const stored = JSON.parse(localStorage.getItem("fu_usuario") || "{}");
+    stored.personalizacion = { ...(stored.personalizacion || {}), ...body };
+    localStorage.setItem("fu_usuario", JSON.stringify(stored));
+    cerrarModalEditar(); cargarPerfil();
+  } catch(e) { alert(e.message); }
+  finally { btn.innerHTML = '<i class="ri-save-line"></i> Guardar estilo de nombre'; btn.disabled = false; }
+});
+
+// ── Guardar badge ──
+document.getElementById("btnGuardarBadge")?.addEventListener("click", async () => {
+  const btn   = document.getElementById("btnGuardarBadge");
+  const badge = document.querySelector(".badge-option.active")?.dataset.badge || "none";
+  btn.innerHTML = '<i class="ri-loader-4-line spin"></i> Guardando...';
+  btn.disabled  = true;
+  try {
+    const res = await fetch(`${API}/auth/personalizacion`, {
+      method: "PUT", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ badge })
+    });
+    if (!res.ok) throw new Error("Error");
+    const stored = JSON.parse(localStorage.getItem("fu_usuario") || "{}");
+    stored.personalizacion = { ...(stored.personalizacion || {}), badge };
+    localStorage.setItem("fu_usuario", JSON.stringify(stored));
+    cerrarModalEditar(); cargarPerfil();
+  } catch(e) { alert(e.message); }
+  finally { btn.innerHTML = '<i class="ri-save-line"></i> Guardar badge'; btn.disabled = false; }
+});
+
+// ══════════════════════════════════
+// MODAL IMAGEN
+// ══════════════════════════════════
+function verImagen(src) {
+  document.getElementById("modalImgSrc").src = src;
+  document.getElementById("modalImg").classList.add("active");
+}
+function cerrarModalImg() {
+  document.getElementById("modalImg").classList.remove("active");
+}
+
+// ══════════════════════════════════
+// UTILS
+// ══════════════════════════════════
+function escHtml(s = "") {
+  return String(s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function tiempoRelativo(f) {
+  const d = (Date.now()-new Date(f))/1000;
+  if(d<60)     return "ahora";
+  if(d<3600)   return `${Math.floor(d/60)}m`;
+  if(d<86400)  return `${Math.floor(d/3600)}h`;
+  if(d<604800) return `${Math.floor(d/86400)}d`;
+  return new Date(f).toLocaleDateString("es",{day:"numeric",month:"short"});
+}
+function formatNum(n = 0) {
+  if(n >= 1000000) return (n/1000000).toFixed(1) + "M";
+  if(n >= 1000)    return (n/1000).toFixed(1)    + "K";
+  return String(n);
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { cerrarModalEditar(); cerrarModalImg(); }
+});
+
+// ── INIT ──
+cargarPerfil();
+</script>
+
+<style>
+  .spin { display:inline-block; animation:spin .8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  #badgeOptions .badge-option {
+    display:flex; align-items:center; gap:12px;
+    padding:12px 16px; text-align:left;
+  }
+  #badgeOptions .badge-option div { display:flex; flex-direction:column; }
+  #badgeOptions .badge-option strong { font-size:.9rem; }
+  #badgeOptions .badge-option small  { color:var(--text-3); font-size:.75rem; }
+</style>
+</body>
+</html>
