@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <!-- interactive-widget=resizes-content: el contenido se reduce cuando abre el teclado -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"/>
   <title>Foro Ubre — Mensajes</title>
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet"/>
@@ -22,6 +21,7 @@
       --red:       #ff4466;
       --radius:    14px;
       --rf:        9999px;
+      --bnav-h:    54px;   /* altura del bottom nav */
     }
     html, body {
       height: 100dvh; overflow: hidden;
@@ -29,14 +29,16 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    /* ══ GRID PRINCIPAL ══ */
+    /* ══ GRID 3 COLS (desktop) ══ */
     .msg-layout {
       display: grid;
       grid-template-columns: 220px 290px 1fr;
       height: 100dvh;
     }
 
-    /* ══ SIDEBAR ══ */
+    /* ══════════════════════════
+       SIDEBAR
+    ══════════════════════════ */
     .sidebar {
       background: var(--surface);
       border-right: 1px solid var(--border);
@@ -68,7 +70,9 @@
     .sidebar-user strong { font-size: .83rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .sidebar-user small  { color: var(--text-3); font-size: .7rem; }
 
-    /* ══ PANEL CONVS ══ */
+    /* ══════════════════════════
+       PANEL CONVERSACIONES
+    ══════════════════════════ */
     .conv-panel {
       background: var(--surface);
       border-right: 1px solid var(--border);
@@ -90,23 +94,20 @@
       font-size: .82rem; outline: none;
     }
     .srch input::placeholder { color: var(--text-3); }
-
     .conv-list { flex: 1; overflow-y: auto; min-height: 0; }
     .conv-list::-webkit-scrollbar { display: none; }
-
     .conv-item {
       display: flex; align-items: center; gap: 10px;
       padding: 9px 12px; cursor: pointer; transition: background .12s;
     }
     .conv-item:hover  { background: var(--surface2); }
     .conv-item.active { background: rgba(92,219,111,.08); }
-
     .cav { flex-shrink: 0; }
     .cav img, .cav video {
       width: 44px; height: 44px; border-radius: 50%;
       object-fit: cover; display: block;
     }
-    .conv-info  { flex: 1; min-width: 0; }
+    .conv-info { flex: 1; min-width: 0; }
     .cnr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
     .cname { font-size: .86rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
     .ctime { font-size: .66rem; color: var(--text-3); flex-shrink: 0; }
@@ -126,7 +127,9 @@
     }
     .conv-empty i { font-size: 2.2rem; }
 
-    /* ══ PANEL CHAT ══ */
+    /* ══════════════════════════
+       PANEL CHAT
+    ══════════════════════════ */
     .chat-panel {
       display: flex; flex-direction: column;
       background: var(--bg);
@@ -141,7 +144,7 @@
     .chat-screen-empty h3 { font-size: .97rem; font-weight: 700; color: var(--text-2); }
     .chat-screen-empty p  { font-size: .83rem; line-height: 1.6; }
 
-    /* Header del chat activo */
+    /* Header chat activo */
     .chat-hdr {
       display: flex; align-items: center; gap: 10px;
       padding: 10px 14px; min-height: 56px;
@@ -156,12 +159,13 @@
     .hdr-av {
       width: 38px; height: 38px; border-radius: 50%;
       object-fit: cover; flex-shrink: 0; cursor: pointer; display: block;
+      background: var(--surface3);
     }
     .hdr-info { flex: 1; min-width: 0; cursor: pointer; }
     .hdr-name { font-weight: 800; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .hdr-sub  { font-size: .71rem; color: var(--text-3); }
 
-    /* ══ ÁREA DE MENSAJES — min-height:0 es CRÍTICO ══ */
+    /* ══ MENSAJES ══ */
     .chat-msgs {
       flex: 1; min-height: 0;
       overflow-y: auto; overflow-x: hidden;
@@ -184,7 +188,6 @@
     .mw.theirs { align-self: flex-start; flex-direction: row; }
     .mw.gt     { margin-top: 8px; }
 
-    /* Avatar del remitente */
     .mav {
       width: 28px; height: 28px; border-radius: 50%;
       object-fit: cover; flex-shrink: 0; display: block;
@@ -194,24 +197,15 @@
 
     .mcol { display: flex; flex-direction: column; gap: 1px; min-width: 0; max-width: 100%; }
 
-    /* Burbuja */
     .bubble {
-      padding: 8px 12px;
-      border-radius: 18px;
+      padding: 8px 12px; border-radius: 18px;
       font-size: .9rem; line-height: 1.5;
       word-break: break-word; white-space: pre-wrap;
     }
-    .mw.mine   .bubble {
-      background: #5cdb6f; color: #050505;
-      border-bottom-right-radius: 4px;
-    }
-    .mw.theirs .bubble {
-      background: #1e1e1e; color: #f0f0f0;
-      border-bottom-left-radius: 4px;
-    }
+    .mw.mine   .bubble { background: #5cdb6f; color: #050505; border-bottom-right-radius: 4px; }
+    .mw.theirs .bubble { background: #1e1e1e; color: #f0f0f0; border-bottom-left-radius: 4px; }
     .bubble.only { padding: 3px; background: transparent !important; }
 
-    /* Media */
     .bmedia-img {
       max-width: 220px; max-height: 270px;
       border-radius: 10px; display: block;
@@ -219,7 +213,6 @@
     }
     .bmedia-vid { max-width: 220px; border-radius: 10px; display: block; }
 
-    /* Meta: hora + estado */
     .mmeta { display: flex; align-items: center; gap: 3px; margin-top: 2px; }
     .mw.mine   .mmeta { justify-content: flex-end; }
     .mw.theirs .mmeta { justify-content: flex-start; }
@@ -232,8 +225,7 @@
     .typing-row {
       padding: 3px 14px; min-height: 20px; flex-shrink: 0;
       display: flex; align-items: center; gap: 6px;
-      font-size: .74rem; color: var(--text-3);
-      visibility: hidden;
+      font-size: .74rem; color: var(--text-3); visibility: hidden;
     }
     .typing-dots span {
       display: inline-block; width: 5px; height: 5px;
@@ -268,9 +260,7 @@
     /* ══ BARRA DE ESCRITURA ══ */
     .chat-ibar {
       flex-shrink: 0;
-      padding: 8px 12px;
-      /* safe-area para muescas en iPhone */
-      padding-bottom: max(10px, env(safe-area-inset-bottom));
+      padding: 8px 12px 10px;
       border-top: 1px solid var(--border);
       background: var(--surface);
     }
@@ -328,58 +318,31 @@
     .spin { display: inline-block; animation: spin .8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ══ BOTTOM NAV ══ */
+    /* ══════════════════════════
+       BOTTOM NAV
+    ══════════════════════════ */
     .bnav { display: none; }
 
-    /* ══ RESPONSIVE ══ */
-    @media (max-width: 900px) {
-      .msg-layout { grid-template-columns: 66px 260px 1fr; }
-      .sidebar .nav-item span:last-child,
-      .sidebar .logo span,
-      .sidebar-user strong,
-      .sidebar-user small { display: none; }
-      .nav-item { justify-content: center; padding: 10px; }
-      .nav-icon  { width: auto; font-size: 1.35rem; }
-    }
-
+    /* ══════════════════════════
+       RESPONSIVE MOBILE
+    ══════════════════════════ */
     @media (max-width: 640px) {
       .msg-layout { grid-template-columns: 1fr; }
       .sidebar { display: none; }
 
-      /* ── Conv panel ── */
-      .conv-panel {
-        position: fixed;
-        top: 0; left: 0; right: 0;
-        height: 100dvh;   /* dvh = actualiza cuando abre teclado */
-        z-index: 10;
-        transition: transform .28s cubic-bezier(.4,0,.2,1);
-      }
-      .conv-panel.off { transform: translateX(-100%); pointer-events: none; }
-
-      /* ── Chat panel ── */
-      /* NO ponemos bottom:0 → conflicto con height:100dvh */
-      .chat-panel {
-        position: fixed;
-        top: 0; left: 0; right: 0;
-        height: 100dvh;   /* ← se encoge con el teclado en browsers modernos */
-        z-index: 10;
-        transition: transform .28s cubic-bezier(.4,0,.2,1);
-      }
-      .chat-panel.off { transform: translateX(100%); pointer-events: none; }
-
-      .btn-back { display: flex !important; }
-
-      /* Bottom nav */
+      /* ── Bottom nav: SIEMPRE visible, SIEMPRE encima ── */
       .bnav {
-        display: block; position: fixed;
+        display: block;
+        position: fixed;
         bottom: 0; left: 0; right: 0;
-        background: var(--surface); border-top: 1px solid var(--border);
-        z-index: 5; /* menor que los paneles */
+        z-index: 100;  /* ← MÁS ALTO que todo */
+        background: var(--surface);
+        border-top: 1px solid var(--border);
         padding-bottom: env(safe-area-inset-bottom, 0);
       }
       .bnav-inner {
         display: flex; align-items: center; justify-content: space-around;
-        padding: 6px 0 3px;
+        height: var(--bnav-h);
       }
       .nbtn {
         display: flex; flex-direction: column; align-items: center; gap: 2px;
@@ -389,6 +352,31 @@
       }
       .nbtn.active { color: var(--green); }
       .nbtn i { font-size: 1.3rem; }
+
+      /* ── Conv panel: NO llega al bottom nav ── */
+      .conv-panel {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        /* bottom = altura del bnav + safe-area */
+        bottom: calc(var(--bnav-h) + env(safe-area-inset-bottom, 0px));
+        height: auto; /* ← NO usar height cuando usamos bottom */
+        z-index: 10;
+        transition: transform .28s cubic-bezier(.4,0,.2,1);
+      }
+      .conv-panel.off { transform: translateX(-100%); pointer-events: none; }
+
+      /* ── Chat panel: NO llega al bottom nav ── */
+      .chat-panel {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        bottom: calc(var(--bnav-h) + env(safe-area-inset-bottom, 0px));
+        height: auto; /* ← NO usar height cuando usamos bottom */
+        z-index: 10;
+        transition: transform .28s cubic-bezier(.4,0,.2,1);
+      }
+      .chat-panel.off { transform: translateX(100%); pointer-events: none; }
+
+      .btn-back { display: flex !important; }
     }
   </style>
 </head>
@@ -435,7 +423,9 @@
 
 </div>
 
-<!-- ══ BOTTOM NAV MOBILE ══ -->
+<!-- ══════════════════════════
+     BOTTOM NAV — z-index:100, siempre encima
+══════════════════════════ -->
 <nav class="bnav">
   <div class="bnav-inner">
     <a href="/"             class="nbtn"><i class="ri-home-5-line"></i><span>Inicio</span></a>
@@ -446,7 +436,7 @@
   </div>
 </nav>
 
-<!-- ══ MODAL IMAGEN/VIDEO FULL ══ -->
+<!-- ══ MODAL MEDIA FULL ══ -->
 <div class="mmmodal hidden" id="mmmodal">
   <button class="mmclose" onclick="cerrarModal()"><i class="ri-close-line"></i></button>
   <div id="mminner"></div>
@@ -454,17 +444,17 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-/* ══════════════════════════════════════════
+/* ════════════════════════
    INIT
-══════════════════════════════════════════ */
+════════════════════════ */
 const API   = "/api";
 const token = localStorage.getItem("fu_token");
 const yo    = JSON.parse(localStorage.getItem("fu_usuario") || "null");
 if (!token || !yo) { window.location.href = "/login.html"; }
 
 document.getElementById("navPerfil").href = `profile.html?handle=${yo.handle}`;
-const bnp = document.getElementById("bnPerfil");
-if (bnp) bnp.href = `profile.html?handle=${yo.handle}`;
+const _bnp = document.getElementById("bnPerfil");
+if (_bnp) _bnp.href = `profile.html?handle=${yo.handle}`;
 
 // Sidebar user
 (function() {
@@ -476,55 +466,71 @@ if (bnp) bnp.href = `profile.html?handle=${yo.handle}`;
   el.innerHTML = `${av}<div style="min-width:0"><strong>${esc(yo.nombre)}</strong><small>@${esc(yo.handle)}</small></div>`;
 })();
 
-/* ══════════════════════════════════════════
-   FIX TECLADO MÓVIL — Visual Viewport API
-   Cuando abre el teclado, ajusta la altura del chat
-══════════════════════════════════════════ */
-function ajustarAlturaMobile() {
+/* ════════════════════════
+   FIX TECLADO MÓVIL
+   Cuando abre el teclado ajusta altura del chat
+   sin afectar el bottom nav
+════════════════════════ */
+function ajustarTeclado() {
   if (window.innerWidth > 640) return;
-  const vv = window.visualViewport;
+  const vv    = window.visualViewport;
   if (!vv) return;
   const panel = document.getElementById("chatPanel");
-  if (panel && !panel.classList.contains("off")) {
-    panel.style.height = vv.height + "px";
-    panel.style.top    = vv.offsetTop + "px";
-  }
-}
-if (window.visualViewport) {
-  window.visualViewport.addEventListener("resize", ajustarAlturaMobile);
-  window.visualViewport.addEventListener("scroll", ajustarAlturaMobile);
+  if (!panel || panel.classList.contains("off")) return;
+
+  // Altura disponible = alto visual - bnav - offset scroll del vv
+  const bnavH = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--bnav-h")) || 54;
+  const safeB = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("env(safe-area-inset-bottom)")) || 0;
+  const total = vv.height - bnavH - safeB;
+
+  panel.style.height = total + "px";
+  panel.style.top    = vv.offsetTop + "px";
+  panel.style.bottom = "auto";
 }
 
-/* ══════════════════════════════════════════
-   ESTADO GLOBAL
-══════════════════════════════════════════ */
+function resetTeclado() {
+  if (window.innerWidth > 640) return;
+  const panel = document.getElementById("chatPanel");
+  if (!panel) return;
+  panel.style.height = "";
+  panel.style.top    = "";
+  panel.style.bottom = "";
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", ajustarTeclado);
+  window.visualViewport.addEventListener("scroll", ajustarTeclado);
+}
+
+/* ════════════════════════
+   ESTADO
+════════════════════════ */
 let convs       = [];
 let convActiva  = null;
 let mediaFile   = null;
 let typingTimer = null;
 let socket      = null;
 
-/* ══════════════════════════════════════════
-   SOCKET — polling primero para Railway
-══════════════════════════════════════════ */
+/* ════════════════════════
+   SOCKET
+════════════════════════ */
 try {
   socket = io({ transports: ["polling","websocket"], upgrade: true, reconnectionAttempts: 5 });
   socket.on("connect",   () => socket.emit("registrar", yo._id));
   socket.on("reconnect", () => socket.emit("registrar", yo._id));
-
   socket.on("nuevoMensaje", ({ convId, mensaje }) => {
     actualizarConvEnLista(convId, mensaje);
     if (convActiva === convId) { appendMsg(mensaje); marcarLeido(convId, true); }
     else subirBadge(convId);
   });
-  socket.on("usuarioEscribiendo",  ({ convId }) => { if (convActiva === convId) setTyping(true); });
-  socket.on("usuarioDejoEscribir", ({ convId }) => { if (convActiva === convId) setTyping(false); });
-  socket.on("mensajesLeidos",      ({ convId }) => { if (convActiva === convId) marcarMsgsVisto(); });
+  socket.on("usuarioEscribiendo",  ({ convId }) => { if (convActiva===convId) setTyping(true);  });
+  socket.on("usuarioDejoEscribir", ({ convId }) => { if (convActiva===convId) setTyping(false); });
+  socket.on("mensajesLeidos",      ({ convId }) => { if (convActiva===convId) marcarMsgsVisto(); });
 } catch(e) { console.warn("Socket:", e.message); }
 
-/* ══════════════════════════════════════════
-   CARGAR CONVERSACIONES
-══════════════════════════════════════════ */
+/* ════════════════════════
+   CONVERSACIONES
+════════════════════════ */
 async function cargarConversaciones() {
   try {
     const res = await fetch(`${API}/messages`, { headers: { Authorization: `Bearer ${token}` } });
@@ -535,7 +541,8 @@ async function cargarConversaciones() {
     if (p) abrirConv(p);
   } catch(e) {
     console.error(e);
-    document.getElementById("convList").innerHTML = `<div class="conv-empty"><i class="ri-error-warning-line" style="color:var(--red)"></i>Error al cargar</div>`;
+    document.getElementById("convList").innerHTML =
+      `<div class="conv-empty"><i class="ri-error-warning-line" style="color:var(--red)"></i>Error al cargar</div>`;
   }
 }
 
@@ -552,26 +559,31 @@ function htmlConvItem(c) {
   const o  = c.otro || {};
   const av = o.avatarTipo === "video"
     ? `<video src="${o.avatar||''}" autoplay loop muted playsinline></video>`
-    : `<img src="${o.avatar||getDefaultAv(o.nombre)}" alt="${esc(o.nombre||'')}"/>`;
+    : `<img src="${o.avatar || getDefaultAv(o.nombre)}" alt=""/>`;
 
   let prev = "Toca para chatear";
   if (c.ultimoMensaje) {
     const esM  = getAutorId(c.ultimoMensaje) === yo._id;
     const tipo = c.ultimoMensaje.mediaTipo || c.ultimoMensaje.media?.tipo;
     const tx   = getTexto(c.ultimoMensaje);
-    if   (tipo === "imagen")     prev = (esM?"Tú: ":"") + "📷 Foto";
-    else if (tipo === "video")   prev = (esM?"Tú: ":"") + "🎥 Video";
-    else if (tx)                 prev = (esM?"Tú: ":"") + tx;
+    if      (tipo==="imagen") prev = (esM?"Tú: ":"") + "📷 Foto";
+    else if (tipo==="video")  prev = (esM?"Tú: ":"") + "🎥 Video";
+    else if (tx)              prev = (esM?"Tú: ":"") + tx;
   }
   const hora = c.ultimoMensaje?.createdAt ? tiempoCorto(c.ultimoMensaje.createdAt) : "";
 
-  return `<div class="conv-item ${convActiva===c._id?'active':''}" id="ci-${c._id}" onclick="abrirConv('${c._id}')">
+  return `<div class="conv-item ${convActiva===c._id?"active":""}" id="ci-${c._id}" onclick="abrirConv('${c._id}')">
     <div class="cav">${av}</div>
     <div class="conv-info">
-      <div class="cnr"><span class="cname">${esc(o.nombre||"?")}</span><span class="ctime">${hora}</span></div>
-      <div class="cprev ${c.noLeidos>0?'unread':''}">
+      <div class="cnr">
+        <span class="cname">${esc(o.nombre||"?")}</span>
+        <span class="ctime">${hora}</span>
+      </div>
+      <div class="cprev ${c.noLeidos>0?"unread":""}">
         <span>${esc(prev)}</span>
-        ${c.noLeidos>0?`<span class="cbadge" id="badge-${c._id}">${c.noLeidos}</span>`:`<span id="badge-${c._id}" style="display:none"></span>`}
+        ${c.noLeidos>0
+          ? `<span class="cbadge" id="badge-${c._id}">${c.noLeidos}</span>`
+          : `<span id="badge-${c._id}" style="display:none"></span>`}
       </div>
     </div>
   </div>`;
@@ -586,9 +598,9 @@ function filtrarConvs(q) {
   ));
 }
 
-/* ══════════════════════════════════════════
-   ABRIR CONVERSACIÓN
-══════════════════════════════════════════ */
+/* ════════════════════════
+   ABRIR CONV
+════════════════════════ */
 async function abrirConv(convId) {
   convActiva = convId;
   mediaFile  = null;
@@ -597,19 +609,19 @@ async function abrirConv(convId) {
     el.classList.toggle("active", el.id === `ci-${convId}`)
   );
 
-  // Mobile: cambiar panel
+  // Mobile: deslizar panels
   document.getElementById("convPanel").classList.add("off");
   const chatEl = document.getElementById("chatPanel");
   chatEl.classList.remove("off");
-  // Ajustar altura para teclado
-  ajustarAlturaMobile();
+  // Limpiar ajustes de teclado al abrir (posición inicial limpia)
+  resetTeclado();
 
   const conv = convs.find(c => c._id === convId);
   const otro = conv?.otro || {};
 
   const avHdr = otro.avatarTipo === "video"
     ? `<video src="${otro.avatar||''}" class="hdr-av" autoplay loop muted playsinline onclick="ir('profile.html?handle=${esc(otro.handle)}')"></video>`
-    : `<img src="${otro.avatar || getDefaultAv(otro.nombre)}" class="hdr-av" alt="" onclick="ir('profile.html?handle=${esc(otro.handle)}')"/>`;
+    : `<img src="${otro.avatar||getDefaultAv(otro.nombre)}" class="hdr-av" alt="" onclick="ir('profile.html?handle=${esc(otro.handle)}')"/>`;
 
   chatEl.innerHTML = `
     <div class="chat-hdr">
@@ -662,16 +674,14 @@ async function abrirConv(convId) {
 function volverALista() {
   convActiva = null;
   setTyping(false);
+  resetTeclado();
   document.getElementById("convPanel").classList.remove("off");
-  const chatEl = document.getElementById("chatPanel");
-  chatEl.classList.add("off");
-  chatEl.style.height = "";
-  chatEl.style.top    = "";
+  document.getElementById("chatPanel").classList.add("off");
 }
 
-/* ══════════════════════════════════════════
+/* ════════════════════════
    CARGAR MENSAJES
-══════════════════════════════════════════ */
+════════════════════════ */
 async function cargarMensajes(convId) {
   const box = document.getElementById("chatMsgs");
   if (!box) return;
@@ -679,7 +689,7 @@ async function cargarMensajes(convId) {
     const res = await fetch(`${API}/messages/${convId}?limite=80`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.mensaje||`HTTP ${res.status}`); }
+    if (!res.ok) { const e = await res.json().catch(()=>{}); throw new Error(e?.mensaje||`HTTP ${res.status}`); }
     const msgs = await res.json();
     box.innerHTML = "";
     if (!msgs.length) {
@@ -694,145 +704,120 @@ async function cargarMensajes(convId) {
   }
 }
 
-/* ══════════════════════════════════════════
+/* ════════════════════════
    RENDER MENSAJES
-══════════════════════════════════════════ */
+════════════════════════ */
 function renderMensajes(msgs, box) {
   box.innerHTML = "";
-  let lastDate   = null;
-  let lastAutor  = null;
-  let lastTime   = 0;
-
+  let lastDate  = null, lastAutor = null, lastTime = 0;
   msgs.forEach(msg => {
-    const mio    = esMio(msg);
-    const aId    = getAutorId(msg);
-    const dStr   = new Date(msg.createdAt).toLocaleDateString("es", { weekday:"long", day:"numeric", month:"long" });
-
-    // Separador de fecha
+    const mio  = esMio(msg);
+    const aId  = getAutorId(msg);
+    const dStr = new Date(msg.createdAt).toLocaleDateString("es",{weekday:"long",day:"numeric",month:"long"});
     if (dStr !== lastDate) {
-      lastDate  = dStr;
-      lastAutor = null; lastTime = 0;
+      lastDate = dStr; lastAutor = null; lastTime = 0;
       const sep = document.createElement("div");
       sep.className = "date-sep"; sep.textContent = dStr;
       box.appendChild(sep);
     }
-
-    const t        = new Date(msg.createdAt).getTime();
-    const mismo    = aId === lastAutor && (t - lastTime) < 120000;
+    const t     = new Date(msg.createdAt).getTime();
+    const mismo = aId === lastAutor && (t - lastTime) < 120000;
     lastAutor = aId; lastTime = t;
-
     box.appendChild(buildBubble(msg, mio, !mismo && !mio, !mismo));
   });
 }
 
-/* ══════════════════════════════════════════
-   CONSTRUIR BURBUJA — maneja schemas viejos y nuevos
-══════════════════════════════════════════ */
+/* ════════════════════════
+   CONSTRUIR BURBUJA
+════════════════════════ */
 function buildBubble(msg, mio, showAv, gapTop) {
-  const autor    = (typeof msg.autor === "object" && msg.autor) ? msg.autor : {};
-  const textoMsg = getTexto(msg);
-  const mediaUrl = msg.mediaUrl  || msg.media?.url  || null;
-  const mediaTipo= msg.mediaTipo || msg.media?.tipo  || null;
+  const autor     = (msg.autor && typeof msg.autor==="object") ? msg.autor : {};
+  const textoMsg  = getTexto(msg);
+  const mediaUrl  = msg.mediaUrl  || msg.media?.url  || null;
+  const mediaTipo = msg.mediaTipo || msg.media?.tipo  || null;
 
-  const wrap     = document.createElement("div");
+  const wrap = document.createElement("div");
   wrap.className = `mw ${mio?"mine":"theirs"}${gapTop?" gt":""}`;
-  wrap.id        = `msg-${msg._id}`;
+  wrap.id = `msg-${msg._id}`;
 
-  // ── Avatar del otro ──
+  // Avatar
   if (!mio) {
-    const isVid   = autor.avatarTipo === "video";
-    const avEl    = document.createElement(isVid ? "video" : "img");
-    avEl.src      = autor.avatar || getDefaultAv(autor.nombre);
-    avEl.className= `mav${showAv ? "" : " hidden-av"}`;
-    avEl.alt      = "";
-    if (isVid) { avEl.autoplay = true; avEl.loop = true; avEl.muted = true; avEl.setAttribute("playsinline",""); }
+    const isVid = autor.avatarTipo === "video";
+    const avEl  = document.createElement(isVid ? "video" : "img");
+    avEl.src    = autor.avatar || getDefaultAv(autor.nombre);
+    avEl.className = `mav${showAv?"":" hidden-av"}`;
+    avEl.alt    = "";
+    if (isVid) { avEl.autoplay=true; avEl.loop=true; avEl.muted=true; avEl.setAttribute("playsinline",""); }
     wrap.appendChild(avEl);
   }
 
-  // ── Columna burbuja ──
-  const col    = document.createElement("div");
-  col.className= "mcol";
+  // Columna
+  const col  = document.createElement("div");
+  col.className = "mcol";
+  const bbl  = document.createElement("div");
+  bbl.className = (mediaUrl && !textoMsg) ? "bubble only" : "bubble";
 
-  const bubble = document.createElement("div");
-  const soloM  = mediaUrl && !textoMsg;
-  bubble.className = soloM ? "bubble only" : "bubble";
-
-  // Media
   if (mediaUrl) {
-    if (mediaTipo === "video") {
-      bubble.innerHTML += `<video src="${mediaUrl}" class="bmedia-vid" controls playsinline onclick="event.stopPropagation()"></video>`;
+    if (mediaTipo==="video") {
+      bbl.innerHTML += `<video src="${mediaUrl}" class="bmedia-vid" controls playsinline onclick="event.stopPropagation()"></video>`;
     } else {
-      bubble.innerHTML += `<img src="${mediaUrl}" class="bmedia-img" alt="foto" onclick="verMedia('${mediaUrl}','imagen')"/>`;
+      bbl.innerHTML += `<img src="${mediaUrl}" class="bmedia-img" alt="foto" onclick="verMedia('${mediaUrl}','imagen')"/>`;
     }
   }
-
-  // Texto
   if (textoMsg) {
     const s = document.createElement("span");
     s.textContent = textoMsg;
-    bubble.appendChild(s);
+    bbl.appendChild(s);
   }
+  col.appendChild(bbl);
 
-  col.appendChild(bubble);
-
-  // ── Meta ──
-  const meta   = document.createElement("div");
+  // Meta
+  const meta = document.createElement("div");
   meta.className = "mmeta";
-  const hora   = document.createElement("span");
+  const hora = document.createElement("span");
   hora.className = "mtime"; hora.textContent = horaFmt(msg.createdAt);
   meta.appendChild(hora);
-
   if (mio) {
-    const st     = document.createElement("span");
-    st.id        = `st-${msg._id}`;
+    const st = document.createElement("span");
+    st.id = `st-${msg._id}`;
     st.className = `mst${msg.leido?" leido":""}`;
-    st.innerHTML = msg.leido
-      ? `<i class="ri-check-double-line"></i> Visto`
-      : `<i class="ri-check-line"></i>`;
+    st.innerHTML = msg.leido ? `<i class="ri-check-double-line"></i> Visto` : `<i class="ri-check-line"></i>`;
     meta.appendChild(st);
   }
-
   col.appendChild(meta);
   wrap.appendChild(col);
   return wrap;
 }
 
-/* ══════════════════════════════════════════
-   ENVIAR MENSAJE
-══════════════════════════════════════════ */
+/* ════════════════════════
+   ENVIAR
+════════════════════════ */
 async function enviar() {
-  const inp    = document.getElementById("cinput");
-  const texto  = inp?.value.trim() || "";
+  const inp   = document.getElementById("cinput");
+  const texto = inp?.value.trim() || "";
   if (!texto && !mediaFile) return;
   if (!convActiva) return;
-
   const btn = document.getElementById("btnSnd");
   if (btn) btn.disabled = true;
   emitDejoEsc();
-
   try {
     const fd = new FormData();
     if (texto)     fd.append("texto", texto);
     if (mediaFile) fd.append("media", mediaFile);
-
     const res  = await fetch(`${API}/messages/${convActiva}`, {
-      method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd
+      method:"POST", headers:{Authorization:`Bearer ${token}`}, body:fd
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.mensaje || "Error");
-
-    if (inp) { inp.value = ""; inp.style.height = "auto"; }
+    if (!res.ok) throw new Error(data.mensaje||"Error");
+    if (inp) { inp.value=""; inp.style.height="auto"; }
     limpiarPrev();
     appendMsg(data);
-
-    const conv   = convs.find(c => c._id === convActiva);
-    const otroId = conv?.otro?._id;
-    if (socket?.connected && otroId)
-      socket.emit("enviarMensaje", { convId: convActiva, mensaje: data, destinatarioId: otroId });
-
+    const oid = convs.find(c=>c._id===convActiva)?.otro?._id;
+    if (socket?.connected && oid)
+      socket.emit("enviarMensaje",{ convId:convActiva, mensaje:data, destinatarioId:oid });
     actualizarConvEnLista(convActiva, data);
   } catch(e) {
-    alert("Error al enviar: " + e.message);
+    alert("Error: " + e.message);
   } finally {
     if (btn) btn.disabled = false;
     inp?.focus();
@@ -843,29 +828,25 @@ function appendMsg(msg) {
   const box = document.getElementById("chatMsgs");
   if (!box) return;
   box.querySelector("[style*='Sin mensajes']")?.remove();
-  const mio  = esMio(msg);
-  box.appendChild(buildBubble(msg, mio, !mio, true));
+  box.appendChild(buildBubble(msg, esMio(msg), !esMio(msg), true));
   box.scrollTop = box.scrollHeight;
 }
 
-/* ══════════════════════════════════════════
-   LEÍDO / VISTO
-══════════════════════════════════════════ */
+/* ════════════════════════
+   LEÍDO
+════════════════════════ */
 async function marcarLeido(convId, silencioso) {
   try {
-    await fetch(`${API}/messages/${convId}/read`, {
-      method: "PUT", headers: { Authorization: `Bearer ${token}` }
-    });
+    await fetch(`${API}/messages/${convId}/read`,{method:"PUT",headers:{Authorization:`Bearer ${token}`}});
     const b = document.getElementById(`badge-${convId}`);
     if (b) b.style.display = "none";
     document.querySelector(`#ci-${convId} .cprev`)?.classList.remove("unread");
     if (!silencioso && socket?.connected) {
       const oid = convs.find(c=>c._id===convId)?.otro?._id;
-      if (oid) socket.emit("mensajesLeidos", { convId, destinatarioId: oid });
+      if (oid) socket.emit("mensajesLeidos",{convId,destinatarioId:oid});
     }
   } catch(_) {}
 }
-
 function marcarMsgsVisto() {
   document.querySelectorAll("[id^='st-']").forEach(el => {
     el.className = "mst leido";
@@ -873,44 +854,42 @@ function marcarMsgsVisto() {
   });
 }
 
-/* ══════════════════════════════════════════
+/* ════════════════════════
    TYPING
-══════════════════════════════════════════ */
+════════════════════════ */
 function onTyping() {
   if (!socket?.connected || !convActiva) return;
   const oid = convs.find(c=>c._id===convActiva)?.otro?._id;
   if (!oid) return;
-  socket.emit("escribiendo", { convId: convActiva, nombre: yo.nombre, destinatarioId: oid });
+  socket.emit("escribiendo",{convId:convActiva,nombre:yo.nombre,destinatarioId:oid});
   clearTimeout(typingTimer);
   typingTimer = setTimeout(emitDejoEsc, 1800);
 }
 function emitDejoEsc() {
   if (!socket?.connected || !convActiva) return;
   const oid = convs.find(c=>c._id===convActiva)?.otro?._id;
-  if (oid) socket.emit("dejoDeEscribir", { convId: convActiva, destinatarioId: oid });
+  if (oid) socket.emit("dejoDeEscribir",{convId:convActiva,destinatarioId:oid});
 }
 function setTyping(show) {
   const el = document.getElementById("typingRow");
   if (el) el.style.visibility = show ? "visible" : "hidden";
 }
 
-/* ══════════════════════════════════════════
+/* ════════════════════════
    MEDIA
-══════════════════════════════════════════ */
+════════════════════════ */
 function onMediaSel(input) {
   const f = input.files[0];
   if (!f) return;
   if (f.size > 25*1024*1024) { alert("Máximo 25MB"); input.value=""; return; }
   mediaFile = f;
-  const url  = URL.createObjectURL(f);
-  const bar  = document.getElementById("mprevBar");
+  const url = URL.createObjectURL(f);
+  const bar = document.getElementById("mprevBar");
   if (!bar) return;
   bar.classList.add("show");
   bar.innerHTML = `
     <div class="pthumb">
-      ${f.type.startsWith("video/")
-        ? `<video src="${url}" muted></video>`
-        : `<img src="${url}" alt=""/>`}
+      ${f.type.startsWith("video/") ? `<video src="${url}" muted></video>` : `<img src="${url}" alt=""/>`}
       <button class="pthumb-rm" onclick="limpiarPrev()"><i class="ri-close-line"></i></button>
     </div>
     <small>${f.type.startsWith("video/")?"🎥":"📷"} ${(f.size/1024/1024).toFixed(1)}MB</small>`;
@@ -923,10 +902,10 @@ function limpiarPrev() {
   if (fi)  fi.value = "";
 }
 function verMedia(url, tipo) {
-  const modal = document.getElementById("mmmodal");
-  const inner = document.getElementById("mminner");
-  modal.classList.remove("hidden");
-  inner.innerHTML = tipo==="video"
+  const m = document.getElementById("mmmodal");
+  const i = document.getElementById("mminner");
+  m.classList.remove("hidden");
+  i.innerHTML = tipo==="video"
     ? `<video src="${url}" controls autoplay playsinline onclick="event.stopPropagation()" style="max-width:96vw;max-height:96dvh;border-radius:14px"></video>`
     : `<img src="${url}" onclick="event.stopPropagation()" alt=""/>`;
 }
@@ -935,18 +914,18 @@ function cerrarModal() {
   document.getElementById("mminner").innerHTML = "";
 }
 
-/* ══════════════════════════════════════════
-   LISTA DE CONVS — UPDATE
-══════════════════════════════════════════ */
+/* ════════════════════════
+   LISTA CONVS
+════════════════════════ */
 function actualizarConvEnLista(convId, msg) {
-  const idx = convs.findIndex(c => c._id === convId);
-  if (idx === -1) return;
+  const idx = convs.findIndex(c=>c._id===convId);
+  if (idx===-1) return;
   convs[idx].ultimoMensaje = msg;
   if (!esMio(msg)) convs[idx].noLeidos = (convs[idx].noLeidos||0)+1;
   convs.unshift(convs.splice(idx,1)[0]);
   renderConvList(convs);
   document.querySelectorAll(".conv-item").forEach(el =>
-    el.classList.toggle("active", el.id === `ci-${convActiva}`)
+    el.classList.toggle("active", el.id===`ci-${convActiva}`)
   );
 }
 function subirBadge(convId) {
@@ -957,56 +936,26 @@ function subirBadge(convId) {
   document.querySelector(`#ci-${convId} .cprev`)?.classList.add("unread");
 }
 
-/* ══════════════════════════════════════════
-   INPUT UTILS
-══════════════════════════════════════════ */
-function autoResize(el) {
-  el.style.height = "auto";
-  el.style.height = Math.min(el.scrollHeight, 100) + "px";
-}
-function onKD(e) {
-  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviar(); }
-}
-
-/* ══════════════════════════════════════════
+/* ════════════════════════
    UTILS
-══════════════════════════════════════════ */
-
-// Extrae texto del mensaje — compatible con CUALQUIER schema viejo
+════════════════════════ */
 function getTexto(msg) {
-  const fields = ["texto","mensaje","content","body","message","contenido","text","msg","msj"];
-  for (const f of fields) {
+  for (const f of ["texto","mensaje","content","body","message","contenido","text","msg","msj"]) {
     const v = msg[f];
-    if (v && typeof v === "string" && v.trim() && v !== "undefined" && v !== "null")
-      return v.trim();
+    if (v && typeof v==="string" && v.trim() && v!=="undefined" && v!=="null") return v.trim();
   }
   return "";
 }
-
-// Avatar por defecto con inicial del nombre
-function getDefaultAv(nombre = "?") {
-  const letra = (nombre || "?")[0].toUpperCase();
-  // SVG con fondo oscuro e inicial en verde
+function getDefaultAv(nombre="?") {
+  const l = (nombre||"?")[0].toUpperCase();
   return `data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-      <rect width="40" height="40" rx="20" fill="#1e1e1e"/>
-      <text x="20" y="26" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#5cdb6f">${letra}</text>
-    </svg>`
+    `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" rx="20" fill="#1e1e1e"/><text x="20" y="26" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#5cdb6f">${l}</text></svg>`
   )}`;
 }
-
-function esMio(msg) {
-  return getAutorId(msg) === yo._id;
-}
-function getAutorId(msg) {
-  return String(msg.autor?._id ?? msg.autor ?? "").trim();
-}
-function esc(s="") {
-  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
-function horaFmt(f) {
-  return new Date(f).toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"});
-}
+function esMio(msg) { return getAutorId(msg) === yo._id; }
+function getAutorId(msg) { return String(msg.autor?._id ?? msg.autor ?? "").trim(); }
+function esc(s="") { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function horaFmt(f) { return new Date(f).toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"}); }
 function tiempoCorto(f) {
   const d = (Date.now()-new Date(f))/1000;
   if (d<60)    return "ahora";
@@ -1014,16 +963,13 @@ function tiempoCorto(f) {
   if (d<86400) return `${Math.floor(d/3600)}h`;
   return new Date(f).toLocaleDateString("es",{day:"numeric",month:"short"});
 }
-function ir(url) { window.location.href = url; }
+function autoResize(el) { el.style.height="auto"; el.style.height=Math.min(el.scrollHeight,100)+"px"; }
+function onKD(e) { if (e.key==="Enter" && !e.shiftKey) { e.preventDefault(); enviar(); } }
+function ir(url) { window.location.href=url; }
 
-document.addEventListener("keydown", e => {
-  if (e.key === "Escape") cerrarModal();
-});
-document.getElementById("mmmodal").addEventListener("click", e => {
-  if (e.target.id === "mmmodal") cerrarModal();
-});
+document.addEventListener("keydown", e => { if(e.key==="Escape") cerrarModal(); });
+document.getElementById("mmmodal").addEventListener("click", e => { if(e.target.id==="mmmodal") cerrarModal(); });
 
-/* ══ INIT ══ */
 cargarConversaciones();
 </script>
 </body>
