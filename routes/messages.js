@@ -1,139 +1,163 @@
-const express      = require("express");
-const Conversation = require("../models/Conversation");
+const express  = require("express");
+const multer   = require("multer");
 const Message      = require("../models/Message");
+const Conversation = require("../models/Conversation");
 const User         = require("../models/User");
 const auth         = require("../middleware/authMiddleware");
+const { uploadFile } = require("../utils/gridfs");
 
 const router = express.Router();
 
-// ── GET /api/messages ── Listar conversaciones
-router.get("/", auth, async (req, res) => {
-  try {
-    const convs = await Conversation.find({
-      participantes: req.usuario._id
-    })
-      .sort({ ultimaActividad: -1 })
-      .populate("participantes", "nombre handle avatar avatarTipo")
-      .populate({
-        path:     "ultimoMensaje",
-        populate: { path: "remitente", select: "nombre handle" }
-      })
-      .lean();
-
-    // Añadir cantidad de mensajes no leídos
-    const resultado = await Promise.all(
-      convs.map(async (c) => {
-        const noLeidos = await Message.countDocuments({
-          conversacion: c._id,
-          remitente:    { $ne: req.usuario._id },
-          leido:        false
-        });
-        return { ...c, noLeidos };
-      })
-    );
-
-    res.json(resultado);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ mensaje: "Error al listar conversaciones" });
+const uploadMedia = multer({
+  storage:    multer.memoryStorage(),
+  limits:     { fileSize: 25 * 1024 * 1024 }, // 25 MB
+  fileFilter: (req, file, cb) => {
+    const ok = [
+      "image/jpeg","image/png","image/gif","image/webp",
+      "video/mp4","video/webm"
+    ].includes(file.mimetype);
+    cb(null, ok);
   }
 });
 
-// ── POST /api/messages ── Crear o abrir conversación con un usuario
+// ── GET /api/messages ── lista de conversaciones
+router.get("/", auth, async (req, res) => {
+  try {
+    const convs = await Conversation.find({ participantes: req.usuario._id })
+      .sort({ updatedAt: -1 })
+      .populate("participantes", "nombre handle avatar avatarTipo personalizacion")
+      .populate("ultimoMensaje")
+      .lean();
+
+    const result = await Promise.all(convs.map(async conv => {
+      const otro    = conv.participantes.find(p => p._id.toString() !== req.usuario._id.toString());
+      const noLeidos = await Message.countDocuments({
+        conversacion: conv._id,
+        autor:        { $ne: req.usuario._id },
+        leido:        false
+      });
+      return { ...conv, otro, noLeidos };
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ mensaje: "Error" });
+  }
+});
+
+// ── POST /api/messages ── crear/encontrar conversación
 router.post("/", auth, async (req, res) => {
   try {
     const { usuarioId } = req.body;
-
-    if (!usuarioId)
-      return res.status(400).json({ mensaje: "usuarioId requerido" });
-
+    if (!usuarioId) return res.status(400).json({ mensaje: "usuarioId requerido" });
     if (usuarioId === req.usuario._id.toString())
       return res.status(400).json({ mensaje: "No puedes chatear contigo mismo" });
 
-    const otroUsuario = await User.findById(usuarioId).select("nombre handle avatar avatarTipo");
-    if (!otroUsuario)
-      return res.status(404).json({ mensaje: "Usuario no encontrado" });
+    const otro = await User.findById(usuarioId);
+    if (!otro) return res.status(404).json({ mensaje: "Usuario no encontrado" });
 
-    // Buscar si ya existe una conversación
     let conv = await Conversation.findOne({
-      participantes: { $all: [req.usuario._id, usuarioId], $size: 2 }
-    }).populate("participantes", "nombre handle avatar avatarTipo");
+      participantes: { $all: [req.usuario._id, usuarioId] }
+    }).populate("participantes", "nombre handle avatar avatarTipo personalizacion");
 
     if (!conv) {
-      conv = await Conversation.create({
-        participantes: [req.usuario._id, usuarioId]
-      });
-      conv = await conv.populate("participantes", "nombre handle avatar avatarTipo");
+      conv = await Conversation.create({ participantes: [req.usuario._id, usuarioId] });
+      conv = await conv.populate("participantes", "nombre handle avatar avatarTipo personalizacion");
     }
 
     res.json(conv);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ mensaje: "Error al crear conversación" });
+    res.status(500).json({ mensaje: "Error" });
   }
 });
 
-// ── GET /api/messages/:convId ── Obtener mensajes de una conversación
+// ── GET /api/messages/:convId ── mensajes paginados
 router.get("/:convId", auth, async (req, res) => {
   try {
-    const conv = await Conversation.findById(req.params.convId);
-    if (!conv)
-      return res.status(404).json({ mensaje: "Conversación no encontrada" });
+    const conv = await Conversation.findOne({
+      _id: req.params.convId, participantes: req.usuario._id
+    });
+    if (!conv) return res.status(403).json({ mensaje: "No autorizado" });
 
-    if (!conv.participantes.includes(req.usuario._id))
-      return res.status(403).json({ mensaje: "No tienes acceso a esta conversación" });
+    const pagina = Math.max(parseInt(req.query.pagina) || 1, 1);
+    const limite = Math.min(parseInt(req.query.limite) || 50, 100);
 
-    const mensajes = await Message.find({ conversacion: req.params.convId })
-      .sort({ createdAt: 1 })
-      .populate("remitente", "nombre handle avatar avatarTipo")
+    const messages = await Message.find({ conversacion: req.params.convId })
+      .sort({ createdAt: -1 })
+      .skip((pagina - 1) * limite)
+      .limit(limite)
+      .populate("autor", "nombre handle avatar avatarTipo")
       .lean();
 
-    // Marcar como leídos los mensajes del otro
-    await Message.updateMany(
-      { conversacion: req.params.convId, remitente: { $ne: req.usuario._id }, leido: false },
-      { $set: { leido: true } }
-    );
-
-    res.json(mensajes);
+    res.json(messages.reverse());
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ mensaje: "Error al obtener mensajes" });
+    res.status(500).json({ mensaje: "Error" });
   }
 });
 
-// ── POST /api/messages/:convId/send ── Enviar mensaje
-router.post("/:convId/send", auth, async (req, res) => {
+// ── POST /api/messages/:convId ── enviar mensaje (con media opcional)
+router.post("/:convId", auth, uploadMedia.single("media"), async (req, res) => {
   try {
-    const { contenido } = req.body;
-    if (!contenido?.trim())
-      return res.status(400).json({ mensaje: "El mensaje no puede estar vacío" });
+    const conv = await Conversation.findOne({
+      _id: req.params.convId, participantes: req.usuario._id
+    });
+    if (!conv) return res.status(403).json({ mensaje: "No autorizado" });
 
-    if (contenido.length > 1000)
-      return res.status(400).json({ mensaje: "Máximo 1000 caracteres" });
+    const { texto } = req.body;
+    let media = null;
 
-    const conv = await Conversation.findById(req.params.convId);
-    if (!conv)
-      return res.status(404).json({ mensaje: "Conversación no encontrada" });
+    if (req.file) {
+      const fileId = await uploadFile(req.file);
+      media = {
+        url:  `/api/images/${fileId}`,
+        tipo: req.file.mimetype.startsWith("video/") ? "video" : "imagen"
+      };
+    }
 
-    if (!conv.participantes.map(String).includes(req.usuario._id.toString()))
-      return res.status(403).json({ mensaje: "No tienes acceso" });
+    if (!texto?.trim() && !media)
+      return res.status(400).json({ mensaje: "Mensaje vacío" });
 
-    const mensaje = await Message.create({
+    const msg = await Message.create({
       conversacion: req.params.convId,
-      remitente:    req.usuario._id,
-      contenido:    contenido.trim()
+      autor:        req.usuario._id,
+      texto:        texto?.trim() || "",
+      media
     });
 
-    await Conversation.findByIdAndUpdate(req.params.convId, {
-      ultimoMensaje:   mensaje._id,
-      ultimaActividad: new Date()
-    });
+    await Conversation.findByIdAndUpdate(
+      req.params.convId,
+      { ultimoMensaje: msg._id },
+      { timestamps: false }
+    );
+    await Conversation.findByIdAndUpdate(req.params.convId, { updatedAt: new Date() });
 
-    const populated = await mensaje.populate("remitente", "nombre handle avatar avatarTipo");
+    const populated = await msg.populate("autor", "nombre handle avatar avatarTipo");
     res.status(201).json(populated);
   } catch (err) {
+    if (err.code === "LIMIT_FILE_SIZE")
+      return res.status(400).json({ mensaje: "Máximo 25MB" });
     console.error(err);
-    res.status(500).json({ mensaje: "Error al enviar mensaje" });
+    res.status(500).json({ mensaje: "Error al enviar" });
+  }
+});
+
+// ── PUT /api/messages/:convId/read ── marcar como leído
+router.put("/:convId/read", auth, async (req, res) => {
+  try {
+    const conv = await Conversation.findOne({
+      _id: req.params.convId, participantes: req.usuario._id
+    });
+    if (!conv) return res.status(403).json({ mensaje: "No autorizado" });
+
+    await Message.updateMany(
+      { conversacion: req.params.convId, autor: { $ne: req.usuario._id }, leido: false },
+      { $set: { leido: true } }
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ mensaje: "Error" });
   }
 });
 
