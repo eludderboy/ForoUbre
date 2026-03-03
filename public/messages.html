@@ -2,25 +2,26 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <!-- interactive-widget=resizes-content: el contenido se reduce cuando abre el teclado -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"/>
   <title>Foro Ubre — Mensajes</title>
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg:          #050505;
-      --surface:     #0d0d0d;
-      --surface2:    #161616;
-      --surface3:    #1e1e1e;
-      --border:      rgba(255,255,255,.07);
-      --text:        #f0f0f0;
-      --text-2:      rgba(255,255,255,.6);
-      --text-3:      rgba(255,255,255,.35);
-      --green:       #5cdb6f;
-      --green-dim:   rgba(92,219,111,.12);
-      --red:         #ff4466;
-      --radius:      14px;
-      --radius-full: 9999px;
+      --bg:        #050505;
+      --surface:   #0d0d0d;
+      --surface2:  #161616;
+      --surface3:  #1e1e1e;
+      --border:    rgba(255,255,255,.07);
+      --text:      #f0f0f0;
+      --text-2:    rgba(255,255,255,.6);
+      --text-3:    rgba(255,255,255,.35);
+      --green:     #5cdb6f;
+      --green-dim: rgba(92,219,111,.12);
+      --red:       #ff4466;
+      --radius:    14px;
+      --rf:        9999px;
     }
     html, body {
       height: 100dvh; overflow: hidden;
@@ -28,7 +29,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    /* ══ LAYOUT 3 COLS ══ */
+    /* ══ GRID PRINCIPAL ══ */
     .msg-layout {
       display: grid;
       grid-template-columns: 220px 290px 1fr;
@@ -40,14 +41,14 @@
       background: var(--surface);
       border-right: 1px solid var(--border);
       display: flex; flex-direction: column;
-      padding: 18px 12px; gap: 4px;
-      overflow-y: auto; overflow-x: hidden;
+      padding: 18px 12px 12px; gap: 4px;
+      overflow-y: auto;
     }
     .sidebar::-webkit-scrollbar { display: none; }
     .logo {
       display: flex; align-items: center; gap: 10px;
       font-weight: 900; font-size: 1.1rem; color: var(--green);
-      padding: 4px 8px 16px; flex-shrink: 0;
+      padding: 2px 8px 16px; flex-shrink: 0;
     }
     .logo i { font-size: 1.3rem; }
     .nav-item {
@@ -58,10 +59,9 @@
     }
     .nav-item:hover  { background: var(--surface2); color: var(--text); }
     .nav-item.active { background: var(--green-dim); color: var(--green); font-weight: 700; }
-    .nav-icon { font-size: 1.2rem; width: 24px; text-align: center; }
+    .nav-icon { font-size: 1.2rem; width: 24px; text-align: center; flex-shrink: 0; }
     .sidebar-user {
-      margin-top: auto;
-      border-top: 1px solid var(--border);
+      margin-top: auto; border-top: 1px solid var(--border);
       display: flex; align-items: center; gap: 9px;
       padding: 14px 6px 2px; flex-shrink: 0;
     }
@@ -73,7 +73,7 @@
       background: var(--surface);
       border-right: 1px solid var(--border);
       display: flex; flex-direction: column;
-      overflow: hidden; height: 100dvh;
+      height: 100dvh; overflow: hidden;
     }
     .conv-header {
       padding: 14px 14px 10px;
@@ -81,36 +81,41 @@
       flex-shrink: 0;
     }
     .conv-header h2 { font-size: .97rem; font-weight: 800; margin-bottom: 9px; }
-    .conv-search    { position: relative; }
-    .conv-search i  { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: .95rem; }
-    .conv-search input {
+    .srch { position: relative; }
+    .srch i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: .95rem; pointer-events: none; }
+    .srch input {
       width: 100%; background: var(--surface2);
-      border: 1px solid var(--border); border-radius: var(--radius-full);
+      border: 1px solid var(--border); border-radius: var(--rf);
       color: var(--text); padding: 7px 12px 7px 32px;
       font-size: .82rem; outline: none;
     }
-    .conv-search input::placeholder { color: var(--text-3); }
+    .srch input::placeholder { color: var(--text-3); }
+
     .conv-list { flex: 1; overflow-y: auto; min-height: 0; }
     .conv-list::-webkit-scrollbar { display: none; }
+
     .conv-item {
       display: flex; align-items: center; gap: 10px;
       padding: 9px 12px; cursor: pointer; transition: background .12s;
     }
     .conv-item:hover  { background: var(--surface2); }
     .conv-item.active { background: rgba(92,219,111,.08); }
-    .conv-av { flex-shrink: 0; }
-    .conv-av img, .conv-av video {
-      width: 44px; height: 44px; border-radius: 50%; object-fit: cover; display: block;
+
+    .cav { flex-shrink: 0; }
+    .cav img, .cav video {
+      width: 44px; height: 44px; border-radius: 50%;
+      object-fit: cover; display: block;
     }
-    .conv-info   { flex: 1; min-width: 0; }
-    .conv-name-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
-    .conv-name { font-size: .86rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
-    .conv-time { font-size: .66rem; color: var(--text-3); flex-shrink: 0; }
-    .conv-prev { font-size: .76rem; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; }
-    .conv-prev.unread { color: var(--text); font-weight: 600; }
-    .conv-badge {
+    .conv-info  { flex: 1; min-width: 0; }
+    .cnr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+    .cname { font-size: .86rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+    .ctime { font-size: .66rem; color: var(--text-3); flex-shrink: 0; }
+    .cprev { font-size: .76rem; color: var(--text-3); display: flex; align-items: center; gap: 4px; }
+    .cprev span:first-child { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cprev.unread { color: var(--text); font-weight: 600; }
+    .cbadge {
       background: var(--green); color: #050505;
-      border-radius: var(--radius-full); min-width: 17px; height: 17px;
+      border-radius: var(--rf); min-width: 17px; height: 17px;
       padding: 0 4px; font-size: .62rem; font-weight: 900;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
@@ -125,117 +130,107 @@
     .chat-panel {
       display: flex; flex-direction: column;
       background: var(--bg);
-      height: 100dvh;        /* ← CLAVE: altura fija */
-      overflow: hidden;
-      min-width: 0;
+      height: 100dvh; overflow: hidden; min-width: 0;
     }
-    .chat-empty-screen {
+    .chat-screen-empty {
       flex: 1; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       gap: 14px; color: var(--text-3); text-align: center; padding: 24px;
     }
-    .chat-empty-screen i  { font-size: 3.5rem; }
-    .chat-empty-screen h3 { font-size: .97rem; font-weight: 700; color: var(--text-2); }
-    .chat-empty-screen p  { font-size: .83rem; line-height: 1.6; }
+    .chat-screen-empty i  { font-size: 3.5rem; }
+    .chat-screen-empty h3 { font-size: .97rem; font-weight: 700; color: var(--text-2); }
+    .chat-screen-empty p  { font-size: .83rem; line-height: 1.6; }
 
-    /* Header chat */
-    .chat-header {
+    /* Header del chat activo */
+    .chat-hdr {
       display: flex; align-items: center; gap: 10px;
-      padding: 10px 14px;
+      padding: 10px 14px; min-height: 56px;
       border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-      background: var(--surface);
-      min-height: 58px;
+      background: var(--surface); flex-shrink: 0;
     }
     .btn-back {
-      display: none;
-      background: none; border: none; color: var(--text-2);
-      font-size: 1.25rem; cursor: pointer; padding: 4px;
-      flex-shrink: 0;
+      display: none; background: none; border: none;
+      color: var(--text-2); font-size: 1.25rem;
+      cursor: pointer; padding: 4px; flex-shrink: 0; line-height: 1;
     }
-    .ch-av { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; cursor: pointer; display: block; }
-    .ch-info { flex: 1; min-width: 0; cursor: pointer; }
-    .ch-name { font-weight: 800; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ch-sub  { font-size: .71rem; color: var(--text-3); }
+    .hdr-av {
+      width: 38px; height: 38px; border-radius: 50%;
+      object-fit: cover; flex-shrink: 0; cursor: pointer; display: block;
+    }
+    .hdr-info { flex: 1; min-width: 0; cursor: pointer; }
+    .hdr-name { font-weight: 800; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hdr-sub  { font-size: .71rem; color: var(--text-3); }
 
-    /* ══ MENSAJES — FLEX CRÍTICO ══ */
-    .chat-messages {
-      flex: 1;
-      min-height: 0;          /* ← CLAVE: sin esto, overflow-y no funciona en flex */
-      overflow-y: auto;
-      overflow-x: hidden;
+    /* ══ ÁREA DE MENSAJES — min-height:0 es CRÍTICO ══ */
+    .chat-msgs {
+      flex: 1; min-height: 0;
+      overflow-y: auto; overflow-x: hidden;
       padding: 12px 14px 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
+      display: flex; flex-direction: column; gap: 1px;
     }
-    .chat-messages::-webkit-scrollbar { width: 3px; }
-    .chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
+    .chat-msgs::-webkit-scrollbar { width: 3px; }
+    .chat-msgs::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 4px; }
 
-    .msg-date-sep {
+    .date-sep {
       text-align: center; font-size: .68rem; color: var(--text-3);
-      padding: 8px 0 4px; font-weight: 600;
-      flex-shrink: 0;
+      padding: 8px 0 4px; font-weight: 600; flex-shrink: 0;
     }
 
     /* ══ BURBUJAS ══ */
-    .msg-wrap {
-      display: flex; align-items: flex-end; gap: 6px;
-      max-width: 80%;
+    .mw {
+      display: flex; align-items: flex-end; gap: 6px; max-width: 80%;
     }
-    .msg-wrap.mine   { align-self: flex-end;   flex-direction: row-reverse; }
-    .msg-wrap.theirs { align-self: flex-start; flex-direction: row; }
-    .msg-wrap.gap-top { margin-top: 8px; }
+    .mw.mine   { align-self: flex-end;   flex-direction: row-reverse; }
+    .mw.theirs { align-self: flex-start; flex-direction: row; }
+    .mw.gt     { margin-top: 8px; }
 
-    .msg-av-sm {
-      width: 26px; height: 26px; border-radius: 50%;
+    /* Avatar del remitente */
+    .mav {
+      width: 28px; height: 28px; border-radius: 50%;
       object-fit: cover; flex-shrink: 0; display: block;
+      background: var(--surface3);
     }
-    .msg-av-hidden { visibility: hidden; }
+    .mav.hidden-av { visibility: hidden; }
 
-    .msg-col { display: flex; flex-direction: column; gap: 1px; min-width: 0; max-width: 100%; }
+    .mcol { display: flex; flex-direction: column; gap: 1px; min-width: 0; max-width: 100%; }
 
-    .msg-bubble {
+    /* Burbuja */
+    .bubble {
       padding: 8px 12px;
       border-radius: 18px;
-      font-size: .9rem;
-      line-height: 1.5;
-      word-break: break-word;
-      white-space: pre-wrap;
+      font-size: .9rem; line-height: 1.5;
+      word-break: break-word; white-space: pre-wrap;
     }
-    /* ← COLORES EXPLÍCITOS (no depender de herencia) */
-    .msg-wrap.mine   .msg-bubble {
-      background-color: #5cdb6f;
-      color:            #050505 !important;
+    .mw.mine   .bubble {
+      background: #5cdb6f; color: #050505;
       border-bottom-right-radius: 4px;
     }
-    .msg-wrap.theirs .msg-bubble {
-      background-color: #1e1e1e;
-      color:            #f0f0f0 !important;
+    .mw.theirs .bubble {
+      background: #1e1e1e; color: #f0f0f0;
       border-bottom-left-radius: 4px;
     }
+    .bubble.only { padding: 3px; background: transparent !important; }
 
-    .msg-media-img {
+    /* Media */
+    .bmedia-img {
       max-width: 220px; max-height: 270px;
       border-radius: 10px; display: block;
       cursor: pointer; object-fit: cover;
     }
-    .msg-media-video { max-width: 220px; border-radius: 10px; display: block; }
-    .bubble-only { padding: 3px !important; background-color: transparent !important; }
+    .bmedia-vid { max-width: 220px; border-radius: 10px; display: block; }
 
-    .msg-meta { display: flex; align-items: center; gap: 3px; margin-top: 2px; }
-    .msg-wrap.mine   .msg-meta { justify-content: flex-end; }
-    .msg-wrap.theirs .msg-meta { justify-content: flex-start; }
-    .msg-time { font-size: .63rem; color: var(--text-3); }
-    .msg-wrap.mine .msg-time { color: rgba(0,0,0,.35); }
-    .msg-status { font-size: .63rem; color: rgba(0,0,0,.35); display: flex; align-items: center; gap: 2px; }
-    .msg-status.leido { color: #1a6b2a; font-weight: 700; }
+    /* Meta: hora + estado */
+    .mmeta { display: flex; align-items: center; gap: 3px; margin-top: 2px; }
+    .mw.mine   .mmeta { justify-content: flex-end; }
+    .mw.theirs .mmeta { justify-content: flex-start; }
+    .mtime { font-size: .63rem; color: var(--text-3); }
+    .mw.mine .mtime { color: rgba(0,0,0,.35); }
+    .mst { font-size: .63rem; color: rgba(0,0,0,.35); display: flex; align-items: center; gap: 2px; }
+    .mst.leido { color: #1a6b2a; font-weight: 700; }
 
     /* ══ TYPING ══ */
     .typing-row {
-      padding: 3px 14px;
-      min-height: 20px;
-      flex-shrink: 0;
+      padding: 3px 14px; min-height: 20px; flex-shrink: 0;
       display: flex; align-items: center; gap: 6px;
       font-size: .74rem; color: var(--text-3);
       visibility: hidden;
@@ -250,90 +245,82 @@
     @keyframes tdot { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
 
     /* ══ PREVIEW MEDIA ══ */
-    .media-preview-bar {
-      display: none; /* hidden by default */
-      align-items: center; gap: 10px;
+    .mprev-bar {
+      display: none; align-items: center; gap: 10px;
       padding: 8px 14px 0; flex-shrink: 0;
     }
-    .media-preview-bar.show { display: flex; }
-    .pv-thumb {
+    .mprev-bar.show { display: flex; }
+    .pthumb {
       position: relative; width: 60px; height: 60px;
       border-radius: 10px; overflow: hidden;
       background: var(--surface2); flex-shrink: 0;
     }
-    .pv-thumb img, .pv-thumb video { width: 100%; height: 100%; object-fit: cover; }
-    .pv-remove {
+    .pthumb img, .pthumb video { width: 100%; height: 100%; object-fit: cover; }
+    .pthumb-rm {
       position: absolute; top: 2px; right: 2px;
       background: rgba(0,0,0,.8); border: none; color: #fff;
       width: 18px; height: 18px; border-radius: 50%;
-      font-size: .7rem; cursor: pointer;
+      font-size: .65rem; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
     }
-    .media-preview-bar small { font-size: .73rem; color: var(--text-3); }
+    .mprev-bar small { font-size: .73rem; color: var(--text-3); }
 
-    /* ══ INPUT BAR ══ */
-    .chat-input-bar {
+    /* ══ BARRA DE ESCRITURA ══ */
+    .chat-ibar {
       flex-shrink: 0;
       padding: 8px 12px;
+      /* safe-area para muescas en iPhone */
       padding-bottom: max(10px, env(safe-area-inset-bottom));
       border-top: 1px solid var(--border);
       background: var(--surface);
     }
-    .chat-input-row {
-      display: flex; align-items: flex-end; gap: 7px;
-    }
-    .btn-attach {
+    .irow { display: flex; align-items: flex-end; gap: 7px; }
+    .btn-att {
       background: none; border: none; color: var(--text-3);
       font-size: 1.3rem; cursor: pointer; padding: 6px;
-      border-radius: 50%; transition: all .15s; flex-shrink: 0;
-      line-height: 1;
+      border-radius: 50%; transition: all .15s; flex-shrink: 0; line-height: 1;
     }
-    .btn-attach:hover { color: var(--green); background: var(--green-dim); }
-    .chat-input {
-      flex: 1;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-full);
-      color: #f0f0f0;
-      padding: 9px 15px;
-      font-size: .9rem; outline: none;
-      resize: none; line-height: 1.4;
-      max-height: 100px; overflow-y: auto;
-      transition: border-color .15s;
-      font-family: inherit;
+    .btn-att:hover { color: var(--green); background: var(--green-dim); }
+    .cinput {
+      flex: 1; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: var(--rf);
+      color: #f0f0f0; padding: 9px 15px;
+      font-size: .9rem; outline: none; resize: none;
+      max-height: 100px; overflow-y: auto; line-height: 1.4;
+      transition: border-color .15s; font-family: inherit;
     }
-    .chat-input:focus { border-color: rgba(92,219,111,.4); }
-    .chat-input::placeholder { color: var(--text-3); }
-    .chat-input::-webkit-scrollbar { display: none; }
-    .btn-send {
+    .cinput:focus { border-color: rgba(92,219,111,.4); }
+    .cinput::placeholder { color: var(--text-3); }
+    .cinput::-webkit-scrollbar { display: none; }
+    .btn-snd {
       background: var(--green); border: none; color: #050505;
       width: 38px; height: 38px; border-radius: 50%;
       font-size: 1rem; cursor: pointer; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
       transition: background .15s, transform .1s;
     }
-    .btn-send:hover    { background: #4ec261; }
-    .btn-send:active   { transform: scale(.88); }
-    .btn-send:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-snd:hover    { background: #4ec261; }
+    .btn-snd:active   { transform: scale(.88); }
+    .btn-snd:disabled { opacity: .4; cursor: not-allowed; }
 
     /* ══ MODAL MEDIA ══ */
-    .media-modal {
+    .mmmodal {
       position: fixed; inset: 0; background: rgba(0,0,0,.96);
       z-index: 600; display: flex;
       align-items: center; justify-content: center;
     }
-    .media-modal.hidden { display: none; }
-    .media-modal img   { max-width: 96vw; max-height: 96dvh; border-radius: var(--radius); object-fit: contain; }
-    .media-modal video { max-width: 96vw; max-height: 96dvh; border-radius: var(--radius); }
-    .close-modal {
+    .mmmodal.hidden { display: none; }
+    .mmmodal img   { max-width: 96vw; max-height: 96dvh; border-radius: var(--radius); object-fit: contain; }
+    .mmmodal video { max-width: 96vw; max-height: 96dvh; border-radius: var(--radius); }
+    .mmclose {
       position: absolute; top: 14px; right: 14px;
       background: rgba(255,255,255,.12); border: none; color: #fff;
       width: 38px; height: 38px; border-radius: 50%; font-size: 1.2rem;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
 
-    /* ══ ESTADOS ══ */
-    .msgs-loading {
+    /* ══ LOADING ══ */
+    .msgs-spin {
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; gap: 10px; flex: 1;
       color: var(--text-3); font-size: .85rem;
@@ -342,7 +329,7 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ══ BOTTOM NAV ══ */
-    .bottom-nav { display: none; }
+    .bnav { display: none; }
 
     /* ══ RESPONSIVE ══ */
     @media (max-width: 900px) {
@@ -356,56 +343,52 @@
     }
 
     @media (max-width: 640px) {
-      .msg-layout { grid-template-columns: 1fr; height: 100dvh; }
+      .msg-layout { grid-template-columns: 1fr; }
       .sidebar { display: none; }
 
-      /* Panels como capas fijas */
+      /* ── Conv panel ── */
       .conv-panel {
-        position: fixed; inset: 0; z-index: 10;
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: 100dvh;   /* dvh = actualiza cuando abre teclado */
+        z-index: 10;
         transition: transform .28s cubic-bezier(.4,0,.2,1);
-        height: 100dvh;
       }
-      .conv-panel.off {
-        transform: translateX(-100%);
-        pointer-events: none;
-      }
+      .conv-panel.off { transform: translateX(-100%); pointer-events: none; }
 
+      /* ── Chat panel ── */
+      /* NO ponemos bottom:0 → conflicto con height:100dvh */
       .chat-panel {
-        position: fixed; inset: 0; z-index: 10;
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: 100dvh;   /* ← se encoge con el teclado en browsers modernos */
+        z-index: 10;
         transition: transform .28s cubic-bezier(.4,0,.2,1);
-        height: 100dvh;
       }
-      .chat-panel.off {
-        transform: translateX(100%);
-        pointer-events: none;
-      }
+      .chat-panel.off { transform: translateX(100%); pointer-events: none; }
 
       .btn-back { display: flex !important; }
 
-      .bottom-nav {
-        display: block;
-        position: fixed; bottom: 0; left: 0; right: 0;
+      /* Bottom nav */
+      .bnav {
+        display: block; position: fixed;
+        bottom: 0; left: 0; right: 0;
         background: var(--surface); border-top: 1px solid var(--border);
-        z-index: 20;
+        z-index: 5; /* menor que los paneles */
         padding-bottom: env(safe-area-inset-bottom, 0);
       }
-      .bottom-nav-inner {
+      .bnav-inner {
         display: flex; align-items: center; justify-content: space-around;
         padding: 6px 0 3px;
       }
-      .bottom-nav-btn {
+      .nbtn {
         display: flex; flex-direction: column; align-items: center; gap: 2px;
         color: var(--text-3); text-decoration: none;
         font-size: .6rem; font-weight: 600; padding: 4px 12px;
-        border-radius: var(--radius); transition: color .15s;
+        transition: color .15s;
       }
-      .bottom-nav-btn.active { color: var(--green); }
-      .bottom-nav-btn .bn-icon { font-size: 1.3rem; }
-
-      /* En mobile hay bottom-nav → el chat no debe tapar los 56px de nav */
-      .chat-panel {
-        bottom: 0; /* se solapa con bottom-nav pero el chat tiene su propia barra */
-      }
+      .nbtn.active { color: var(--green); }
+      .nbtn i { font-size: 1.3rem; }
     }
   </style>
 </head>
@@ -415,10 +398,7 @@
 
   <!-- ══ SIDEBAR ══ -->
   <aside class="sidebar">
-    <div class="logo">
-      <i class="ri-leaf-fill"></i>
-      <span>Foro Ubre</span>
-    </div>
+    <div class="logo"><i class="ri-leaf-fill"></i><span>Foro Ubre</span></div>
     <a href="/"             class="nav-item"><span class="nav-icon"><i class="ri-home-5-line"></i></span><span>Inicio</span></a>
     <a href="explore.html"  class="nav-item"><span class="nav-icon"><i class="ri-search-line"></i></span><span>Explorar</span></a>
     <a href="videos.html"   class="nav-item"><span class="nav-icon"><i class="ri-video-line"></i></span><span>Videos</span></a>
@@ -427,14 +407,13 @@
     <div class="sidebar-user" id="sidebarUser"></div>
   </aside>
 
-  <!-- ══ PANEL CONVS ══ -->
+  <!-- ══ PANEL CONVERSACIONES ══ -->
   <div class="conv-panel" id="convPanel">
     <div class="conv-header">
       <h2><i class="ri-message-3-fill" style="color:var(--green);margin-right:5px;vertical-align:middle"></i>Mensajes</h2>
-      <div class="conv-search">
+      <div class="srch">
         <i class="ri-search-line"></i>
-        <input type="text" id="searchConvInput" placeholder="Buscar..."
-               oninput="filtrarConvs(this.value)"/>
+        <input type="text" id="srchInput" placeholder="Buscar..." oninput="filtrarConvs(this.value)"/>
       </div>
     </div>
     <div class="conv-list" id="convList">
@@ -447,7 +426,7 @@
 
   <!-- ══ PANEL CHAT ══ -->
   <div class="chat-panel off" id="chatPanel">
-    <div class="chat-empty-screen">
+    <div class="chat-screen-empty">
       <i class="ri-message-3-line"></i>
       <h3>Tus mensajes</h3>
       <p>Selecciona una conversación<br/>o ve a un perfil y toca "Mensaje".</p>
@@ -456,223 +435,194 @@
 
 </div>
 
-<!-- ══ BOTTOM NAV ══ -->
-<nav class="bottom-nav">
-  <div class="bottom-nav-inner">
-    <a href="/"             class="bottom-nav-btn"><span class="bn-icon"><i class="ri-home-5-line"></i></span><span>Inicio</span></a>
-    <a href="explore.html"  class="bottom-nav-btn"><span class="bn-icon"><i class="ri-search-line"></i></span><span>Buscar</span></a>
-    <a href="videos.html"   class="bottom-nav-btn"><span class="bn-icon"><i class="ri-video-line"></i></span><span>Videos</span></a>
-    <a href="messages.html" class="bottom-nav-btn active"><span class="bn-icon"><i class="ri-message-3-fill"></i></span><span>Mensajes</span></a>
-    <a href="#" class="bottom-nav-btn" id="bnPerfil"><span class="bn-icon"><i class="ri-user-3-line"></i></span><span>Perfil</span></a>
+<!-- ══ BOTTOM NAV MOBILE ══ -->
+<nav class="bnav">
+  <div class="bnav-inner">
+    <a href="/"             class="nbtn"><i class="ri-home-5-line"></i><span>Inicio</span></a>
+    <a href="explore.html"  class="nbtn"><i class="ri-search-line"></i><span>Buscar</span></a>
+    <a href="videos.html"   class="nbtn"><i class="ri-video-line"></i><span>Videos</span></a>
+    <a href="messages.html" class="nbtn active"><i class="ri-message-3-fill"></i><span>Mensajes</span></a>
+    <a href="#" class="nbtn" id="bnPerfil"><i class="ri-user-3-line"></i><span>Perfil</span></a>
   </div>
 </nav>
 
-<!-- ══ MODAL MEDIA FULL ══ -->
-<div class="media-modal hidden" id="mediaModal" onclick="cerrarMediaModal(event)">
-  <button class="close-modal"><i class="ri-close-line"></i></button>
-  <div id="mediaModalInner"></div>
+<!-- ══ MODAL IMAGEN/VIDEO FULL ══ -->
+<div class="mmmodal hidden" id="mmmodal">
+  <button class="mmclose" onclick="cerrarModal()"><i class="ri-close-line"></i></button>
+  <div id="mminner"></div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════════
    INIT
-════════════════════════════════════════ */
+══════════════════════════════════════════ */
 const API   = "/api";
 const token = localStorage.getItem("fu_token");
 const yo    = JSON.parse(localStorage.getItem("fu_usuario") || "null");
 if (!token || !yo) { window.location.href = "/login.html"; }
 
 document.getElementById("navPerfil").href = `profile.html?handle=${yo.handle}`;
-document.getElementById("bnPerfil")?.setAttribute("href", `profile.html?handle=${yo.handle}`);
+const bnp = document.getElementById("bnPerfil");
+if (bnp) bnp.href = `profile.html?handle=${yo.handle}`;
 
 // Sidebar user
-(function buildSidebarUser() {
-  const av = yo.avatarTipo === "video"
-    ? `<video src="${yo.avatar}" autoplay loop muted playsinline
-               style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0"></video>`
-    : `<img src="${yo.avatar}"
-             style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`;
+(function() {
   const el = document.getElementById("sidebarUser");
-  if (el) el.innerHTML = `${av}
-    <div style="min-width:0">
-      <strong>${esc(yo.nombre)}</strong>
-      <small>@${esc(yo.handle)}</small>
-    </div>`;
+  if (!el) return;
+  const av = yo.avatarTipo === "video"
+    ? `<video src="${yo.avatar}" autoplay loop muted playsinline style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0"></video>`
+    : `<img src="${yo.avatar}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`;
+  el.innerHTML = `${av}<div style="min-width:0"><strong>${esc(yo.nombre)}</strong><small>@${esc(yo.handle)}</small></div>`;
 })();
 
-/* ════════════════════════════════════════
-   ESTADO
-════════════════════════════════════════ */
-let convs      = [];
-let convActiva = null;
-let mediaFile  = null;
+/* ══════════════════════════════════════════
+   FIX TECLADO MÓVIL — Visual Viewport API
+   Cuando abre el teclado, ajusta la altura del chat
+══════════════════════════════════════════ */
+function ajustarAlturaMobile() {
+  if (window.innerWidth > 640) return;
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const panel = document.getElementById("chatPanel");
+  if (panel && !panel.classList.contains("off")) {
+    panel.style.height = vv.height + "px";
+    panel.style.top    = vv.offsetTop + "px";
+  }
+}
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", ajustarAlturaMobile);
+  window.visualViewport.addEventListener("scroll", ajustarAlturaMobile);
+}
+
+/* ══════════════════════════════════════════
+   ESTADO GLOBAL
+══════════════════════════════════════════ */
+let convs       = [];
+let convActiva  = null;
+let mediaFile   = null;
 let typingTimer = null;
-let socket     = null;
+let socket      = null;
 
-/* ════════════════════════════════════════
-   SOCKET — polling primero (Railway safe)
-════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   SOCKET — polling primero para Railway
+══════════════════════════════════════════ */
 try {
-  socket = io({
-    transports: ["polling", "websocket"],   // ← polling primero evita errores WSS en Railway
-    upgrade:    true,
-    reconnectionAttempts: 5,
-    reconnectionDelay:    2000
-  });
-
-  socket.on("connect",    () => { socket.emit("registrar", yo._id); });
-  socket.on("reconnect",  () => { socket.emit("registrar", yo._id); });
+  socket = io({ transports: ["polling","websocket"], upgrade: true, reconnectionAttempts: 5 });
+  socket.on("connect",   () => socket.emit("registrar", yo._id));
+  socket.on("reconnect", () => socket.emit("registrar", yo._id));
 
   socket.on("nuevoMensaje", ({ convId, mensaje }) => {
     actualizarConvEnLista(convId, mensaje);
-    if (convActiva === convId) {
-      appendMensaje(mensaje);
-      marcarLeido(convId, true);
-    } else {
-      subirBadge(convId);
-    }
+    if (convActiva === convId) { appendMsg(mensaje); marcarLeido(convId, true); }
+    else subirBadge(convId);
   });
+  socket.on("usuarioEscribiendo",  ({ convId }) => { if (convActiva === convId) setTyping(true); });
+  socket.on("usuarioDejoEscribir", ({ convId }) => { if (convActiva === convId) setTyping(false); });
+  socket.on("mensajesLeidos",      ({ convId }) => { if (convActiva === convId) marcarMsgsVisto(); });
+} catch(e) { console.warn("Socket:", e.message); }
 
-  socket.on("usuarioEscribiendo", ({ convId }) => {
-    if (convActiva === convId) setTyping(true);
-  });
-  socket.on("usuarioDejoEscribir", ({ convId }) => {
-    if (convActiva === convId) setTyping(false);
-  });
-  socket.on("mensajesLeidos", ({ convId }) => {
-    if (convActiva === convId) actualizarVisto();
-  });
-} catch(e) {
-  console.warn("Socket no disponible:", e.message);
-}
-
-/* ════════════════════════════════════════
-   CONVERSACIONES
-════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   CARGAR CONVERSACIONES
+══════════════════════════════════════════ */
 async function cargarConversaciones() {
   try {
-    const res = await fetch(`${API}/messages`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await fetch(`${API}/messages`, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     convs = await res.json();
     renderConvList(convs);
-
-    const paramConv = new URLSearchParams(location.search).get("conv");
-    if (paramConv) abrirConv(paramConv);
+    const p = new URLSearchParams(location.search).get("conv");
+    if (p) abrirConv(p);
   } catch(e) {
-    console.error("cargarConversaciones:", e);
-    document.getElementById("convList").innerHTML = `
-      <div class="conv-empty">
-        <i class="ri-error-warning-line" style="color:var(--red)"></i>
-        Error al cargar
-      </div>`;
+    console.error(e);
+    document.getElementById("convList").innerHTML = `<div class="conv-empty"><i class="ri-error-warning-line" style="color:var(--red)"></i>Error al cargar</div>`;
   }
 }
 
 function renderConvList(lista) {
   const el = document.getElementById("convList");
   if (!lista.length) {
-    el.innerHTML = `
-      <div class="conv-empty">
-        <i class="ri-message-3-line"></i>
-        Sin mensajes aún.<br/>Ve a un perfil → "Mensaje".
-      </div>`;
+    el.innerHTML = `<div class="conv-empty"><i class="ri-message-3-line"></i>Sin mensajes aún.<br/>Ve a un perfil → "Mensaje".</div>`;
     return;
   }
-  el.innerHTML = lista.map(convHTML).join("");
+  el.innerHTML = lista.map(htmlConvItem).join("");
 }
 
-function convHTML(c) {
-  const otro = c.otro || {};
-  const av   = otro.avatarTipo === "video"
-    ? `<video src="${otro.avatar||''}" autoplay loop muted playsinline></video>`
-    : `<img src="${otro.avatar||''}" alt=""/>`;
+function htmlConvItem(c) {
+  const o  = c.otro || {};
+  const av = o.avatarTipo === "video"
+    ? `<video src="${o.avatar||''}" autoplay loop muted playsinline></video>`
+    : `<img src="${o.avatar||getDefaultAv(o.nombre)}" alt="${esc(o.nombre||'')}"/>`;
 
   let prev = "Toca para chatear";
   if (c.ultimoMensaje) {
-    const autoId = (c.ultimoMensaje.autor?._id || c.ultimoMensaje.autor || "").toString();
-    const esM    = autoId === yo._id;
-    const mt     = c.ultimoMensaje.mediaTipo;
-    // Compatibilidad campo viejo (.media.tipo) y nuevo (.mediaTipo)
-    const tipo   = mt || c.ultimoMensaje.media?.tipo;
-    const tx     = c.ultimoMensaje.texto || c.ultimoMensaje.content || c.ultimoMensaje.body || "";
-    if (tipo === "imagen")     prev = (esM ? "Tú: " : "") + "📷 Foto";
-    else if (tipo === "video") prev = (esM ? "Tú: " : "") + "🎥 Video";
-    else if (tx)               prev = (esM ? "Tú: " : "") + tx;
+    const esM  = getAutorId(c.ultimoMensaje) === yo._id;
+    const tipo = c.ultimoMensaje.mediaTipo || c.ultimoMensaje.media?.tipo;
+    const tx   = getTexto(c.ultimoMensaje);
+    if   (tipo === "imagen")     prev = (esM?"Tú: ":"") + "📷 Foto";
+    else if (tipo === "video")   prev = (esM?"Tú: ":"") + "🎥 Video";
+    else if (tx)                 prev = (esM?"Tú: ":"") + tx;
   }
-
   const hora = c.ultimoMensaje?.createdAt ? tiempoCorto(c.ultimoMensaje.createdAt) : "";
 
-  return `
-    <div class="conv-item ${convActiva === c._id ? 'active' : ''}"
-         id="ci-${c._id}" onclick="abrirConv('${c._id}')">
-      <div class="conv-av">${av}</div>
-      <div class="conv-info">
-        <div class="conv-name-row">
-          <span class="conv-name">${esc(otro.nombre || "?")}</span>
-          <span class="conv-time">${hora}</span>
-        </div>
-        <div class="conv-prev ${c.noLeidos > 0 ? 'unread' : ''}">
-          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(prev)}</span>
-          ${c.noLeidos > 0
-            ? `<span class="conv-badge" id="badge-${c._id}">${c.noLeidos}</span>`
-            : `<span id="badge-${c._id}" style="display:none"></span>`}
-        </div>
+  return `<div class="conv-item ${convActiva===c._id?'active':''}" id="ci-${c._id}" onclick="abrirConv('${c._id}')">
+    <div class="cav">${av}</div>
+    <div class="conv-info">
+      <div class="cnr"><span class="cname">${esc(o.nombre||"?")}</span><span class="ctime">${hora}</span></div>
+      <div class="cprev ${c.noLeidos>0?'unread':''}">
+        <span>${esc(prev)}</span>
+        ${c.noLeidos>0?`<span class="cbadge" id="badge-${c._id}">${c.noLeidos}</span>`:`<span id="badge-${c._id}" style="display:none"></span>`}
       </div>
-    </div>`;
+    </div>
+  </div>`;
 }
 
 function filtrarConvs(q) {
   if (!q.trim()) { renderConvList(convs); return; }
   const f = q.toLowerCase();
   renderConvList(convs.filter(c =>
-    (c.otro?.nombre || "").toLowerCase().includes(f) ||
-    (c.otro?.handle || "").toLowerCase().includes(f)
+    (c.otro?.nombre||"").toLowerCase().includes(f) ||
+    (c.otro?.handle||"").toLowerCase().includes(f)
   ));
 }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════════
    ABRIR CONVERSACIÓN
-════════════════════════════════════════ */
+══════════════════════════════════════════ */
 async function abrirConv(convId) {
   convActiva = convId;
   mediaFile  = null;
 
-  // Marcar activa en lista
   document.querySelectorAll(".conv-item").forEach(el =>
     el.classList.toggle("active", el.id === `ci-${convId}`)
   );
 
-  // Mobile: mostrar chat
+  // Mobile: cambiar panel
   document.getElementById("convPanel").classList.add("off");
   const chatEl = document.getElementById("chatPanel");
   chatEl.classList.remove("off");
+  // Ajustar altura para teclado
+  ajustarAlturaMobile();
 
   const conv = convs.find(c => c._id === convId);
   const otro = conv?.otro || {};
 
-  const avHeaderEl = otro.avatarTipo === "video"
-    ? `<video src="${otro.avatar||''}" class="ch-av" autoplay loop muted playsinline
-              onclick="ir('profile.html?handle=${esc(otro.handle)}')"></video>`
-    : `<img src="${otro.avatar||''}" class="ch-av" alt=""
-             onclick="ir('profile.html?handle=${esc(otro.handle)}')"/>`;
+  const avHdr = otro.avatarTipo === "video"
+    ? `<video src="${otro.avatar||''}" class="hdr-av" autoplay loop muted playsinline onclick="ir('profile.html?handle=${esc(otro.handle)}')"></video>`
+    : `<img src="${otro.avatar || getDefaultAv(otro.nombre)}" class="hdr-av" alt="" onclick="ir('profile.html?handle=${esc(otro.handle)}')"/>`;
 
   chatEl.innerHTML = `
-    <div class="chat-header">
-      <button class="btn-back" onclick="volverALista()">
-        <i class="ri-arrow-left-line"></i>
-      </button>
-      ${avHeaderEl}
-      <div class="ch-info" onclick="ir('profile.html?handle=${esc(otro.handle)}')">
-        <div class="ch-name">${esc(otro.nombre || "?")}</div>
-        <div class="ch-sub">@${esc(otro.handle || "")}</div>
+    <div class="chat-hdr">
+      <button class="btn-back" onclick="volverALista()"><i class="ri-arrow-left-line"></i></button>
+      ${avHdr}
+      <div class="hdr-info" onclick="ir('profile.html?handle=${esc(otro.handle)}')">
+        <div class="hdr-name">${esc(otro.nombre||"?")}</div>
+        <div class="hdr-sub">@${esc(otro.handle||"")}</div>
       </div>
     </div>
 
-    <div class="chat-messages" id="chatMessages">
-      <div class="msgs-loading">
+    <div class="chat-msgs" id="chatMsgs">
+      <div class="msgs-spin">
         <i class="ri-loader-4-line spin" style="font-size:1.4rem;color:var(--green)"></i>
         Cargando mensajes...
       </div>
@@ -683,22 +633,21 @@ async function abrirConv(convId) {
       escribiendo...
     </div>
 
-    <div class="media-preview-bar" id="mediaPreviewBar"></div>
+    <div class="mprev-bar" id="mprevBar"></div>
 
-    <div class="chat-input-bar">
-      <div class="chat-input-row">
-        <label for="mediaFileInput" class="btn-attach" title="Foto/Video">
+    <div class="chat-ibar">
+      <div class="irow">
+        <label for="mediaFInput" class="btn-att" title="Foto/Video">
           <i class="ri-image-add-line"></i>
         </label>
-        <input type="file" id="mediaFileInput"
+        <input type="file" id="mediaFInput"
                accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
-               hidden onchange="onMediaSelected(this)"/>
-        <textarea class="chat-input" id="chatInput"
-                  placeholder="Escribe un mensaje..."
-                  rows="1"
-                  oninput="autoResize(this); onTyping()"
-                  onkeydown="onKeydown(event)"></textarea>
-        <button class="btn-send" id="btnSend" onclick="enviarMensaje()">
+               hidden onchange="onMediaSel(this)"/>
+        <textarea class="cinput" id="cinput"
+                  placeholder="Escribe un mensaje..." rows="1"
+                  oninput="autoResize(this);onTyping()"
+                  onkeydown="onKD(event)"></textarea>
+        <button class="btn-snd" id="btnSnd" onclick="enviar()">
           <i class="ri-send-plane-fill"></i>
         </button>
       </div>
@@ -707,172 +656,136 @@ async function abrirConv(convId) {
 
   await cargarMensajes(convId);
   marcarLeido(convId, false);
-  document.getElementById("chatInput")?.focus();
+  document.getElementById("cinput")?.focus();
 }
 
 function volverALista() {
   convActiva = null;
   setTyping(false);
   document.getElementById("convPanel").classList.remove("off");
-  document.getElementById("chatPanel").classList.add("off");
+  const chatEl = document.getElementById("chatPanel");
+  chatEl.classList.add("off");
+  chatEl.style.height = "";
+  chatEl.style.top    = "";
 }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════════
    CARGAR MENSAJES
-════════════════════════════════════════ */
+══════════════════════════════════════════ */
 async function cargarMensajes(convId) {
-  const box = document.getElementById("chatMessages");
+  const box = document.getElementById("chatMsgs");
   if (!box) return;
-
   try {
-    const res = await fetch(`${API}/messages/${convId}?limite=60`, {
+    const res = await fetch(`${API}/messages/${convId}?limite=80`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.mensaje || `HTTP ${res.status}`);
-    }
-
+    if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.mensaje||`HTTP ${res.status}`); }
     const msgs = await res.json();
     box.innerHTML = "";
-
     if (!msgs.length) {
-      box.innerHTML = `
-        <div style="text-align:center;color:var(--text-3);font-size:.83rem;padding:32px 0;margin:auto">
-          <i class="ri-chat-smile-3-line" style="font-size:2rem;display:block;margin-bottom:8px;color:var(--green)"></i>
-          Sin mensajes. ¡Di hola! 👋
-        </div>`;
+      box.innerHTML = `<div style="margin:auto;text-align:center;color:var(--text-3);font-size:.83rem;padding:32px 0"><i class="ri-chat-smile-3-line" style="font-size:2rem;display:block;margin-bottom:8px;color:var(--green)"></i>Sin mensajes. ¡Di hola! 👋</div>`;
       return;
     }
-
     renderMensajes(msgs, box);
-    // Scroll al final
     requestAnimationFrame(() => { box.scrollTop = box.scrollHeight; });
-
   } catch(e) {
     console.error("cargarMensajes:", e);
-    if (box) box.innerHTML = `
-      <div class="msgs-loading" style="color:var(--red)">
-        <i class="ri-error-warning-line" style="font-size:1.5rem"></i>
-        ${esc(e.message)}
-      </div>`;
+    box.innerHTML = `<div class="msgs-spin" style="color:var(--red)"><i class="ri-error-warning-line" style="font-size:1.5rem"></i>${esc(e.message)}</div>`;
   }
 }
 
-/* ════════════════════════════════════════
-   RENDER MENSAJES — SIMPLE Y ROBUSTO
-════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   RENDER MENSAJES
+══════════════════════════════════════════ */
 function renderMensajes(msgs, box) {
   box.innerHTML = "";
-  let lastDateStr = null;
-  let lastAutorId = null;
-  let lastTime    = 0;
+  let lastDate   = null;
+  let lastAutor  = null;
+  let lastTime   = 0;
 
   msgs.forEach(msg => {
-    const mio     = esMio(msg);
-    const autorId = getAutorId(msg);
+    const mio    = esMio(msg);
+    const aId    = getAutorId(msg);
+    const dStr   = new Date(msg.createdAt).toLocaleDateString("es", { weekday:"long", day:"numeric", month:"long" });
 
     // Separador de fecha
-    const msgDate = new Date(msg.createdAt).toLocaleDateString("es", {
-      weekday: "long", day: "numeric", month: "long"
-    });
-    if (msgDate !== lastDateStr) {
-      lastDateStr = msgDate;
-      lastAutorId = null;
-      lastTime    = 0;
-      const sep   = document.createElement("div");
-      sep.className   = "msg-date-sep";
-      sep.textContent = msgDate;
+    if (dStr !== lastDate) {
+      lastDate  = dStr;
+      lastAutor = null; lastTime = 0;
+      const sep = document.createElement("div");
+      sep.className = "date-sep"; sep.textContent = dStr;
       box.appendChild(sep);
     }
 
-    // Agrupación: mismo autor < 2 min = sin gap/avatar
-    const msgTime    = new Date(msg.createdAt).getTime();
-    const mismoBloque = autorId === lastAutorId && (msgTime - lastTime) < 120000;
-    const showAv     = !mismoBloque && !mio;
-    const gapTop     = !mismoBloque;
+    const t        = new Date(msg.createdAt).getTime();
+    const mismo    = aId === lastAutor && (t - lastTime) < 120000;
+    lastAutor = aId; lastTime = t;
 
-    lastAutorId = autorId;
-    lastTime    = msgTime;
-
-    box.appendChild(buildBubble(msg, mio, showAv, gapTop));
+    box.appendChild(buildBubble(msg, mio, !mismo && !mio, !mismo));
   });
 }
 
-/* ════════════════════════════════════════
-   CONSTRUIR BURBUJA
-════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   CONSTRUIR BURBUJA — maneja schemas viejos y nuevos
+══════════════════════════════════════════ */
 function buildBubble(msg, mio, showAv, gapTop) {
-  // ── TEXTO: compatibilidad campo viejo y nuevo ──
-  const textoMsg = msg.texto || msg.content || msg.body || msg.message || msg.contenido || "";
+  const autor    = (typeof msg.autor === "object" && msg.autor) ? msg.autor : {};
+  const textoMsg = getTexto(msg);
+  const mediaUrl = msg.mediaUrl  || msg.media?.url  || null;
+  const mediaTipo= msg.mediaTipo || msg.media?.tipo  || null;
 
-  // ── MEDIA: compatibilidad campo viejo (msg.media.url) y nuevo (msg.mediaUrl) ──
-  const mediaUrl  = msg.mediaUrl  || msg.media?.url  || null;
-  const mediaTipo = msg.mediaTipo || msg.media?.tipo  || null;
+  const wrap     = document.createElement("div");
+  wrap.className = `mw ${mio?"mine":"theirs"}${gapTop?" gt":""}`;
+  wrap.id        = `msg-${msg._id}`;
 
-  const autor = msg.autor || {};
-
-  const wrap = document.createElement("div");
-  wrap.className = `msg-wrap ${mio ? "mine" : "theirs"}${gapTop ? " gap-top" : ""}`;
-  wrap.id = `msg-${msg._id}`;
-
-  // Avatar (solo mensajes ajenos + primer mensaje del bloque)
+  // ── Avatar del otro ──
   if (!mio) {
-    const avEl = document.createElement(autor.avatarTipo === "video" ? "video" : "img");
-    avEl.src   = autor.avatar || "";
-    avEl.className = `msg-av-sm${showAv ? "" : " msg-av-hidden"}`;
-    if (autor.avatarTipo === "video") {
-      avEl.autoplay = true; avEl.loop = true; avEl.muted = true;
-      avEl.setAttribute("playsinline", "");
-    }
+    const isVid   = autor.avatarTipo === "video";
+    const avEl    = document.createElement(isVid ? "video" : "img");
+    avEl.src      = autor.avatar || getDefaultAv(autor.nombre);
+    avEl.className= `mav${showAv ? "" : " hidden-av"}`;
+    avEl.alt      = "";
+    if (isVid) { avEl.autoplay = true; avEl.loop = true; avEl.muted = true; avEl.setAttribute("playsinline",""); }
     wrap.appendChild(avEl);
   }
 
-  // Columna
-  const col = document.createElement("div");
-  col.className = "msg-col";
+  // ── Columna burbuja ──
+  const col    = document.createElement("div");
+  col.className= "mcol";
 
-  // Burbuja
   const bubble = document.createElement("div");
-  const soloMedia = mediaUrl && !textoMsg;
-  bubble.className = soloMedia ? "msg-bubble bubble-only" : "msg-bubble";
+  const soloM  = mediaUrl && !textoMsg;
+  bubble.className = soloM ? "bubble only" : "bubble";
 
   // Media
   if (mediaUrl) {
     if (mediaTipo === "video") {
-      bubble.innerHTML += `
-        <video src="${mediaUrl}" class="msg-media-video"
-               controls playsinline onclick="event.stopPropagation()"></video>`;
+      bubble.innerHTML += `<video src="${mediaUrl}" class="bmedia-vid" controls playsinline onclick="event.stopPropagation()"></video>`;
     } else {
-      bubble.innerHTML += `
-        <img src="${mediaUrl}" class="msg-media-img" alt="foto"
-             onclick="verMedia('${mediaUrl}','imagen')"/>`;
+      bubble.innerHTML += `<img src="${mediaUrl}" class="bmedia-img" alt="foto" onclick="verMedia('${mediaUrl}','imagen')"/>`;
     }
   }
 
   // Texto
   if (textoMsg) {
-    const span = document.createElement("span");
-    span.textContent = textoMsg;
-    bubble.appendChild(span);
+    const s = document.createElement("span");
+    s.textContent = textoMsg;
+    bubble.appendChild(s);
   }
 
   col.appendChild(bubble);
 
-  // Meta (hora + estado)
-  const meta = document.createElement("div");
-  meta.className = "msg-meta";
-
-  const hora = document.createElement("span");
-  hora.className   = "msg-time";
-  hora.textContent = horaFmt(msg.createdAt);
+  // ── Meta ──
+  const meta   = document.createElement("div");
+  meta.className = "mmeta";
+  const hora   = document.createElement("span");
+  hora.className = "mtime"; hora.textContent = horaFmt(msg.createdAt);
   meta.appendChild(hora);
 
   if (mio) {
-    const st = document.createElement("span");
-    st.id        = `status-${msg._id}`;
-    st.className = `msg-status${msg.leido ? " leido" : ""}`;
+    const st     = document.createElement("span");
+    st.id        = `st-${msg._id}`;
+    st.className = `mst${msg.leido?" leido":""}`;
     st.innerHTML = msg.leido
       ? `<i class="ri-check-double-line"></i> Visto`
       : `<i class="ri-check-line"></i>`;
@@ -884,18 +797,18 @@ function buildBubble(msg, mio, showAv, gapTop) {
   return wrap;
 }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════════
    ENVIAR MENSAJE
-════════════════════════════════════════ */
-async function enviarMensaje() {
-  const inputEl = document.getElementById("chatInput");
-  const texto   = inputEl?.value.trim() || "";
+══════════════════════════════════════════ */
+async function enviar() {
+  const inp    = document.getElementById("cinput");
+  const texto  = inp?.value.trim() || "";
   if (!texto && !mediaFile) return;
   if (!convActiva) return;
 
-  const btnSend = document.getElementById("btnSend");
-  if (btnSend) btnSend.disabled = true;
-  emitDejoEscribir();
+  const btn = document.getElementById("btnSnd");
+  if (btn) btn.disabled = true;
+  emitDejoEsc();
 
   try {
     const fd = new FormData();
@@ -903,222 +816,214 @@ async function enviarMensaje() {
     if (mediaFile) fd.append("media", mediaFile);
 
     const res  = await fetch(`${API}/messages/${convActiva}`, {
-      method:  "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body:    fd
+      method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.mensaje || "Error");
 
-    if (inputEl) { inputEl.value = ""; inputEl.style.height = "auto"; }
-    limpiarMediaPreview();
-    appendMensaje(data);
+    if (inp) { inp.value = ""; inp.style.height = "auto"; }
+    limpiarPrev();
+    appendMsg(data);
 
     const conv   = convs.find(c => c._id === convActiva);
     const otroId = conv?.otro?._id;
-    if (socket?.connected && otroId) {
-      socket.emit("enviarMensaje", {
-        convId: convActiva, mensaje: data, destinatarioId: otroId
-      });
-    }
-    actualizarConvEnLista(convActiva, data);
+    if (socket?.connected && otroId)
+      socket.emit("enviarMensaje", { convId: convActiva, mensaje: data, destinatarioId: otroId });
 
+    actualizarConvEnLista(convActiva, data);
   } catch(e) {
     alert("Error al enviar: " + e.message);
   } finally {
-    if (btnSend) btnSend.disabled = false;
-    inputEl?.focus();
+    if (btn) btn.disabled = false;
+    inp?.focus();
   }
 }
 
-function appendMensaje(msg) {
-  const box = document.getElementById("chatMessages");
+function appendMsg(msg) {
+  const box = document.getElementById("chatMsgs");
   if (!box) return;
   box.querySelector("[style*='Sin mensajes']")?.remove();
   const mio  = esMio(msg);
-  const node = buildBubble(msg, mio, !mio, true);
-  box.appendChild(node);
+  box.appendChild(buildBubble(msg, mio, !mio, true));
   box.scrollTop = box.scrollHeight;
 }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════════
    LEÍDO / VISTO
-════════════════════════════════════════ */
+══════════════════════════════════════════ */
 async function marcarLeido(convId, silencioso) {
   try {
     await fetch(`${API}/messages/${convId}/read`, {
       method: "PUT", headers: { Authorization: `Bearer ${token}` }
     });
-    const badge = document.getElementById(`badge-${convId}`);
-    if (badge) badge.style.display = "none";
-    document.querySelector(`#ci-${convId} .conv-prev`)?.classList.remove("unread");
-
+    const b = document.getElementById(`badge-${convId}`);
+    if (b) b.style.display = "none";
+    document.querySelector(`#ci-${convId} .cprev`)?.classList.remove("unread");
     if (!silencioso && socket?.connected) {
-      const conv   = convs.find(c => c._id === convId);
-      const otroId = conv?.otro?._id;
-      if (otroId) socket.emit("mensajesLeidos", { convId, destinatarioId: otroId });
+      const oid = convs.find(c=>c._id===convId)?.otro?._id;
+      if (oid) socket.emit("mensajesLeidos", { convId, destinatarioId: oid });
     }
   } catch(_) {}
 }
 
-function actualizarVisto() {
-  document.querySelectorAll("[id^='status-']").forEach(el => {
-    el.className = "msg-status leido";
+function marcarMsgsVisto() {
+  document.querySelectorAll("[id^='st-']").forEach(el => {
+    el.className = "mst leido";
     el.innerHTML = `<i class="ri-check-double-line"></i> Visto`;
   });
 }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════════
    TYPING
-════════════════════════════════════════ */
+══════════════════════════════════════════ */
 function onTyping() {
   if (!socket?.connected || !convActiva) return;
-  const conv   = convs.find(c => c._id === convActiva);
-  const otroId = conv?.otro?._id;
-  if (!otroId) return;
-  socket.emit("escribiendo", { convId: convActiva, nombre: yo.nombre, destinatarioId: otroId });
+  const oid = convs.find(c=>c._id===convActiva)?.otro?._id;
+  if (!oid) return;
+  socket.emit("escribiendo", { convId: convActiva, nombre: yo.nombre, destinatarioId: oid });
   clearTimeout(typingTimer);
-  typingTimer = setTimeout(emitDejoEscribir, 1800);
+  typingTimer = setTimeout(emitDejoEsc, 1800);
 }
-
-function emitDejoEscribir() {
+function emitDejoEsc() {
   if (!socket?.connected || !convActiva) return;
-  const conv   = convs.find(c => c._id === convActiva);
-  const otroId = conv?.otro?._id;
-  if (otroId) socket.emit("dejoDeEscribir", { convId: convActiva, destinatarioId: otroId });
+  const oid = convs.find(c=>c._id===convActiva)?.otro?._id;
+  if (oid) socket.emit("dejoDeEscribir", { convId: convActiva, destinatarioId: oid });
 }
-
 function setTyping(show) {
   const el = document.getElementById("typingRow");
   if (el) el.style.visibility = show ? "visible" : "hidden";
 }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════════
    MEDIA
-════════════════════════════════════════ */
-function onMediaSelected(input) {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > 25 * 1024 * 1024) { alert("Máximo 25MB"); input.value = ""; return; }
-  mediaFile = file;
-  const url  = URL.createObjectURL(file);
-  const bar  = document.getElementById("mediaPreviewBar");
+══════════════════════════════════════════ */
+function onMediaSel(input) {
+  const f = input.files[0];
+  if (!f) return;
+  if (f.size > 25*1024*1024) { alert("Máximo 25MB"); input.value=""; return; }
+  mediaFile = f;
+  const url  = URL.createObjectURL(f);
+  const bar  = document.getElementById("mprevBar");
   if (!bar) return;
   bar.classList.add("show");
   bar.innerHTML = `
-    <div class="pv-thumb">
-      ${file.type.startsWith("video/")
+    <div class="pthumb">
+      ${f.type.startsWith("video/")
         ? `<video src="${url}" muted></video>`
         : `<img src="${url}" alt=""/>`}
-      <button class="pv-remove" onclick="limpiarMediaPreview()">
-        <i class="ri-close-line"></i>
-      </button>
+      <button class="pthumb-rm" onclick="limpiarPrev()"><i class="ri-close-line"></i></button>
     </div>
-    <small>${file.type.startsWith("video/") ? "🎥" : "📷"} ${(file.size/1024/1024).toFixed(1)}MB</small>
-  `;
+    <small>${f.type.startsWith("video/")?"🎥":"📷"} ${(f.size/1024/1024).toFixed(1)}MB</small>`;
 }
-
-function limpiarMediaPreview() {
+function limpiarPrev() {
   mediaFile = null;
-  const bar   = document.getElementById("mediaPreviewBar");
-  const input = document.getElementById("mediaFileInput");
-  if (bar)   { bar.classList.remove("show"); bar.innerHTML = ""; }
-  if (input) input.value = "";
+  const bar = document.getElementById("mprevBar");
+  const fi  = document.getElementById("mediaFInput");
+  if (bar) { bar.classList.remove("show"); bar.innerHTML=""; }
+  if (fi)  fi.value = "";
 }
-
 function verMedia(url, tipo) {
-  const modal = document.getElementById("mediaModal");
-  const inner = document.getElementById("mediaModalInner");
+  const modal = document.getElementById("mmmodal");
+  const inner = document.getElementById("mminner");
   modal.classList.remove("hidden");
-  if (tipo === "video") {
-    inner.innerHTML = `<video src="${url}" controls autoplay playsinline
-                              onclick="event.stopPropagation()"
-                              style="max-width:96vw;max-height:96dvh;border-radius:14px"></video>`;
-  } else {
-    inner.innerHTML = `<img src="${url}" onclick="event.stopPropagation()" alt=""/>`;
-  }
+  inner.innerHTML = tipo==="video"
+    ? `<video src="${url}" controls autoplay playsinline onclick="event.stopPropagation()" style="max-width:96vw;max-height:96dvh;border-radius:14px"></video>`
+    : `<img src="${url}" onclick="event.stopPropagation()" alt=""/>`;
 }
-function cerrarMediaModal(e) {
-  if (e && e.target !== document.getElementById("mediaModal") &&
-      !e.target.classList.contains("close-modal")) return;
-  document.getElementById("mediaModal").classList.add("hidden");
-  document.getElementById("mediaModalInner").innerHTML = "";
+function cerrarModal() {
+  document.getElementById("mmmodal").classList.add("hidden");
+  document.getElementById("mminner").innerHTML = "";
 }
 
-/* ════════════════════════════════════════
-   LISTA DE CONVS
-════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   LISTA DE CONVS — UPDATE
+══════════════════════════════════════════ */
 function actualizarConvEnLista(convId, msg) {
   const idx = convs.findIndex(c => c._id === convId);
   if (idx === -1) return;
   convs[idx].ultimoMensaje = msg;
-  if (!esMio(msg)) convs[idx].noLeidos = (convs[idx].noLeidos || 0) + 1;
-  convs.unshift(convs.splice(idx, 1)[0]);
+  if (!esMio(msg)) convs[idx].noLeidos = (convs[idx].noLeidos||0)+1;
+  convs.unshift(convs.splice(idx,1)[0]);
   renderConvList(convs);
-  // Restaurar estado activo
   document.querySelectorAll(".conv-item").forEach(el =>
     el.classList.toggle("active", el.id === `ci-${convActiva}`)
   );
 }
-
 function subirBadge(convId) {
-  const badge = document.getElementById(`badge-${convId}`);
-  if (!badge) return;
-  const n = parseInt(badge.textContent || "0") + 1;
-  badge.textContent  = String(n);
-  badge.style.display = "flex";
-  document.querySelector(`#ci-${convId} .conv-prev`)?.classList.add("unread");
+  const b = document.getElementById(`badge-${convId}`);
+  if (!b) return;
+  b.textContent = String(parseInt(b.textContent||"0")+1);
+  b.style.display = "flex";
+  document.querySelector(`#ci-${convId} .cprev`)?.classList.add("unread");
 }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════════
    INPUT UTILS
-════════════════════════════════════════ */
+══════════════════════════════════════════ */
 function autoResize(el) {
   el.style.height = "auto";
   el.style.height = Math.min(el.scrollHeight, 100) + "px";
 }
-function onKeydown(e) {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    enviarMensaje();
-  }
+function onKD(e) {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviar(); }
 }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════════
    UTILS
-════════════════════════════════════════ */
+══════════════════════════════════════════ */
+
+// Extrae texto del mensaje — compatible con CUALQUIER schema viejo
+function getTexto(msg) {
+  const fields = ["texto","mensaje","content","body","message","contenido","text","msg","msj"];
+  for (const f of fields) {
+    const v = msg[f];
+    if (v && typeof v === "string" && v.trim() && v !== "undefined" && v !== "null")
+      return v.trim();
+  }
+  return "";
+}
+
+// Avatar por defecto con inicial del nombre
+function getDefaultAv(nombre = "?") {
+  const letra = (nombre || "?")[0].toUpperCase();
+  // SVG con fondo oscuro e inicial en verde
+  return `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+      <rect width="40" height="40" rx="20" fill="#1e1e1e"/>
+      <text x="20" y="26" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#5cdb6f">${letra}</text>
+    </svg>`
+  )}`;
+}
+
 function esMio(msg) {
-  const id = (msg.autor?._id ?? msg.autor ?? "").toString().trim();
-  return id === yo._id;
+  return getAutorId(msg) === yo._id;
 }
 function getAutorId(msg) {
-  return (msg.autor?._id ?? msg.autor ?? "").toString();
+  return String(msg.autor?._id ?? msg.autor ?? "").trim();
 }
-function esc(s = "") {
-  return String(s)
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+function esc(s="") {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 function horaFmt(f) {
-  return new Date(f).toLocaleTimeString("es", { hour:"2-digit", minute:"2-digit" });
+  return new Date(f).toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"});
 }
 function tiempoCorto(f) {
-  const d = (Date.now() - new Date(f)) / 1000;
-  if (d < 60)    return "ahora";
-  if (d < 3600)  return `${Math.floor(d/60)}m`;
-  if (d < 86400) return `${Math.floor(d/3600)}h`;
-  return new Date(f).toLocaleDateString("es", { day:"numeric", month:"short" });
+  const d = (Date.now()-new Date(f))/1000;
+  if (d<60)    return "ahora";
+  if (d<3600)  return `${Math.floor(d/60)}m`;
+  if (d<86400) return `${Math.floor(d/3600)}h`;
+  return new Date(f).toLocaleDateString("es",{day:"numeric",month:"short"});
 }
 function ir(url) { window.location.href = url; }
 
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") {
-    document.getElementById("mediaModal")?.classList.add("hidden");
-    document.getElementById("mediaModalInner").innerHTML = "";
-  }
+  if (e.key === "Escape") cerrarModal();
+});
+document.getElementById("mmmodal").addEventListener("click", e => {
+  if (e.target.id === "mmmodal") cerrarModal();
 });
 
-/* ════ INIT ════ */
+/* ══ INIT ══ */
 cargarConversaciones();
 </script>
 </body>
