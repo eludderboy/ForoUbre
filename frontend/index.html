@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Foro Ubre</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">🐄 Foro Ubre</div>
+    <nav>
+      <a href="#" class="nav-item active">🏠 Inicio</a>
+      <a href="#" class="nav-item">🔍 Explorar</a>
+      <a href="#" class="nav-item">🔔 Notificaciones</a>
+      <a href="#" class="nav-item">✉️ Mensajes</a>
+      <a href="#" class="nav-item" id="navPerfil">👤 Perfil</a>
+    </nav>
+    <button class="btn-post-sidebar" id="btnNuevoPostSidebar">+ Post</button>
+    <div class="sidebar-user" id="sidebarUser"></div>
+  </aside>
+
+  <!-- FEED -->
+  <main class="feed">
+    <header class="feed-header">
+      <h2>Inicio</h2>
+      <button class="btn-logout" id="btnLogout">Salir</button>
+    </header>
+
+    <!-- Nuevo Post -->
+    <div class="new-post" id="newPostBox">
+      <img src="" class="avatar" id="myAvatar" alt="avatar"/>
+      <div class="post-input-area">
+        <textarea id="postInput" placeholder="¿Qué está pasando?" maxlength="280"></textarea>
+
+        <!-- Preview imagen -->
+        <div id="imagePreviewBox" class="image-preview-box hidden">
+          <button class="remove-image" id="btnRemoveImage">✕</button>
+          <img id="imagePreview" src="" alt="preview"/>
+        </div>
+
+        <div class="post-actions">
+          <div class="post-actions-left">
+            <label for="imageInput" class="btn-icon" title="Subir imagen">📷</label>
+            <input type="file" id="imageInput" accept="image/*" hidden/>
+            <span id="charCount">280</span>
+          </div>
+          <button id="btnPost">Publicar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feed -->
+    <div id="feed">
+      <div class="loading">Cargando posts...</div>
+    </div>
+
+    <div id="loadMoreBox" class="load-more-box hidden">
+      <button id="btnLoadMore">Cargar más</button>
+    </div>
+  </main>
+
+  <!-- TENDENCIAS -->
+  <aside class="trends">
+    <div class="trends-box">
+      <h3>🔥 Tendencias</h3>
+      <ul>
+        <li><span>#ForoUbre</span><small>1.2K posts</small></li>
+        <li><span>#VacaViral</span><small>890 posts</small></li>
+        <li><span>#Leche</span><small>540 posts</small></li>
+        <li><span>#MuuuTech</span><small>310 posts</small></li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Modal imagen grande -->
+  <div class="modal-img" id="modalImg" onclick="cerrarModal()">
+    <img id="modalImgSrc" src="" alt="imagen completa"/>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
