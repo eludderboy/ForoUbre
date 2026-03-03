@@ -10,7 +10,7 @@ const router = express.Router();
 
 const uploadMedia = multer({
   storage:    multer.memoryStorage(),
-  limits:     { fileSize: 25 * 1024 * 1024 }, // 25 MB
+  limits:     { fileSize: 25 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const ok = [
       "image/jpeg","image/png","image/gif","image/webp",
@@ -30,7 +30,9 @@ router.get("/", auth, async (req, res) => {
       .lean();
 
     const result = await Promise.all(convs.map(async conv => {
-      const otro    = conv.participantes.find(p => p._id.toString() !== req.usuario._id.toString());
+      const otro = conv.participantes.find(
+        p => p._id.toString() !== req.usuario._id.toString()
+      );
       const noLeidos = await Message.countDocuments({
         conversacion: conv._id,
         autor:        { $ne: req.usuario._id },
@@ -41,8 +43,8 @@ router.get("/", auth, async (req, res) => {
 
     res.json(result);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ mensaje: "Error" });
+    console.error("GET /messages →", err);
+    res.status(500).json({ mensaje: "Error al cargar conversaciones" });
   }
 });
 
@@ -50,7 +52,8 @@ router.get("/", auth, async (req, res) => {
 router.post("/", auth, async (req, res) => {
   try {
     const { usuarioId } = req.body;
-    if (!usuarioId) return res.status(400).json({ mensaje: "usuarioId requerido" });
+    if (!usuarioId)
+      return res.status(400).json({ mensaje: "usuarioId requerido" });
     if (usuarioId === req.usuario._id.toString())
       return res.status(400).json({ mensaje: "No puedes chatear contigo mismo" });
 
@@ -68,17 +71,20 @@ router.post("/", auth, async (req, res) => {
 
     res.json(conv);
   } catch (err) {
-    console.error(err);
+    console.error("POST /messages →", err);
     res.status(500).json({ mensaje: "Error" });
   }
 });
 
-// ── GET /api/messages/:convId ── mensajes paginados
+// ── GET /api/messages/:convId ── mensajes (FIXED)
 router.get("/:convId", auth, async (req, res) => {
   try {
+    // Verificar que el usuario pertenece a la conversación
     const conv = await Conversation.findOne({
-      _id: req.params.convId, participantes: req.usuario._id
-    });
+      _id:           req.params.convId,
+      participantes: req.usuario._id
+    }).lean();
+
     if (!conv) return res.status(403).json({ mensaje: "No autorizado" });
 
     const pagina = Math.max(parseInt(req.query.pagina) || 1, 1);
@@ -93,62 +99,64 @@ router.get("/:convId", auth, async (req, res) => {
 
     res.json(messages.reverse());
   } catch (err) {
-    res.status(500).json({ mensaje: "Error" });
+    console.error("GET /messages/:convId →", err.message);
+    res.status(500).json({ mensaje: "Error al cargar mensajes", detalle: err.message });
   }
 });
 
-// ── POST /api/messages/:convId ── enviar mensaje (con media opcional)
+// ── POST /api/messages/:convId ── enviar mensaje
 router.post("/:convId", auth, uploadMedia.single("media"), async (req, res) => {
   try {
     const conv = await Conversation.findOne({
-      _id: req.params.convId, participantes: req.usuario._id
-    });
+      _id:           req.params.convId,
+      participantes: req.usuario._id
+    }).lean();
     if (!conv) return res.status(403).json({ mensaje: "No autorizado" });
 
     const { texto } = req.body;
-    let media = null;
+    let mediaUrl  = null;
+    let mediaTipo = null;
 
     if (req.file) {
-      const fileId = await uploadFile(req.file);
-      media = {
-        url:  `/api/images/${fileId}`,
-        tipo: req.file.mimetype.startsWith("video/") ? "video" : "imagen"
-      };
+      const fileId  = await uploadFile(req.file);
+      mediaUrl      = `/api/images/${fileId}`;
+      mediaTipo     = req.file.mimetype.startsWith("video/") ? "video" : "imagen";
     }
 
-    if (!texto?.trim() && !media)
+    if (!texto?.trim() && !mediaUrl)
       return res.status(400).json({ mensaje: "Mensaje vacío" });
 
     const msg = await Message.create({
       conversacion: req.params.convId,
       autor:        req.usuario._id,
       texto:        texto?.trim() || "",
-      media
+      mediaUrl,
+      mediaTipo
     });
 
-    await Conversation.findByIdAndUpdate(
-      req.params.convId,
-      { ultimoMensaje: msg._id },
-      { timestamps: false }
-    );
-    await Conversation.findByIdAndUpdate(req.params.convId, { updatedAt: new Date() });
+    // Actualizar conversación
+    await Conversation.findByIdAndUpdate(req.params.convId, {
+      ultimoMensaje: msg._id,
+      updatedAt:     new Date()
+    });
 
     const populated = await msg.populate("autor", "nombre handle avatar avatarTipo");
     res.status(201).json(populated);
   } catch (err) {
     if (err.code === "LIMIT_FILE_SIZE")
       return res.status(400).json({ mensaje: "Máximo 25MB" });
-    console.error(err);
+    console.error("POST /messages/:convId →", err.message);
     res.status(500).json({ mensaje: "Error al enviar" });
   }
 });
 
-// ── PUT /api/messages/:convId/read ── marcar como leído
+// ── PUT /api/messages/:convId/read ── marcar leído
 router.put("/:convId/read", auth, async (req, res) => {
   try {
     const conv = await Conversation.findOne({
-      _id: req.params.convId, participantes: req.usuario._id
-    });
+      _id:           req.params.convId,
+      participantes: req.usuario._id
+    }).lean();
     if (!conv) return res.status(403).json({ mensaje: "No autorizado" });
 
     await Message.updateMany(
@@ -157,6 +165,7 @@ router.put("/:convId/read", auth, async (req, res) => {
     );
     res.json({ ok: true });
   } catch (err) {
+    console.error("PUT /messages/:convId/read →", err.message);
     res.status(500).json({ mensaje: "Error" });
   }
 });
