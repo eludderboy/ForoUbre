@@ -23,9 +23,11 @@ app.use("/api/auth",  require("./routes/auth"));
 app.use("/api/posts", require("./routes/posts"));
 
 // ── Cualquier ruta no-API devuelve el index ──
-app.get("*", (req, res) => {
+app.use((req, res, next) => {
   if (!req.path.startsWith("/api")) {
     res.sendFile(path.join(__dirname, "public", "index.html"));
+  } else {
+    next();
   }
 });
 
