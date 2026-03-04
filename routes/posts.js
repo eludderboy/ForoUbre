@@ -226,4 +226,63 @@ router.delete("/:id", auth, async (req, res) => {
   }
 });
 
+// ── GET comentarios de un post ──
+router.get("/:id/comments", auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id)
+      .populate({
+        path: "comentarios.autor",
+        select: "nombre handle avatar avatarTipo verificado"
+      })
+      .lean();
+
+    if (!post) return res.status(404).json({ mensaje: "Post no encontrado" });
+
+    // Ordenar del más antiguo al más nuevo
+    const comentarios = (post.comentarios || []).sort(
+      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+    );
+
+    res.json(comentarios);
+  } catch (e) {
+    console.error("GET comments:", e);
+    res.status(500).json({ mensaje: e.message });
+  }
+});
+
+// ── POST nuevo comentario ──
+router.post("/:id/comments", auth, async (req, res) => {
+  try {
+    const { texto } = req.body;
+    if (!texto?.trim()) return res.status(400).json({ mensaje: "El comentario no puede estar vacío" });
+
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ mensaje: "Post no encontrado" });
+
+    const comentario = {
+      autor:     req.usuario._id,
+      texto:     texto.trim(),
+      createdAt: new Date()
+    };
+
+    post.comentarios = post.comentarios || [];
+    post.comentarios.push(comentario);
+    await post.save();
+
+    // Devolver el comentario con datos del autor
+    const postActualizado = await Post.findById(req.params.id)
+      .populate({
+        path: "comentarios.autor",
+        select: "nombre handle avatar avatarTipo verificado"
+      })
+      .lean();
+
+    const nuevoComentario = postActualizado.comentarios[postActualizado.comentarios.length - 1];
+    res.status(201).json(nuevoComentario);
+  } catch (e) {
+    console.error("POST comment:", e);
+    res.status(500).json({ mensaje: e.message });
+  }
+});
+
 module.exports = router;
