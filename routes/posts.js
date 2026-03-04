@@ -1,202 +1,217 @@
-const express  = require("express");
-const multer   = require("multer");
+const express = require("express");
+const multer  = require("multer");
+const mongoose = require("mongoose");
 const Post     = require("../models/Post");
-const Comment  = require("../models/Comment");
+const User     = require("../models/User");
 const auth     = require("../middleware/authMiddleware");
-const { uploadFile, deleteFile } = require("../utils/gridfs");
+const { uploadFile } = require("../utils/gridfs");
 
 const router = express.Router();
 
-// Multer con memoryStorage (no toca el disco)
+// Multer: múltiples campos
 const upload = multer({
-  storage:    multer.memoryStorage(),
-  limits:     { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  storage: multer.memoryStorage(),
+  limits:  { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const ok = [
       "image/jpeg","image/png","image/gif","image/webp",
-      "video/mp4","video/webm"
+      "video/mp4","video/webm",
+      "audio/mpeg","audio/mp3","audio/ogg","audio/wav","audio/webm"
     ].includes(file.mimetype);
     cb(null, ok);
   }
 });
 
-// ── GET /api/posts ──
+const uploadFields = upload.fields([
+  { name: "media",    maxCount: 1  },
+  { name: "imagenes", maxCount: 10 },
+  { name: "audio",    maxCount: 1  }
+]);
+
+/* ── GET / — feed ── */
 router.get("/", auth, async (req, res) => {
   try {
     const pagina = Math.max(parseInt(req.query.pagina) || 1, 1);
     const limite = Math.min(parseInt(req.query.limite) || 20, 50);
-    const skip   = (pagina - 1) * limite;
+    const comunidad = req.query.comunidad || null;
 
-    const posts = await Post.find()
+    const filtro = comunidad ? { comunidad } : {};
+
+    const posts = await Post.find(filtro)
       .sort({ createdAt: -1 })
-      .skip(skip)
+      .skip((pagina - 1) * limite)
       .limit(limite)
-      .populate("autor", "nombre handle avatar avatarTipo personalizacion")
+      .populate("autor", "nombre handle avatar avatarTipo personalizacion verificado")
       .lean();
 
-    const result = await Promise.all(posts.map(async p => ({
+    // Añadir flags útiles para el cliente
+    const result = posts.map(p => ({
       ...p,
-      yaLike:        p.likes.some(id => id.toString() === req.usuario._id.toString()),
-      totalLikes:    p.likes.length,
-      totalComments: await Comment.countDocuments({ post: p._id })
-    })));
+      yaLike:   p.likes.some(id => id.toString() === req.usuario._id.toString()),
+      yaRepost: p.reposts.some(id => id.toString() === req.usuario._id.toString()),
+      // Para polls: ¿ya votó?
+      miVoto: p.tipo === "poll"
+        ? (p.opciones.find(op => op.votos.some(v => v.toString() === req.usuario._id.toString()))?._id?.toString() || null)
+        : null
+    }));
 
     res.json(result);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ mensaje: "Error al obtener posts" });
+  } catch(e) {
+    console.error("GET /posts:", e);
+    res.status(500).json({ mensaje: "Error al cargar posts" });
   }
 });
 
-// ── POST /api/posts ──
-router.post("/", auth, upload.single("imagen"), async (req, res) => {
+/* ── POST / — crear post ── */
+router.post("/", auth, uploadFields, async (req, res) => {
   try {
-    const { texto, stickerUrl } = req.body;
-    let imagen = null;
+    const tipo  = req.body.tipo  || "normal";
+    const texto = (req.body.texto || "").trim();
+    const nsfw  = req.body.nsfw === "true";
+    let post;
 
-    if (req.file) {
-      // Subir a GridFS → guardar URL interna
-      const fileId = await uploadFile(req.file);
-      imagen = `/api/images/${fileId}`;
-    } else if (stickerUrl?.startsWith("https://")) {
-      // Sticker IA: URL externa
-      imagen = stickerUrl;
+    /* ── SLIDESHOW ── */
+    if (tipo === "slideshow") {
+      const imgFiles = req.files?.imagenes || [];
+      if (!imgFiles.length && !texto)
+        return res.status(400).json({ mensaje: "Añade al menos una imagen" });
+
+      const imagenes = await Promise.all(
+        imgFiles.map(async f => {
+          const id = await uploadFile(f);
+          return `/api/images/${id}`;
+        })
+      );
+
+      let audioUrl = null;
+      if (req.files?.audio?.[0]) {
+        const aid = await uploadFile(req.files.audio[0]);
+        audioUrl  = `/api/images/${aid}`;
+      }
+
+      post = await Post.create({
+        autor: req.usuario._id, texto, tipo: "slideshow",
+        imagenes, audioUrl, nsfw
+      });
     }
 
-    if (!texto?.trim() && !imagen)
-      return res.status(400).json({ mensaje: "El post necesita texto o imagen" });
+    /* ── POLL ── */
+    else if (tipo === "poll") {
+      if (!texto) return res.status(400).json({ mensaje: "La encuesta necesita una pregunta" });
 
-    if (texto && texto.length > 280)
-      return res.status(400).json({ mensaje: "Máximo 280 caracteres" });
+      let opciones = [];
+      try { opciones = JSON.parse(req.body.opciones || "[]"); } catch(_) {}
+      opciones = opciones.filter(o => typeof o === "string" && o.trim());
 
-    const post = await Post.create({
-      autor:  req.usuario._id,
-      texto:  texto?.trim() || "",
-      imagen
-    });
+      if (opciones.length < 2)
+        return res.status(400).json({ mensaje: "Mínimo 2 opciones" });
+      if (opciones.length > 6)
+        return res.status(400).json({ mensaje: "Máximo 6 opciones" });
 
-    const populated = await post.populate(
-      "autor", "nombre handle avatar avatarTipo personalizacion"
-    );
+      post = await Post.create({
+        autor: req.usuario._id, texto, tipo: "poll",
+        opciones: opciones.map(t => ({ texto: t.trim(), votos: [] }))
+      });
+    }
 
-    res.status(201).json({
-      ...populated.toObject(),
-      yaLike:        false,
-      totalLikes:    0,
-      totalComments: 0
-    });
-  } catch (err) {
-    if (err.code === "LIMIT_FILE_SIZE")
-      return res.status(400).json({ mensaje: "Archivo máximo 5MB" });
-    console.error(err);
-    res.status(500).json({ mensaje: "Error al crear post" });
+    /* ── NORMAL ── */
+    else {
+      let mediaUrl  = null;
+      let mediaTipo = null;
+      if (req.files?.media?.[0]) {
+        const f   = req.files.media[0];
+        const id  = await uploadFile(f);
+        mediaUrl  = `/api/images/${id}`;
+        mediaTipo = f.mimetype.startsWith("video/") ? "video" : "imagen";
+      }
+      if (!texto && !mediaUrl)
+        return res.status(400).json({ mensaje: "Post vacío" });
+
+      post = await Post.create({
+        autor: req.usuario._id, texto, tipo: "normal",
+        mediaUrl, mediaTipo, nsfw
+      });
+    }
+
+    const populated = await post.populate("autor", "nombre handle avatar avatarTipo personalizacion verificado");
+    res.status(201).json({ ...populated.toObject(), yaLike: false, yaRepost: false, miVoto: null });
+  } catch(e) {
+    if (e.code === "LIMIT_FILE_SIZE") return res.status(400).json({ mensaje: "Archivo muy grande (máx 50MB)" });
+    console.error("POST /posts:", e);
+    res.status(500).json({ mensaje: "Error al publicar" });
   }
 });
 
-// ── DELETE /api/posts/:id ──
-router.delete("/:id", auth, async (req, res) => {
+/* ── POST /:id/votar — votar en encuesta ── */
+router.post("/:id/votar", auth, async (req, res) => {
   try {
+    const { opcion } = req.body;
     const post = await Post.findById(req.params.id);
-    if (!post)
-      return res.status(404).json({ mensaje: "Post no encontrado" });
-    if (post.autor.toString() !== req.usuario._id.toString())
-      return res.status(403).json({ mensaje: "No autorizado" });
+    if (!post)           return res.status(404).json({ mensaje: "Post no encontrado" });
+    if (post.tipo !== "poll") return res.status(400).json({ mensaje: "No es una encuesta" });
 
-    // Eliminar imagen de GridFS si es interna
-    if (post.imagen?.startsWith("/api/images/"))
-      await deleteFile(post.imagen);
+    // Quitar voto anterior (cambiar voto)
+    post.opciones.forEach(op => {
+      op.votos = op.votos.filter(v => v.toString() !== req.usuario._id.toString());
+    });
 
-    await post.deleteOne();
-    await Comment.deleteMany({ post: req.params.id });
+    // Registrar nuevo voto
+    const opt = post.opciones.id(opcion);
+    if (!opt) return res.status(404).json({ mensaje: "Opción no encontrada" });
+    opt.votos.push(req.usuario._id);
 
-    res.json({ mensaje: "Post eliminado" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ mensaje: "Error al eliminar" });
+    await post.save();
+
+    const miVoto = opcion;
+    res.json({ opciones: post.opciones, miVoto });
+  } catch(e) {
+    console.error("POST /votar:", e);
+    res.status(500).json({ mensaje: "Error al votar" });
   }
 });
 
-// ── POST /api/posts/:id/like ──
+/* ── POST /:id/like ── */
 router.post("/:id/like", auth, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ mensaje: "No encontrado" });
-
     const uid = req.usuario._id.toString();
-    const idx = post.likes.map(String).indexOf(uid);
+    const idx = post.likes.findIndex(l => l.toString() === uid);
     if (idx === -1) post.likes.push(req.usuario._id);
     else            post.likes.splice(idx, 1);
-
     await post.save();
-    res.json({ yaLike: idx === -1, totalLikes: post.likes.length });
-  } catch (err) {
-    console.error(err);
+    res.json({ likes: post.likes.length, yaLike: idx === -1 });
+  } catch(e) {
     res.status(500).json({ mensaje: "Error" });
   }
 });
 
-// ── GET /api/posts/:id/comments ──
-router.get("/:id/comments", auth, async (req, res) => {
+/* ── POST /:id/repost ── */
+router.post("/:id/repost", auth, async (req, res) => {
   try {
-    const comments = await Comment.find({ post: req.params.id })
-      .sort({ createdAt: 1 })
-      .populate("autor", "nombre handle avatar avatarTipo personalizacion")
-      .lean();
-
-    res.json(comments.map(c => ({
-      ...c,
-      yaLike:     c.likes.some(id => id.toString() === req.usuario._id.toString()),
-      totalLikes: c.likes.length
-    })));
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ mensaje: "Error al cargar comentarios" });
-  }
-});
-
-// ── POST /api/posts/:id/comments ──
-router.post("/:id/comments", auth, async (req, res) => {
-  try {
-    const { texto } = req.body;
-    if (!texto?.trim())
-      return res.status(400).json({ mensaje: "Comentario vacío" });
-    if (texto.length > 280)
-      return res.status(400).json({ mensaje: "Máximo 280 caracteres" });
-
     const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ mensaje: "Post no encontrado" });
-
-    const comment = await Comment.create({
-      post:  req.params.id,
-      autor: req.usuario._id,
-      texto: texto.trim()
-    });
-
-    const populated = await comment.populate(
-      "autor", "nombre handle avatar avatarTipo personalizacion"
-    );
-
-    res.status(201).json({ ...populated.toObject(), yaLike: false, totalLikes: 0 });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ mensaje: "Error al comentar" });
+    if (!post) return res.status(404).json({ mensaje: "No encontrado" });
+    const uid = req.usuario._id.toString();
+    const idx = post.reposts.findIndex(r => r.toString() === uid);
+    if (idx === -1) post.reposts.push(req.usuario._id);
+    else            post.reposts.splice(idx, 1);
+    await post.save();
+    res.json({ reposts: post.reposts.length, yaRepost: idx === -1 });
+  } catch(e) {
+    res.status(500).json({ mensaje: "Error" });
   }
 });
 
-// ── POST /api/posts/comments/:commentId/like ──
-router.post("/comments/:commentId/like", auth, async (req, res) => {
+/* ── DELETE /:id ── */
+router.delete("/:id", auth, async (req, res) => {
   try {
-    const comment = await Comment.findById(req.params.commentId);
-    if (!comment) return res.status(404).json({ mensaje: "No encontrado" });
-
-    const uid = req.usuario._id.toString();
-    const idx = comment.likes.map(String).indexOf(uid);
-    if (idx === -1) comment.likes.push(req.usuario._id);
-    else            comment.likes.splice(idx, 1);
-
-    await comment.save();
-    res.json({ yaLike: idx === -1, totalLikes: comment.likes.length });
-  } catch (err) {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ mensaje: "No encontrado" });
+    if (post.autor.toString() !== req.usuario._id.toString())
+      return res.status(403).json({ mensaje: "No autorizado" });
+    await post.deleteOne();
+    res.json({ ok: true });
+  } catch(e) {
     res.status(500).json({ mensaje: "Error" });
   }
 });
