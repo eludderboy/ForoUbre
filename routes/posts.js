@@ -29,36 +29,46 @@ const uploadFields = upload.fields([
 ]);
 
 /* ── GET / — feed ── */
+// Reemplaza el bloque GET / en routes/posts.js
 router.get("/", auth, async (req, res) => {
   try {
-    const pagina = Math.max(parseInt(req.query.pagina) || 1, 1);
-    const limite = Math.min(parseInt(req.query.limite) || 20, 50);
+    const pagina    = Math.max(parseInt(req.query.pagina) || 1, 1);
+    const limite    = Math.min(parseInt(req.query.limite) || 20, 50);
     const comunidad = req.query.comunidad || null;
-
-    const filtro = comunidad ? { comunidad } : {};
+    const filtro    = comunidad ? { comunidad } : {};
 
     const posts = await Post.find(filtro)
       .sort({ createdAt: -1 })
       .skip((pagina - 1) * limite)
       .limit(limite)
-      .populate("autor", "nombre handle avatar avatarTipo personalizacion verificado")
+      .populate("autor", "nombre handle avatar avatarTipo verificado")
       .lean();
 
-    // Añadir flags útiles para el cliente
-    const result = posts.map(p => ({
-      ...p,
-      yaLike:   p.likes.some(id => id.toString() === req.usuario._id.toString()),
-      yaRepost: p.reposts.some(id => id.toString() === req.usuario._id.toString()),
-      // Para polls: ¿ya votó?
-      miVoto: p.tipo === "poll"
-        ? (p.opciones.find(op => op.votos.some(v => v.toString() === req.usuario._id.toString()))?._id?.toString() || null)
-        : null
-    }));
+    const uid = req.usuario._id.toString();
+
+    const result = posts.map(p => {
+      // ← || [] para posts viejos que no tienen esos campos
+      const likes   = p.likes   || [];
+      const reposts = p.reposts || [];
+      const opciones= p.opciones|| [];
+
+      return {
+        ...p,
+        likes, reposts, opciones,
+        yaLike:   likes.some(id  => id.toString()  === uid),
+        yaRepost: reposts.some(id => id.toString() === uid),
+        miVoto: p.tipo === "poll"
+          ? (opciones.find(op =>
+              (op.votos || []).some(v => v.toString() === uid)
+            )?._id?.toString() || null)
+          : null
+      };
+    });
 
     res.json(result);
   } catch(e) {
     console.error("GET /posts:", e);
-    res.status(500).json({ mensaje: "Error al cargar posts" });
+    res.status(500).json({ mensaje: e.message });
   }
 });
 
