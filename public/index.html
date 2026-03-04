@@ -223,7 +223,15 @@ nav{display:flex;flex-direction:column;gap:2px}
 .slide-wrap{position:relative;overflow:hidden;border-radius:var(--radius);background:#000;margin-bottom:10px;touch-action:pan-y;user-select:none;border:1px solid var(--border)}
 .slide-track{display:flex;transition:transform .32s cubic-bezier(.4,0,.2,1);will-change:transform}
 .slide-item{flex-shrink:0;width:100%}
-.slide-item img{width:100%;max-height:460px;object-fit:contain;display:block;cursor:zoom-in}
+.slide-item img {
+  width: 100%;
+  max-height: 460px;
+  min-height: 80px;        /* ← evita colapso a 0 */
+  object-fit: contain;
+  display: block;
+  cursor: zoom-in;
+  background: #111;        /* ← visible mientras carga */
+}
 .slide-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.6);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--transition);z-index:3}
 .slide-btn:hover{background:rgba(0,0,0,.85)}
 .slide-btn.prev{left:8px}
@@ -947,24 +955,39 @@ function renderComentarioHTML(c) {
 
 /* ── SLIDESHOW ── */
 function buildSlide(p) {
-  const id=`sl${p._id}`, imgs=p.imagenes||[];
-  const items=imgs.map((url,i)=>`
+  const id   = `sl${p._id}`;
+  const imgs = p.imagenes || [];
+
+  const items = imgs.map((url, i) => `
     <div class="slide-item">
-      ${(p.nsfw&&i===0)
-        ?`<div class="nsfw-wrap"><img src="${url}" style="width:100%;max-height:460px;object-fit:contain"/><div class="nsfw-overlay" onclick="quitarNSFW(this)"><i class="ri-eye-off-line"></i><p>Contenido sensible</p><small>Toca para ver</small></div></div>`
-        :`<img src="${url}" loading="lazy" onclick="verFull('${url}')" alt="foto ${i+1}"/>`}
+      ${(p.nsfw && i === 0)
+        ? `<div class="nsfw-wrap">
+             <img src="${url}" style="width:100%;max-height:460px;object-fit:contain;display:block"/>
+             <div class="nsfw-overlay" onclick="quitarNSFW(this)">
+               <i class="ri-eye-off-line"></i><p>Contenido sensible</p><small>Toca para ver</small>
+             </div>
+           </div>`
+        : `<img src="${url}"
+                style="width:100%;max-height:460px;object-fit:contain;display:block;cursor:zoom-in"
+                onclick="verFull('${url}')"
+                alt="foto ${i + 1}"/>`}
     </div>`).join("");
+
   return `
     <div class="slide-wrap" id="${id}" data-idx="0" data-total="${imgs.length}">
       <div class="slide-track" id="${id}t">${items}</div>
-      ${imgs.length>1?`
+      ${imgs.length > 1 ? `
         <button class="slide-btn prev" onclick="sMov('${id}',-1)"><i class="ri-arrow-left-s-line"></i></button>
         <button class="slide-btn next" onclick="sMov('${id}',1)"><i class="ri-arrow-right-s-line"></i></button>
-        <div class="slide-dots" id="${id}d">${imgs.map((_,i)=>`<span class="dot ${i===0?"active":""}"></span>`).join("")}</div>
-        <div class="slide-counter"><span id="${id}c">1</span>/${imgs.length}</div>`:""}
-      ${p.audioUrl?`
-        <button class="slide-audio-btn" id="${id}ab" onclick="toggleAudio('${id}')"><i class="ri-music-line"></i></button>
-        <audio id="${id}au" src="${p.audioUrl}" loop></audio>`:""}
+        <div class="slide-dots" id="${id}d">
+          ${imgs.map((_,i) => `<span class="dot ${i===0?"active":""}"></span>`).join("")}
+        </div>
+        <div class="slide-counter"><span id="${id}c">1</span>/${imgs.length}</div>` : ""}
+      ${p.audioUrl ? `
+        <button class="slide-audio-btn" id="${id}ab" onclick="toggleAudio('${id}')">
+          <i class="ri-music-line"></i>
+        </button>
+        <audio id="${id}au" src="${p.audioUrl}" loop></audio>` : ""}
     </div>`;
 }
 function sMov(id,dir) {
