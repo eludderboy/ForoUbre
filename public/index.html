@@ -5,13 +5,589 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Foro Ubre</title>
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css"/>
+  <style>
+    /* ══════════════════════════════════════
+       BASE
+    ══════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:          #050505;
+      --surface:     #0d0d0d;
+      --surface2:    #161616;
+      --surface3:    #1e1e1e;
+      --border:      rgba(255,255,255,.07);
+      --text:        #f0f0f0;
+      --text-2:      rgba(255,255,255,.6);
+      --text-3:      rgba(255,255,255,.35);
+      --green:       #5cdb6f;
+      --green-dim:   rgba(92,219,111,.12);
+      --green-subtle:rgba(92,219,111,.08);
+      --red:         #ff4466;
+      --radius:      14px;
+      --rf:          9999px;
+    }
+    html, body {
+      min-height: 100dvh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    /* ══════════════════════════════════════
+       LAYOUT
+    ══════════════════════════════════════ */
+    .layout {
+      display: grid;
+      grid-template-columns: 240px 1fr 300px;
+      max-width: 1100px;
+      margin: 0 auto;
+      min-height: 100dvh;
+    }
+
+    /* ══════════════════════════════════════
+       SIDEBAR IZQUIERDO
+    ══════════════════════════════════════ */
+    .sidebar {
+      position: sticky; top: 0; height: 100dvh;
+      display: flex; flex-direction: column;
+      padding: 20px 14px; gap: 2px;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+    }
+    .sidebar::-webkit-scrollbar { display: none; }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 900; font-size: 1.2rem; color: var(--green);
+      padding: 6px 10px 20px; flex-shrink: 0;
+    }
+    .logo i { font-size: 1.5rem; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px; border-radius: var(--radius);
+      color: var(--text-2); text-decoration: none;
+      font-size: .95rem; font-weight: 500;
+      transition: all .15s; position: relative;
+    }
+    .nav-item:hover  { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--green-dim); color: var(--green); font-weight: 700; }
+    .nav-icon { font-size: 1.25rem; width: 26px; text-align: center; flex-shrink: 0; }
+    .nav-badge {
+      background: var(--green); color: #050505;
+      border-radius: var(--rf); min-width: 18px; height: 18px;
+      padding: 0 4px; font-size: .62rem; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      margin-left: auto;
+    }
+    .nav-badge.hidden { display: none; }
+    .btn-post-sidebar {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--green); color: #050505;
+      border: none; border-radius: var(--rf);
+      padding: 12px; font-size: .95rem; font-weight: 800;
+      cursor: pointer; margin-top: 10px; transition: background .15s;
+      width: 100%;
+    }
+    .btn-post-sidebar:hover { background: #4ec261; }
+    .btn-post-sidebar i { font-size: 1.1rem; }
+    .sidebar-user {
+      margin-top: auto; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 6px 4px; flex-shrink: 0;
+    }
+    .sidebar-user strong { font-size: .85rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-user small  { color: var(--text-3); font-size: .72rem; }
+
+    /* ══════════════════════════════════════
+       FEED CENTRAL
+    ══════════════════════════════════════ */
+    .feed-col {
+      border-right: 1px solid var(--border);
+      min-height: 100dvh;
+    }
+    .feed-header {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+      background: rgba(5,5,5,.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .feed-header h2 { font-size: 1rem; font-weight: 800; }
+    .btn-logout {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: 1px solid var(--border);
+      border-radius: var(--rf); color: var(--text-3);
+      padding: 6px 12px; font-size: .8rem; cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+    /* ══ COMPOSER ══ */
+    .new-post {
+      display: flex; gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .post-input-area { flex: 1; min-width: 0; }
+    .post-input-area textarea {
+      width: 100%; background: none; border: none;
+      color: var(--text); font-size: .97rem; resize: none;
+      outline: none; line-height: 1.5; font-family: inherit;
+      max-height: 160px; overflow-y: auto;
+    }
+    .post-input-area textarea::placeholder { color: var(--text-3); }
+    .post-input-area textarea::-webkit-scrollbar { display: none; }
+    .image-preview-box {
+      position: relative; margin-top: 8px;
+      border-radius: var(--radius); overflow: hidden;
+      background: #000;
+    }
+    .image-preview-box.hidden { display: none; }
+    .image-preview-box img, .image-preview-box video {
+      width: 100%; max-height: 280px; object-fit: contain; display: block;
+    }
+    .remove-image {
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(0,0,0,.75); border: none; color: #fff;
+      width: 28px; height: 28px; border-radius: 50%;
+      font-size: .9rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .post-actions {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 10px; padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .post-actions-left { display: flex; align-items: center; gap: 6px; }
+    .btn-icon {
+      background: none; border: none; color: var(--green);
+      font-size: 1.2rem; cursor: pointer; padding: 5px;
+      border-radius: 50%; transition: background .15s; line-height: 1;
+    }
+    .btn-icon:hover { background: var(--green-dim); }
+    .btn-sticker {
+      background: none; border: 1px solid var(--border);
+      border-radius: var(--rf); color: var(--text-3);
+      padding: 5px 11px; font-size: .78rem; cursor: pointer;
+      display: flex; align-items: center; gap: 5px;
+      transition: all .15s;
+    }
+    .btn-sticker:hover { border-color: var(--green); color: var(--green); }
+    .char-count { font-size: .78rem; color: var(--text-3); padding: 0 4px; }
+    .char-count.warn  { color: #f0a500; }
+    .char-count.limit { color: var(--red); }
+    #btnPost {
+      background: var(--green); color: #050505;
+      border: none; border-radius: var(--rf);
+      padding: 8px 18px; font-size: .88rem; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+      transition: background .15s;
+    }
+    #btnPost:hover    { background: #4ec261; }
+    #btnPost:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ══ POST CARD ══ */
+    .post-card {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background .12s;
+    }
+    .post-card:hover { background: rgba(255,255,255,.015); }
+    .post-header {
+      display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px;
+    }
+    .post-av {
+      width: 40px; height: 40px; border-radius: 50%;
+      object-fit: cover; flex-shrink: 0; display: block;
+      background: var(--surface3); cursor: pointer;
+    }
+    .post-meta { flex: 1; min-width: 0; cursor: pointer; }
+    .post-name {
+      font-weight: 700; font-size: .9rem;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .post-handle { font-size: .78rem; color: var(--text-3); }
+    .post-body   { font-size: .92rem; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+    .post-menu-btn {
+      background: none; border: none; color: var(--text-3);
+      font-size: 1rem; cursor: pointer; padding: 4px;
+      border-radius: 50%; transition: all .15s; flex-shrink: 0;
+    }
+    .post-menu-btn:hover { color: var(--red); background: rgba(255,68,102,.1); }
+    .post-acts {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 10px;
+    }
+    .pact {
+      display: flex; align-items: center; gap: 5px;
+      background: none; border: none; color: var(--text-3);
+      font-size: .82rem; cursor: pointer; padding: 5px 9px;
+      border-radius: var(--rf); transition: all .15s;
+    }
+    .pact i { font-size: 1rem; }
+    .pact:hover       { background: var(--surface2); color: var(--text-2); }
+    .pact.liked       { color: var(--red); }
+    .pact.liked:hover { background: rgba(255,68,102,.1); }
+    .pact.reposted    { color: var(--green); }
+
+    /* ══ LOADING / EMPTY ══ */
+    .loading {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; padding: 40px; color: var(--text-3); font-size: .9rem;
+    }
+    .spin { display: inline-block; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .load-more-box { text-align: center; padding: 16px; }
+    .load-more-box.hidden { display: none; }
+    .load-more-box button {
+      background: none; border: 1px solid var(--border);
+      border-radius: var(--rf); color: var(--text-3);
+      padding: 8px 20px; font-size: .84rem; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: all .15s;
+    }
+    .load-more-box button:hover { border-color: var(--green); color: var(--green); }
+
+    /* ══════════════════════════════════════
+       SIDEBAR DERECHO
+    ══════════════════════════════════════ */
+    .right-col {
+      position: sticky; top: 0; height: 100dvh;
+      overflow-y: auto; padding: 16px 14px; display: flex; flex-direction: column; gap: 14px;
+    }
+    .right-col::-webkit-scrollbar { display: none; }
+    .trends-box {
+      background: var(--surface); border-radius: var(--radius);
+      padding: 14px;
+    }
+    .trends-box h3 {
+      font-size: .88rem; font-weight: 800; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 6px; color: var(--text);
+    }
+    .trends-box ul { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+    .trends-box li {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 8px; border-radius: 10px; cursor: pointer;
+      transition: background .12s;
+    }
+    .trends-box li:hover { background: var(--surface2); }
+    .trends-box li span { font-size: .85rem; font-weight: 600; color: var(--green); }
+    .trends-box li small { font-size: .72rem; color: var(--text-3); }
+
+    /* Sugerencias */
+    .sug-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 0; border-bottom: 1px solid var(--border);
+    }
+    .sug-item:last-child { border-bottom: none; }
+    .sug-av { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .sug-info { flex: 1; min-width: 0; }
+    .sug-name { font-size: .84rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sug-handle { font-size: .72rem; color: var(--text-3); }
+    .btn-follow {
+      background: var(--green); color: #050505;
+      border: none; border-radius: var(--rf);
+      padding: 5px 12px; font-size: .76rem; font-weight: 800;
+      cursor: pointer; flex-shrink: 0; transition: background .15s;
+    }
+    .btn-follow:hover { background: #4ec261; }
+
+    /* Videos recientes */
+    .vid-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 6px 0; cursor: pointer; border-bottom: 1px solid var(--border);
+    }
+    .vid-item:last-child { border-bottom: none; }
+    .vid-thumb {
+      width: 52px; height: 36px; border-radius: 6px;
+      object-fit: cover; flex-shrink: 0;
+    }
+    .vid-info { flex: 1; min-width: 0; }
+    .vid-title { font-size: .78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vid-sub   { font-size: .68rem; color: var(--text-3); }
+
+    /* ══════════════════════════════════════
+       BOTTOM NAV (mobile)
+    ══════════════════════════════════════ */
+    .bottom-nav { display: none; }
+
+    /* ══════════════════════════════════════
+       MODALES — BASE
+    ══════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 400;
+      background: rgba(0,0,0,.75);
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); width: 100%; max-width: 520px;
+      max-height: 90dvh; overflow-y: auto; padding: 20px;
+    }
+    .modal-box::-webkit-scrollbar { display: none; }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .modal-header h3 {
+      font-size: 1rem; font-weight: 800;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .btn-cerrar-modal, .modal-close {
+      background: none; border: none; color: var(--text-3);
+      font-size: 1.3rem; cursor: pointer; padding: 4px;
+      border-radius: 50%; transition: all .15s; line-height: 1;
+    }
+    .btn-cerrar-modal:hover, .modal-close:hover { color: var(--text); background: var(--surface2); }
+    .btn-auth {
+      width: 100%; padding: 10px; border: none; border-radius: var(--rf);
+      background: var(--green); color: #050505; font-size: .9rem; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 8px; transition: background .15s; margin-top: 10px;
+    }
+    .btn-auth:hover { background: #4ec261; }
+    .btn-auth:disabled { opacity: .4; cursor: not-allowed; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .form-group label { font-size: .82rem; font-weight: 600; color: var(--text-2); display: flex; align-items: center; gap: 6px; }
+    .form-group label small { color: var(--text-3); font-weight: 400; }
+    .form-group input {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--rf); color: var(--text); padding: 9px 14px;
+      font-size: .88rem; outline: none; transition: border-color .15s;
+    }
+    .form-group input:focus { border-color: rgba(92,219,111,.4); }
+    .form-group input::placeholder { color: var(--text-3); }
+
+    /* ══════════════════════════════════════
+       STICKER MODAL
+    ══════════════════════════════════════ */
+    .sticker-results {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;
+    }
+    .sticker-results.hidden { display: none; }
+    .sticker-opt {
+      border-radius: var(--radius); overflow: hidden;
+      border: 2px solid transparent; cursor: pointer;
+      transition: border-color .15s;
+    }
+    .sticker-opt:hover  { border-color: var(--green-dim); }
+    .sticker-opt.sel    { border-color: var(--green); }
+    .sticker-opt img    { width: 100%; display: block; }
+
+    /* ══════════════════════════════════════
+       ★ NUEVO: POST TYPE TABS
+    ══════════════════════════════════════ */
+    .post-tabs {
+      display: flex; gap: 4px; margin-bottom: 12px;
+      background: var(--surface2); border-radius: var(--radius); padding: 4px;
+    }
+    .post-tab {
+      flex: 1; padding: 7px 4px; border: none; border-radius: 10px;
+      background: none; color: var(--text-3);
+      font-size: .78rem; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      transition: all .15s;
+    }
+    .post-tab.active { background: var(--green); color: #050505; }
+    .post-tab i { font-size: .95rem; }
+
+    /* ══ SLIDESHOW UPLOAD ══ */
+    .slide-upload-zone {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 18px; text-align: center; cursor: pointer;
+      color: var(--text-3); font-size: .83rem; display: block;
+      transition: border-color .15s;
+    }
+    .slide-upload-zone:hover { border-color: var(--green); color: var(--green); }
+    .slide-upload-zone i { font-size: 2rem; display: block; margin-bottom: 6px; }
+    .slide-prev-grid {
+      display: grid; grid-template-columns: repeat(auto-fill,minmax(70px,1fr));
+      gap: 6px; margin-top: 10px;
+    }
+    .spi { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: var(--surface2); }
+    .spi img { width: 100%; height: 100%; object-fit: cover; }
+    .spi-n { position: absolute; bottom: 3px; left: 3px; background: rgba(0,0,0,.65); color: #fff; font-size: .6rem; font-weight: 700; border-radius: 4px; padding: 1px 4px; }
+    .spi-rm { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,.8); border: none; color: #fff; width: 18px; height: 18px; border-radius: 50%; font-size: .65rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .audio-row {
+      display: flex; align-items: center; gap: 8px; margin-top: 10px;
+      padding: 8px 10px; background: var(--surface2); border-radius: var(--radius); cursor: pointer;
+    }
+    .audio-row i { color: var(--green); font-size: 1.1rem; flex-shrink: 0; }
+    .audio-row span { flex: 1; font-size: .8rem; color: var(--text-3); }
+    .audio-rm { background: none; border: none; color: var(--red); cursor: pointer; font-size: .9rem; padding: 2px; line-height: 1; }
+
+    /* ══ POLL CREATOR ══ */
+    .poll-list { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }
+    .poll-row { display: flex; align-items: center; gap: 7px; }
+    .poll-inp {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--rf); color: var(--text); padding: 8px 13px;
+      font-size: .85rem; outline: none; transition: border-color .15s;
+    }
+    .poll-inp:focus { border-color: rgba(92,219,111,.4); }
+    .poll-inp::placeholder { color: var(--text-3); }
+    .poll-rm { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 1rem; padding: 4px; transition: color .15s; }
+    .poll-rm:hover { color: var(--red); }
+    .btn-add-op {
+      width: 100%; margin-top: 4px; padding: 7px;
+      background: none; border: 1px dashed var(--border); border-radius: var(--rf);
+      color: var(--text-3); font-size: .82rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all .15s;
+    }
+    .btn-add-op:hover { border-color: var(--green); color: var(--green); }
+
+    /* ══ NSFW TOGGLE ══ */
+    .nsfw-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 4px 0; }
+    .nsfw-label { font-size: .8rem; color: var(--text-3); flex: 1; }
+    .nsfw-badge { background: var(--red); color: #fff; font-size: .6rem; font-weight: 800; border-radius: 4px; padding: 1px 5px; }
+    .tswitch {
+      width: 36px; height: 20px; background: var(--surface3); border-radius: var(--rf);
+      cursor: pointer; position: relative; transition: background .2s; flex-shrink: 0; border: none;
+    }
+    .tswitch.on { background: var(--red); }
+    .tswitch::after {
+      content: ""; position: absolute; width: 14px; height: 14px;
+      border-radius: 50%; background: #fff; top: 3px; left: 3px; transition: transform .2s;
+    }
+    .tswitch.on::after { transform: translateX(16px); }
+    .nsfw-detect { display: flex; align-items: center; gap: 6px; font-size: .72rem; color: var(--text-3); margin-top: 4px; }
+    .nsfw-detect.hidden { display: none; }
+
+    /* ══════════════════════════════════════
+       ★ NUEVO: SLIDESHOW EN FEED
+    ══════════════════════════════════════ */
+    .slide-wrap {
+      position: relative; overflow: hidden; border-radius: var(--radius);
+      background: #000; margin-top: 10px; touch-action: pan-y; user-select: none;
+    }
+    .slide-track { display: flex; transition: transform .32s ease; will-change: transform; }
+    .slide-item { flex-shrink: 0; width: 100%; }
+    .slide-item img { width: 100%; max-height: 480px; object-fit: contain; display: block; }
+    .slide-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: rgba(0,0,0,.55); border: none; color: #fff;
+      width: 34px; height: 34px; border-radius: 50%; font-size: 1.2rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background .15s; z-index: 3;
+    }
+    .slide-btn:hover { background: rgba(0,0,0,.8); }
+    .slide-btn.prev { left: 8px; }
+    .slide-btn.next { right: 8px; }
+    .slide-dots {
+      position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 5px; z-index: 3;
+    }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.4); transition: all .2s; }
+    .dot.active { background: #fff; transform: scale(1.3); }
+    .slide-counter {
+      position: absolute; top: 8px; right: 10px;
+      background: rgba(0,0,0,.55); color: #fff;
+      font-size: .7rem; font-weight: 700; border-radius: var(--rf);
+      padding: 2px 8px; z-index: 3;
+    }
+    .slide-audio-btn {
+      position: absolute; bottom: 8px; right: 10px;
+      background: rgba(0,0,0,.6); border: none; color: #fff;
+      width: 32px; height: 32px; border-radius: 50%;
+      font-size: 1rem; cursor: pointer; z-index: 3;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .slide-audio-btn:hover   { background: rgba(92,219,111,.6); }
+    .slide-audio-btn.playing { color: var(--green); }
+
+    /* ══════════════════════════════════════
+       ★ NUEVO: POLL EN FEED
+    ══════════════════════════════════════ */
+    .poll-wrap { margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
+    .poll-opt-btn {
+      position: relative; overflow: hidden;
+      padding: 9px 13px; border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      background: var(--surface2); cursor: pointer;
+      text-align: left; color: var(--text); font-size: .875rem;
+      width: 100%; transition: border-color .15s;
+    }
+    .poll-opt-btn:hover:not(:disabled) { border-color: var(--green); }
+    .poll-opt-btn.voted       { border-color: var(--green); }
+    .poll-opt-btn.voted-other { opacity: .7; }
+    .poll-bar { position: absolute; top:0; left:0; bottom:0; background: rgba(92,219,111,.12); transition: width .5s ease; pointer-events: none; border-radius: var(--radius); }
+    .poll-opt-inner { position: relative; z-index: 1; display: flex; align-items: center; gap: 6px; }
+    .poll-pct { margin-left: auto; font-size: .75rem; color: var(--text-3); font-weight: 600; }
+    .poll-check { color: var(--green); font-size: .85rem; }
+    .poll-total-txt { font-size: .72rem; color: var(--text-3); text-align: center; margin-top: 2px; }
+
+    /* ══════════════════════════════════════
+       ★ NUEVO: NSFW OVERLAY
+    ══════════════════════════════════════ */
+    .nsfw-wrap { position: relative; border-radius: var(--radius); overflow: hidden; }
+    .nsfw-overlay {
+      position: absolute; inset: 0; z-index: 5;
+      background: rgba(5,5,5,.88); backdrop-filter: blur(8px);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 8px;
+      cursor: pointer; transition: background .2s;
+    }
+    .nsfw-overlay i     { font-size: 2rem; color: var(--red); }
+    .nsfw-overlay p     { font-size: .82rem; color: var(--text-2); font-weight: 700; }
+    .nsfw-overlay small { font-size: .7rem; color: var(--text-3); }
+    .nsfw-overlay:hover { background: rgba(5,5,5,.92); }
+
+    /* ══════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════ */
+    @media (max-width: 1000px) {
+      .layout { grid-template-columns: 66px 1fr 260px; }
+      .sidebar .nav-item span:last-child,
+      .sidebar .logo span,
+      .btn-post-sidebar span,
+      .sidebar-user strong, .sidebar-user small { display: none; }
+      .nav-item { justify-content: center; padding: 12px; }
+      .nav-icon  { width: auto; font-size: 1.4rem; }
+      .btn-post-sidebar { padding: 12px; justify-content: center; }
+    }
+    @media (max-width: 700px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar, .right-col { display: none; }
+      .feed-col { padding-bottom: 64px; }
+      .bottom-nav {
+        display: flex; position: fixed;
+        bottom: 0; left: 0; right: 0; z-index: 100;
+        background: var(--surface); border-top: 1px solid var(--border);
+        padding-bottom: env(safe-area-inset-bottom, 0);
+        justify-content: space-around;
+      }
+      .bottom-nav-btn {
+        display: flex; flex-direction: column; align-items: center; gap: 2px;
+        color: var(--text-3); text-decoration: none;
+        font-size: .6rem; font-weight: 600; padding: 7px 12px;
+        transition: color .15s;
+      }
+      .bottom-nav-btn.active { color: var(--green); }
+      .bn-icon { font-size: 1.3rem; }
+      .btn-new-post-fab {
+        position: fixed; bottom: 74px; right: 16px; z-index: 99;
+        width: 50px; height: 50px; border-radius: 50%;
+        background: var(--green); color: #050505; border: none;
+        font-size: 1.4rem; cursor: pointer; box-shadow: 0 4px 20px rgba(92,219,111,.35);
+        display: flex; align-items: center; justify-content: center;
+        transition: transform .15s;
+      }
+      .btn-new-post-fab:active { transform: scale(.9); }
+    }
+  </style>
 </head>
 <body>
 
-<div class="app-layout">
+<!-- ══════════════════════════════════════
+     LAYOUT
+══════════════════════════════════════ -->
+<div class="layout">
 
-  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <!-- ── SIDEBAR ── -->
   <aside class="sidebar">
     <div class="logo">
       <i class="ri-leaf-fill"></i>
@@ -42,7 +618,7 @@
       </a>
     </nav>
 
-    <button class="btn-post-sidebar" id="btnNuevoPostSidebar">
+    <button class="btn-post-sidebar" onclick="abrirPostModal()">
       <i class="ri-quill-pen-line"></i>
       <span>Nuevo post</span>
     </button>
@@ -50,9 +626,8 @@
     <div class="sidebar-user" id="sidebarUser"></div>
   </aside>
 
-  <!-- ══════════════ FEED ══════════════ -->
-  <main class="feed">
-
+  <!-- ── FEED ── -->
+  <main class="feed-col">
     <header class="feed-header">
       <h2>Inicio</h2>
       <button class="btn-logout" id="btnLogout">
@@ -61,42 +636,35 @@
       </button>
     </header>
 
-    <!-- COMPOSER -->
+    <!-- COMPOSER RÁPIDO -->
     <div class="new-post">
       <div id="composerAvatarWrap" style="flex-shrink:0"></div>
-
       <div class="post-input-area">
-        <textarea
-          id="postInput"
-          placeholder="¿Qué está pasando?"
-          maxlength="280"
-          rows="3"
-        ></textarea>
-
+        <textarea id="postInput" placeholder="¿Qué está pasando?" maxlength="280" rows="3"
+                  oninput="onComposerInput(this)"></textarea>
         <div id="imagePreviewBox" class="image-preview-box hidden">
-          <button class="remove-image" id="btnRemoveImage" type="button">
+          <button class="remove-image" id="btnRemoveImage" onclick="quitarImagenComposer()">
             <i class="ri-close-line"></i>
           </button>
           <img id="imagePreview" src="" alt="preview"/>
         </div>
-
         <div class="post-actions">
           <div class="post-actions-left">
-            <label for="imageInput" class="btn-icon" title="Subir imagen">
+            <label for="imageInput" class="btn-icon" title="Foto">
               <i class="ri-image-line"></i>
             </label>
             <input type="file" id="imageInput"
-                   accept="image/jpeg,image/png,image/gif,image/webp" hidden/>
-
-            <button type="button" class="btn-sticker"
-                    onclick="abrirModalSticker()" title="Sticker con IA">
+                   accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm" hidden
+                   onchange="onComposerMedia(this)"/>
+            <button type="button" class="btn-sticker" onclick="abrirModalSticker()">
               <i class="ri-sparkling-line"></i> Sticker IA
             </button>
-
+            <button type="button" class="btn-sticker" onclick="abrirPostModal()" title="Más opciones: slideshow, encuesta">
+              <i class="ri-apps-line"></i> Más
+            </button>
             <span id="charCount" class="char-count">280</span>
           </div>
-
-          <button id="btnPost" type="button">
+          <button id="btnPost" onclick="publicarNormal()">
             <i class="ri-send-plane-fill"></i> Publicar
           </button>
         </div>
@@ -109,48 +677,34 @@
         <i class="ri-loader-4-line spin"></i> Cargando posts...
       </div>
     </div>
-
     <div id="loadMoreBox" class="load-more-box hidden">
-      <button id="btnLoadMore">
+      <button id="btnLoadMore" onclick="cargarMas()">
         <i class="ri-arrow-down-line"></i> Cargar más
       </button>
     </div>
-
   </main>
 
-  <!-- ══════════════ TRENDS ══════════════ -->
-  <aside class="trends">
-
+  <!-- ── RIGHT SIDEBAR ── -->
+  <aside class="right-col">
     <div class="trends-box">
       <h3><i class="ri-fire-line"></i> Tendencias</h3>
       <ul>
-        <li onclick="window.location.href='explore.html?q=ForoUbre'">
-          <span>#ForoUbre</span><small>1.2K posts</small>
-        </li>
-        <li onclick="window.location.href='explore.html?q=VacaViral'">
-          <span>#VacaViral</span><small>890 posts</small>
-        </li>
-        <li onclick="window.location.href='explore.html?q=Leche'">
-          <span>#Leche</span><small>540 posts</small>
-        </li>
-        <li onclick="window.location.href='explore.html?q=MuuuTech'">
-          <span>#MuuuTech</span><small>310 posts</small>
-        </li>
+        <li onclick="ir('explore.html?q=ForoUbre')">  <span>#ForoUbre</span>  <small>1.2K posts</small></li>
+        <li onclick="ir('explore.html?q=VacaViral')"> <span>#VacaViral</span> <small>890 posts</small></li>
+        <li onclick="ir('explore.html?q=Leche')">     <span>#Leche</span>     <small>540 posts</small></li>
+        <li onclick="ir('explore.html?q=MuuuTech')">  <span>#MuuuTech</span>  <small>310 posts</small></li>
       </ul>
     </div>
 
-    <!-- Videos recientes -->
     <div class="trends-box">
       <h3><i class="ri-video-line"></i> Videos recientes</h3>
       <div id="videosRecientesList">
-        <p style="color:var(--text-3);font-size:.82rem;padding:4px 0">
+        <p style="color:var(--text-3);font-size:.82rem">
           <i class="ri-loader-4-line spin"></i> Cargando...
         </p>
       </div>
-      <a href="videos.html"
-         style="display:block;text-align:center;font-size:.8rem;color:var(--green);
-                margin-top:10px;font-weight:700;text-decoration:none">
-        Ver todos los videos →
+      <a href="videos.html" style="display:block;text-align:center;font-size:.8rem;color:var(--green);margin-top:10px;font-weight:700;text-decoration:none">
+        Ver todos →
       </a>
     </div>
 
@@ -162,51 +716,118 @@
         </p>
       </div>
     </div>
-
   </aside>
 
 </div>
 
-<!-- ══════════════ BOTTOM NAV ══════════════ -->
+<!-- ══ BOTTOM NAV ══ -->
 <nav class="bottom-nav">
-  <div class="bottom-nav-inner">
-    <a href="/"             class="bottom-nav-btn active">
-      <span class="bn-icon"><i class="ri-home-5-fill"></i></span>
-      <span>Inicio</span>
-    </a>
-    <a href="explore.html"  class="bottom-nav-btn">
-      <span class="bn-icon"><i class="ri-search-line"></i></span>
-      <span>Buscar</span>
-    </a>
-    <a href="videos.html"   class="bottom-nav-btn">
-      <span class="bn-icon"><i class="ri-video-line"></i></span>
-      <span>Videos</span>
-    </a>
-    <a href="messages.html" class="bottom-nav-btn">
-      <span class="bn-icon"><i class="ri-message-3-line"></i></span>
-      <span>Mensajes</span>
-    </a>
-    <a href="#" class="bottom-nav-btn" id="bnPerfil">
-      <span class="bn-icon"><i class="ri-user-3-line"></i></span>
-      <span>Perfil</span>
-    </a>
-  </div>
+  <a href="/"             class="bottom-nav-btn active"><span class="bn-icon"><i class="ri-home-5-fill"></i></span><span>Inicio</span></a>
+  <a href="explore.html"  class="bottom-nav-btn"><span class="bn-icon"><i class="ri-search-line"></i></span><span>Buscar</span></a>
+  <a href="videos.html"   class="bottom-nav-btn"><span class="bn-icon"><i class="ri-video-line"></i></span><span>Videos</span></a>
+  <a href="messages.html" class="bottom-nav-btn"><span class="bn-icon"><i class="ri-message-3-line"></i></span><span>Mensajes</span></a>
+  <a href="#" class="bottom-nav-btn" id="bnPerfil"><span class="bn-icon"><i class="ri-user-3-line"></i></span><span>Perfil</span></a>
 </nav>
+<button class="btn-new-post-fab" onclick="abrirPostModal()" title="Nuevo post">
+  <i class="ri-quill-pen-line"></i>
+</button>
 
-<!-- ══════════════ MODAL STICKER IA ══════════════ -->
-<div class="modal-overlay hidden" id="modalSticker">
-  <div class="modal-box" style="max-width:500px">
+<!-- ══════════════════════════════════════
+     MODAL: CREAR POST COMPLETO
+══════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="postModal">
+  <div class="modal-box">
     <div class="modal-header">
-      <h3><i class="ri-sparkling-line"></i> Generar Sticker con IA</h3>
-      <button class="btn-cerrar-modal" onclick="cerrarModalSticker()">
-        <i class="ri-close-line"></i>
+      <h3><i class="ri-quill-pen-line" style="color:var(--green)"></i> Nuevo post</h3>
+      <button class="modal-close" onclick="cerrarPostModal()"><i class="ri-close-line"></i></button>
+    </div>
+
+    <!-- Tabs tipo -->
+    <div class="post-tabs">
+      <button class="post-tab active" id="tab-normal"    onclick="setTipo('normal',this)"><i class="ri-edit-line"></i> Normal</button>
+      <button class="post-tab"        id="tab-slideshow" onclick="setTipo('slideshow',this)"><i class="ri-slideshow-line"></i> Slideshow</button>
+      <button class="post-tab"        id="tab-poll"      onclick="setTipo('poll',this)"><i class="ri-bar-chart-2-line"></i> Encuesta</button>
+    </div>
+
+    <!-- Texto (común) -->
+    <textarea id="modalTexto" style="width:100%;background:none;border:none;color:var(--text);font-size:.95rem;resize:none;outline:none;line-height:1.5;font-family:inherit;min-height:70px;max-height:150px;overflow-y:auto"
+              placeholder="¿Qué está pasando?" oninput="autoResizeTA(this)" rows="3"></textarea>
+
+    <!-- ZONA NORMAL -->
+    <div id="zonaNormal">
+      <div id="normalPrevBox" style="margin-top:8px"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+        <label for="normalFile" class="btn-icon" title="Foto/Video"><i class="ri-image-add-line"></i></label>
+        <input type="file" id="normalFile" hidden
+               accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
+               onchange="onNormalFile(this)"/>
+      </div>
+      <div class="nsfw-row" id="normalNSFWRow" style="display:none">
+        <span class="nsfw-label"><span class="nsfw-badge">NSFW</span> Marcar contenido sensible</span>
+        <button class="tswitch" id="nsfwNormal" onclick="this.classList.toggle('on')"></button>
+      </div>
+      <div class="nsfw-detect hidden" id="nsfwStatus">
+        <i class="ri-loader-4-line spin"></i> Analizando imagen...
+      </div>
+    </div>
+
+    <!-- ZONA SLIDESHOW -->
+    <div id="zonaSlideshow" style="display:none">
+      <label class="slide-upload-zone" for="slideFiles">
+        <i class="ri-images-line"></i>
+        Toca para añadir fotos (máx. 10)
+      </label>
+      <input type="file" id="slideFiles" hidden multiple
+             accept="image/jpeg,image/png,image/webp,image/gif"
+             onchange="onSlideFiles(this)"/>
+      <div class="slide-prev-grid" id="slidePrevGrid"></div>
+      <label class="audio-row" for="slideAudio">
+        <i class="ri-music-line"></i>
+        <span id="audioLabel">Añadir música (MP3, M4A...)</span>
+        <input type="file" id="slideAudio" hidden
+               accept="audio/mpeg,audio/mp3,audio/ogg,audio/wav,audio/webm"
+               onchange="onSlideAudio(this)"/>
+      </label>
+      <div class="nsfw-row">
+        <span class="nsfw-label"><span class="nsfw-badge">NSFW</span> Contenido sensible</span>
+        <button class="tswitch" id="nsfwSlide" onclick="this.classList.toggle('on')"></button>
+      </div>
+    </div>
+
+    <!-- ZONA POLL -->
+    <div id="zonaPoll" style="display:none">
+      <div class="poll-list" id="pollList">
+        <div class="poll-row">
+          <input class="poll-inp" placeholder="Opción 1" maxlength="60"/>
+          <button class="poll-rm" style="visibility:hidden" onclick="remPollOp(this)"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="poll-row">
+          <input class="poll-inp" placeholder="Opción 2" maxlength="60"/>
+          <button class="poll-rm" style="visibility:hidden" onclick="remPollOp(this)"><i class="ri-close-line"></i></button>
+        </div>
+      </div>
+      <button class="btn-add-op" id="btnAddOp" onclick="addPollOp()">
+        <i class="ri-add-line"></i> Añadir opción
       </button>
     </div>
+
+    <button class="btn-auth" id="btnPublicar" onclick="publicarPost()">
+      <i class="ri-send-plane-fill"></i> Publicar
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MODAL: STICKER IA
+══════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="modalSticker">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-header">
+      <h3><i class="ri-sparkling-line" style="color:var(--green)"></i> Generar Sticker con IA</h3>
+      <button class="btn-cerrar-modal" onclick="cerrarModalSticker()"><i class="ri-close-line"></i></button>
+    </div>
     <div class="form-group">
-      <label>
-        <i class="ri-quill-pen-line"></i> Describe tu sticker
-        <small>(en inglés da mejores resultados)</small>
-      </label>
+      <label><i class="ri-quill-pen-line"></i> Describe tu sticker <small>(inglés da mejores resultados)</small></label>
       <input type="text" id="stickerPromptInput"
              placeholder="ej: cute cat astronaut kawaii..."
              maxlength="200"
@@ -216,14 +837,11 @@
       <i class="ri-sparkling-2-line"></i> Generar 2 stickers
     </button>
     <div id="stickerResults" class="sticker-results hidden"></div>
-    <div id="stickerSeleccionado" class="hidden">
-      <div style="display:flex;align-items:center;gap:10px;padding:12px;
-                  background:var(--green-subtle);border-radius:var(--radius);
-                  border:1px solid var(--green)">
+    <div id="stickerSeleccionado" class="hidden" style="margin-top:12px">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--green-subtle);border-radius:var(--radius);border:1px solid var(--green)">
         <i class="ri-checkbox-circle-fill" style="color:var(--green);font-size:1.2rem"></i>
         <span style="flex:1;font-size:.87rem;font-weight:600">Sticker seleccionado</span>
-        <button class="btn-auth"
-                style="width:auto;padding:7px 18px;font-size:.83rem"
+        <button class="btn-auth" style="width:auto;padding:7px 16px;font-size:.82rem;margin:0"
                 onclick="adjuntarStickerAPost()">
           <i class="ri-attachment-2"></i> Usar en post
         </button>
@@ -232,131 +850,810 @@
   </div>
 </div>
 
-<!-- ══════════════ MODAL IMAGEN ══════════════ -->
-<div class="modal-img" id="modalImg" onclick="cerrarModal()">
-  <img id="modalImgSrc" src="" alt=""/>
+<!-- ══════════════════════════════════════
+     MODAL: COMENTARIOS
+══════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="modalComentarios">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><i class="ri-chat-3-line" style="color:var(--green)"></i> Comentarios</h3>
+      <button class="modal-close" onclick="cerrarComentarios()"><i class="ri-close-line"></i></button>
+    </div>
+    <div id="comentariosList" style="margin-bottom:12px;max-height:300px;overflow-y:auto"></div>
+    <div style="display:flex;gap:8px">
+      <textarea id="comentarioInput" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:9px 13px;font-size:.87rem;resize:none;outline:none;font-family:inherit;max-height:80px"
+                placeholder="Escribe un comentario..." rows="2"></textarea>
+      <button onclick="enviarComentario()" style="background:var(--green);border:none;color:#050505;border-radius:var(--radius);padding:0 14px;cursor:pointer;font-size:1.1rem">
+        <i class="ri-send-plane-fill"></i>
+      </button>
+    </div>
+  </div>
 </div>
 
-<!-- ══════════════ SCRIPTS ══════════════ -->
-<script src="app.js"></script>
+<!-- ══ MODAL MEDIA FULL ══ -->
+<div class="modal-overlay hidden" id="mediaFullModal" onclick="cerrarMediaFull()">
+  <div id="mediaFullInner"></div>
+</div>
+
 <script>
-  // Perfil links
-  document.getElementById("navPerfil").href = `profile.html?handle=${JSON.parse(localStorage.getItem("fu_usuario")||'{}').handle}`;
-  document.getElementById("bnPerfil").href  = `profile.html?handle=${JSON.parse(localStorage.getItem("fu_usuario")||'{}').handle}`;
+/* ═══════════════════════════════════════════
+   CONSTANTES Y ESTADO GLOBAL
+═══════════════════════════════════════════ */
+const API   = "/api";
+const token = localStorage.getItem("fu_token");
+const yo    = JSON.parse(localStorage.getItem("fu_usuario") || "null");
+if (!token || !yo) { window.location.href = "/login.html"; }
 
-  const token = localStorage.getItem("fu_token");
+// Links de perfil
+document.getElementById("navPerfil").href = `profile.html?handle=${yo.handle}`;
+document.getElementById("bnPerfil").href  = `profile.html?handle=${yo.handle}`;
 
-  // ── Videos recientes en trends ──
-  async function cargarVideosRecientes() {
-    try {
-      const res  = await fetch("/api/videos?pagina=1&limite=3", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      const box  = document.getElementById("videosRecientesList");
-      if (!box) return;
+// Sidebar user
+(function() {
+  const el = document.getElementById("sidebarUser");
+  const av = yo.avatarTipo === "video"
+    ? `<video src="${yo.avatar}" autoplay loop muted playsinline style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0"></video>`
+    : `<img src="${yo.avatar}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0" alt=""/>`;
+  el.innerHTML = `${av}<div style="min-width:0"><strong>${esc(yo.nombre)}</strong><small>@${esc(yo.handle)}</small></div>`;
+})();
+// Composer avatar
+(function() {
+  const el = document.getElementById("composerAvatarWrap");
+  const av = yo.avatarTipo === "video"
+    ? `<video src="${yo.avatar}" autoplay loop muted playsinline style="width:40px;height:40px;border-radius:50%;object-fit:cover"></video>`
+    : `<img src="${yo.avatar}" style="width:40px;height:40px;border-radius:50%;object-fit:cover" alt=""/>`;
+  el.innerHTML = av;
+})();
 
-      if (!data.length) {
-        box.innerHTML = `<p style="color:var(--text-3);font-size:.82rem">Sin videos aún</p>`;
-        return;
-      }
+// Logout
+document.getElementById("btnLogout").onclick = () => {
+  localStorage.clear(); window.location.href = "/login.html";
+};
 
-      box.innerHTML = data.map(v => `
-        <div onclick="window.location.href='videos.html'"
-             style="display:flex;align-items:center;gap:8px;cursor:pointer;
-                    padding:6px 0;border-bottom:1px solid var(--border)">
-          <div style="width:50px;height:50px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#111">
-            <video src="${v.url}" style="width:100%;height:100%;object-fit:cover"
-                   preload="metadata" muted></video>
-          </div>
-          <div style="min-width:0;flex:1">
-            <p style="font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;
-                      text-overflow:ellipsis;color:var(--text)">
-              ${v.descripcion || '@' + v.autor.handle}
-            </p>
-            <small style="color:var(--text-3);font-size:.72rem">
-              <i class="ri-heart-fill" style="color:#ff4466"></i> ${v.totalLikes}
-              · <i class="ri-eye-line"></i> ${v.reproducciones}
-            </small>
-          </div>
-        </div>
-      `).join("");
-    } catch(e) {}
-  }
+/* ═══════════════════════════════════════════
+   ESTADO DEL MODAL POST
+═══════════════════════════════════════════ */
+let tipoActual    = "normal";
+let normalFile    = null;
+let slideImgs     = [];   // [{file, url}]
+let slideAudio    = null;
+// Composer rápido
+let composerFile  = null;
+let composerSticker = null;
 
-  // ── Sugerencias ──
-  async function cargarSugerencias() {
-    try {
-      const res  = await fetch("/api/profile/sugerencias", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      const box  = document.getElementById("sugerenciasList");
-      if (!box) return;
+/* ═══════════════════════════════════════════
+   MODAL POST — ABRIR/CERRAR/RESET
+═══════════════════════════════════════════ */
+function abrirPostModal() {
+  resetPostModal();
+  document.getElementById("postModal").classList.remove("hidden");
+}
+function cerrarPostModal() {
+  document.getElementById("postModal").classList.add("hidden");
+}
+function resetPostModal() {
+  tipoActual = "normal"; normalFile = null; slideImgs = []; slideAudio = null;
+  document.getElementById("modalTexto").value      = "";
+  document.getElementById("modalTexto").style.height = "auto";
+  document.getElementById("normalPrevBox").innerHTML = "";
+  document.getElementById("slidePrevGrid").innerHTML = "";
+  document.getElementById("audioLabel").textContent  = "Añadir música (MP3, M4A...)";
+  document.getElementById("normalNSFWRow").style.display = "none";
+  document.getElementById("nsfwStatus").classList.add("hidden");
+  document.getElementById("nsfwNormal").classList.remove("on");
+  document.getElementById("nsfwSlide").classList.remove("on");
+  document.getElementById("normalFile").value = "";
+  document.getElementById("slideFiles").value = "";
+  document.getElementById("slideAudio").value = "";
+  setTipo("normal", document.getElementById("tab-normal"));
+}
 
-      if (!data.length) {
-        box.innerHTML = `<p style="color:var(--text-3);font-size:.82rem;padding:8px 0">Sin sugerencias</p>`;
-        return;
-      }
+function setTipo(tipo, btn) {
+  tipoActual = tipo;
+  document.querySelectorAll(".post-tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("zonaNormal").style.display    = tipo==="normal"    ? "block":"none";
+  document.getElementById("zonaSlideshow").style.display = tipo==="slideshow" ? "block":"none";
+  document.getElementById("zonaPoll").style.display      = tipo==="poll"      ? "block":"none";
+}
 
-      box.innerHTML = data.map(u => {
-        const av = u.avatarTipo === "video"
-          ? `<video src="${u.avatar}" autoplay loop muted playsinline class="avatar-sm"></video>`
-          : `<img src="${u.avatar}" class="avatar-sm" alt=""/>`;
-        return `
-          <div class="suggestion">
-            <div style="cursor:pointer"
-                 onclick="window.location.href='profile.html?handle=${u.handle}'">${av}</div>
-            <div style="flex:1;min-width:0;cursor:pointer"
-                 onclick="window.location.href='profile.html?handle=${u.handle}'">
-              <strong style="font-size:.85rem;display:block;white-space:nowrap;
-                             overflow:hidden;text-overflow:ellipsis">${u.nombre}</strong>
-              <small style="color:var(--text-3)">@${u.handle}</small>
-            </div>
-            <button class="btn-seguir" onclick="seguirDesdeIndex('${u._id}', this)">
-              <i class="ri-user-add-line"></i>
-            </button>
-          </div>
-        `;
-      }).join("");
-    } catch(e) {}
-  }
+/* ═══════════════════════════════════════════
+   NORMAL — ARCHIVO
+═══════════════════════════════════════════ */
+function onNormalFile(input) {
+  const f = input.files[0];
+  if (!f) return;
+  if (f.size > 50*1024*1024) { alert("Máximo 50MB"); input.value=""; return; }
+  normalFile = f;
+  const url  = URL.createObjectURL(f);
+  const esV  = f.type.startsWith("video/");
+  const box  = document.getElementById("normalPrevBox");
+  box.innerHTML = `
+    <div style="position:relative;border-radius:var(--radius);overflow:hidden;background:#000">
+      ${esV
+        ? `<video src="${url}" controls style="width:100%;max-height:280px;display:block"></video>`
+        : `<img src="${url}" style="width:100%;max-height:280px;object-fit:contain;display:block"/>`}
+      <button onclick="quitarNormalFile()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.75);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>`;
+  document.getElementById("normalNSFWRow").style.display = "flex";
+  if (!esV) autoNSFW(f);
+}
+function quitarNormalFile() {
+  normalFile = null;
+  document.getElementById("normalPrevBox").innerHTML = "";
+  document.getElementById("normalFile").value        = "";
+  document.getElementById("normalNSFWRow").style.display = "none";
+  document.getElementById("nsfwStatus").classList.add("hidden");
+}
 
-  async function seguirDesdeIndex(userId, btn) {
-    try {
-      const res  = await fetch(`/api/profile/${userId}/follow`, {
-        method:  "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      btn.innerHTML = data.sigues
-        ? `<i class="ri-user-follow-line"></i>`
-        : `<i class="ri-user-add-line"></i>`;
-      btn.style.opacity = data.sigues ? "0.5" : "1";
-    } catch(e) {}
-  }
-
-  window.addEventListener("load", () => {
-    setTimeout(() => {
-      cargarSugerencias();
-      cargarVideosRecientes();
-    }, 800);
+/* ═══════════════════════════════════════════
+   SLIDESHOW — ARCHIVOS + AUDIO
+═══════════════════════════════════════════ */
+function onSlideFiles(input) {
+  Array.from(input.files).forEach(f => {
+    if (slideImgs.length >= 10) return;
+    if (!f.type.startsWith("image/")) return;
+    slideImgs.push({ file: f, url: URL.createObjectURL(f) });
   });
-</script>
+  input.value = "";
+  renderSlidePrev();
+}
+function renderSlidePrev() {
+  document.getElementById("slidePrevGrid").innerHTML = slideImgs.map((item,i) => `
+    <div class="spi">
+      <img src="${item.url}" alt=""/>
+      <span class="spi-n">${i+1}</span>
+      <button class="spi-rm" onclick="remSlide(${i})"><i class="ri-close-line"></i></button>
+    </div>`).join("");
+}
+function remSlide(i) { slideImgs.splice(i,1); renderSlidePrev(); }
 
-<style>
-  .char-count {
-    font-size:.78rem; color:var(--text-3);
-    font-weight:600; padding:0 4px; min-width:28px; text-align:center;
+function onSlideAudio(input) {
+  const f = input.files[0];
+  if (!f) return;
+  if (f.size > 20*1024*1024) { alert("Máximo 20MB para audio"); input.value=""; return; }
+  slideAudio = f;
+  document.getElementById("audioLabel").innerHTML =
+    `<i class="ri-music-fill" style="color:var(--green);margin-right:4px"></i>${esc(f.name)} <button class="audio-rm" onclick="quitarAudio(event)"><i class="ri-close-line"></i></button>`;
+}
+function quitarAudio(e) {
+  e.preventDefault(); slideAudio = null;
+  document.getElementById("slideAudio").value    = "";
+  document.getElementById("audioLabel").textContent = "Añadir música (MP3, M4A...)";
+}
+
+/* ═══════════════════════════════════════════
+   POLL
+═══════════════════════════════════════════ */
+function addPollOp() {
+  const list = document.getElementById("pollList");
+  if (list.children.length >= 6) return;
+  const n   = list.children.length + 1;
+  const row = document.createElement("div");
+  row.className = "poll-row";
+  row.innerHTML = `<input class="poll-inp" placeholder="Opción ${n}" maxlength="60"/>
+    <button class="poll-rm" onclick="remPollOp(this)"><i class="ri-close-line"></i></button>`;
+  list.appendChild(row);
+  updPollRM();
+  if (list.children.length >= 6) document.getElementById("btnAddOp").style.display="none";
+}
+function remPollOp(btn) {
+  const list = document.getElementById("pollList");
+  if (list.children.length <= 2) return;
+  btn.closest(".poll-row").remove();
+  Array.from(list.children).forEach((r,i) => r.querySelector("input").placeholder = `Opción ${i+1}`);
+  updPollRM();
+  document.getElementById("btnAddOp").style.display="";
+}
+function updPollRM() {
+  const list = document.getElementById("pollList");
+  Array.from(list.children).forEach(r => {
+    r.querySelector(".poll-rm").style.visibility = list.children.length>2 ? "visible":"hidden";
+  });
+}
+
+/* ═══════════════════════════════════════════
+   NSFW AUTO-DETECT (nsfwjs carga lazy)
+═══════════════════════════════════════════ */
+let _nsfwM = null;
+async function getNSFWModel() {
+  if (_nsfwM) return _nsfwM;
+  try {
+    await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.2.0/dist/tf.min.js");
+    await loadScript("https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js");
+    _nsfwM = await nsfwjs.load("MobileNetV2");
+    return _nsfwM;
+  } catch(e) { return null; }
+}
+function loadScript(src) {
+  return new Promise((res,rej) => {
+    if (document.querySelector(`script[src="${src}"]`)) { res(); return; }
+    const s = document.createElement("script"); s.src=src; s.onload=res; s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
+async function autoNSFW(file) {
+  const st = document.getElementById("nsfwStatus");
+  st.classList.remove("hidden");
+  try {
+    const m = await getNSFWModel();
+    if (!m) { st.classList.add("hidden"); return; }
+    const img = new Image(); img.src = URL.createObjectURL(file);
+    await new Promise(r => { img.onload=r; img.onerror=r; });
+    const preds = await m.classify(img);
+    const score = preds.filter(p=>["Porn","Hentai","Sexy"].includes(p.className))
+                        .reduce((s,p)=>s+p.probability, 0);
+    st.classList.add("hidden");
+    if (score > 0.60) {
+      document.getElementById("nsfwNormal").classList.add("on");
+      st.innerHTML = `<i class="ri-shield-check-line" style="color:var(--red)"></i> Detectado como contenido sensible`;
+      st.classList.remove("hidden");
+    }
+  } catch(e) { st.classList.add("hidden"); }
+}
+
+/* ═══════════════════════════════════════════
+   PUBLICAR (desde modal completo)
+═══════════════════════════════════════════ */
+async function publicarPost() {
+  const btn   = document.getElementById("btnPublicar");
+  const texto = document.getElementById("modalTexto").value.trim();
+  if (btn) btn.disabled = true;
+  try {
+    const fd = new FormData();
+    fd.append("tipo", tipoActual);
+    if (texto) fd.append("texto", texto);
+
+    if (tipoActual === "normal") {
+      if (!texto && !normalFile) { alert("Escribe algo o añade un archivo"); return; }
+      if (normalFile) fd.append("media", normalFile);
+      fd.append("nsfw", String(document.getElementById("nsfwNormal").classList.contains("on")));
+    }
+    else if (tipoActual === "slideshow") {
+      if (!slideImgs.length && !texto) { alert("Añade al menos una imagen"); return; }
+      slideImgs.forEach(item => fd.append("imagenes", item.file));
+      if (slideAudio) fd.append("audio", slideAudio);
+      fd.append("nsfw", String(document.getElementById("nsfwSlide").classList.contains("on")));
+    }
+    else if (tipoActual === "poll") {
+      if (!texto) { alert("Escribe la pregunta"); return; }
+      const ops = Array.from(document.querySelectorAll("#pollList .poll-inp"))
+                       .map(i=>i.value.trim()).filter(Boolean);
+      if (ops.length < 2) { alert("Mínimo 2 opciones"); return; }
+      fd.append("opciones", JSON.stringify(ops));
+    }
+
+    const res  = await fetch(`${API}/posts`, {
+      method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.mensaje || "Error");
+    cerrarPostModal();
+    prependPost(data);
+  } catch(e) {
+    alert("Error: " + e.message);
+  } finally { if (btn) btn.disabled = false; }
+}
+
+/* ═══════════════════════════════════════════
+   COMPOSER RÁPIDO (post normal desde la caja)
+═══════════════════════════════════════════ */
+function onComposerInput(el) {
+  const rem = 280 - el.value.length;
+  const cc  = document.getElementById("charCount");
+  cc.textContent = String(rem);
+  cc.className   = rem < 20 ? "char-count limit" : rem < 60 ? "char-count warn" : "char-count";
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 160) + "px";
+}
+function onComposerMedia(input) {
+  const f = input.files[0];
+  if (!f) return;
+  composerFile = f;
+  const url = URL.createObjectURL(f);
+  const esV = f.type.startsWith("video/");
+  const box = document.getElementById("imagePreviewBox");
+  box.classList.remove("hidden");
+  const prev = document.getElementById("imagePreview");
+  if (esV) {
+    box.innerHTML = `
+      <button class="remove-image" onclick="quitarImagenComposer()"><i class="ri-close-line"></i></button>
+      <video src="${url}" controls style="width:100%;max-height:280px;object-fit:contain;display:block"></video>`;
+  } else {
+    prev.src = url;
   }
-  .nav-badge {
-    background:var(--green); color:#050505;
-    border-radius:var(--radius-full); min-width:18px; height:18px;
-    padding:0 5px; display:flex; align-items:center; justify-content:center;
-    font-size:.65rem; font-weight:900; margin-left:auto;
+}
+function quitarImagenComposer() {
+  composerFile = null; composerSticker = null;
+  document.getElementById("imageInput").value = "";
+  document.getElementById("imagePreviewBox").classList.add("hidden");
+  document.getElementById("imagePreview").src = "";
+}
+async function publicarNormal() {
+  const btn   = document.getElementById("btnPost");
+  const texto = document.getElementById("postInput").value.trim();
+  if (!texto && !composerFile && !composerSticker) return;
+  btn.disabled = true;
+  try {
+    const fd = new FormData();
+    fd.append("tipo","normal");
+    if (texto)          fd.append("texto", texto);
+    if (composerFile)   fd.append("media", composerFile);
+    if (composerSticker) {
+      // Convertir URL de sticker a blob
+      const r = await fetch(composerSticker);
+      const b = await r.blob();
+      fd.append("media", b, "sticker.png");
+    }
+    const res  = await fetch(`${API}/posts`, {
+      method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.mensaje || "Error");
+    document.getElementById("postInput").value    = "";
+    document.getElementById("charCount").textContent = "280";
+    document.getElementById("charCount").className = "char-count";
+    quitarImagenComposer();
+    prependPost(data);
+  } catch(e) {
+    alert("Error: " + e.message);
+  } finally { btn.disabled = false; }
+}
+
+/* ═══════════════════════════════════════════
+   FEED — CARGAR
+═══════════════════════════════════════════ */
+let paginaFeed = 1;
+let cargandoMas = false;
+
+async function cargarFeed(reset=false) {
+  if (reset) { paginaFeed = 1; document.getElementById("feed").innerHTML = `<div class="loading"><i class="ri-loader-4-line spin"></i> Cargando posts...</div>`; }
+  try {
+    const res  = await fetch(`${API}/posts?pagina=${paginaFeed}&limite=20`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.mensaje || "Error");
+    const feed = document.getElementById("feed");
+    if (reset) feed.innerHTML = "";
+    if (!data.length && reset) {
+      feed.innerHTML = `<div class="loading" style="flex-direction:column;gap:8px"><i class="ri-seedling-line" style="font-size:2rem;color:var(--green)"></i><span>Sin posts aún. ¡Sé el primero!</span></div>`;
+    } else {
+      data.forEach(p => {
+        const div = document.createElement("div");
+        div.innerHTML = renderPost(p);
+        feed.appendChild(div.firstElementChild);
+      });
+      document.getElementById("loadMoreBox").classList.toggle("hidden", data.length < 20);
+    }
+    initSlideshows();
+  } catch(e) {
+    document.getElementById("feed").innerHTML = `<div class="loading" style="color:var(--red)"><i class="ri-error-warning-line"></i> Error al cargar</div>`;
   }
-  .spin { display:inline-block; animation:spin .8s linear infinite; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-</style>
+}
+async function cargarMas() {
+  if (cargandoMas) return;
+  cargandoMas = true; paginaFeed++;
+  await cargarFeed(false);
+  cargandoMas = false;
+}
+function prependPost(p) {
+  const feed = document.getElementById("feed");
+  feed.querySelector(".loading")?.remove();
+  const div  = document.createElement("div");
+  div.innerHTML = renderPost(p);
+  feed.prepend(div.firstElementChild);
+  initSlideshows();
+}
+
+/* ═══════════════════════════════════════════
+   RENDER POST
+═══════════════════════════════════════════ */
+function renderPost(p) {
+  const autor = p.autor || {};
+  const avEl  = autor.avatarTipo === "video"
+    ? `<video src="${autor.avatar||''}" autoplay loop muted playsinline class="post-av" onclick="ir('profile.html?handle=${esc(autor.handle)}')"></video>`
+    : `<img src="${autor.avatar||defAv(autor.nombre)}" class="post-av" alt="" onclick="ir('profile.html?handle=${esc(autor.handle)}')"/>`;
+
+  let mediaHTML = "";
+  if      (p.tipo==="slideshow" && p.imagenes?.length) mediaHTML = buildSlide(p);
+  else if (p.tipo==="poll"      && p.opciones?.length) mediaHTML = buildPoll(p);
+  else if (p.mediaUrl) {
+    const inner = p.mediaTipo==="video"
+      ? `<video src="${p.mediaUrl}" controls playsinline style="width:100%;max-height:480px;border-radius:var(--radius);display:block"></video>`
+      : `<img src="${p.mediaUrl}" style="width:100%;max-height:480px;object-fit:contain;border-radius:var(--radius);display:block;cursor:pointer" onclick="verFull('${p.mediaUrl}')"/>`;
+    mediaHTML = p.nsfw
+      ? `<div class="nsfw-wrap" style="margin-top:10px">${inner}<div class="nsfw-overlay" onclick="quitarNSFW(this)"><i class="ri-eye-off-line"></i><p>Contenido sensible</p><small>Toca para ver</small></div></div>`
+      : `<div style="margin-top:10px">${inner}</div>`;
+  }
+
+  const esMio  = (p.autor?._id||p.autor||"").toString() === yo._id;
+  const likes  = p.likes?.length  || 0;
+  const coms   = p.comentarios?.length || 0;
+  const repost = p.reposts?.length || 0;
+
+  return `
+    <article class="post-card" data-id="${p._id}">
+      <div class="post-header">
+        ${avEl}
+        <div class="post-meta" onclick="ir('profile.html?handle=${esc(autor.handle)}')">
+          <div class="post-name">${esc(autor.nombre||"?")}${autor.verificado?'<i class="ri-verified-badge-fill" style="color:var(--green);font-size:.82rem"></i>':''}</div>
+          <div class="post-handle">@${esc(autor.handle||"")} · ${tiempoCorto(p.createdAt)}</div>
+        </div>
+        ${esMio?`<button class="post-menu-btn" onclick="borrarPost('${p._id}',this)"><i class="ri-delete-bin-line"></i></button>`:""}
+      </div>
+      ${p.texto?`<p class="post-body">${esc(p.texto)}</p>`:""}
+      ${mediaHTML}
+      <div class="post-acts">
+        <button class="pact ${p.yaLike?"liked":""}" id="like-${p._id}" onclick="likear('${p._id}',this)">
+          <i class="${p.yaLike?"ri-heart-fill":"ri-heart-line"}"></i> ${likes}
+        </button>
+        <button class="pact" onclick="verComentarios('${p._id}')">
+          <i class="ri-chat-3-line"></i> ${coms}
+        </button>
+        <button class="pact ${p.yaRepost?"reposted":""}" id="rp-${p._id}" onclick="repostear('${p._id}',this)">
+          <i class="${p.yaRepost?"ri-repeat-fill":"ri-repeat-line"}"></i> ${repost}
+        </button>
+        <button class="pact" onclick="compartir('${p._id}')">
+          <i class="ri-share-line"></i>
+        </button>
+      </div>
+    </article>`;
+}
+
+/* ── SLIDESHOW EN FEED ── */
+function buildSlide(p) {
+  const id   = `sl${p._id}`;
+  const imgs = p.imagenes || [];
+  const items = imgs.map((url,i) => `
+    <div class="slide-item">
+      ${(p.nsfw && i===0)
+        ? `<div class="nsfw-wrap"><img src="${url}" style="width:100%;max-height:480px;object-fit:contain"/>
+           <div class="nsfw-overlay" onclick="quitarNSFW(this)"><i class="ri-eye-off-line"></i><p>Contenido sensible</p><small>Toca para ver</small></div></div>`
+        : `<img src="${url}" style="width:100%;max-height:480px;object-fit:contain;cursor:pointer" onclick="verFull('${url}')" loading="lazy"/>`}
+    </div>`).join("");
+  return `
+    <div class="slide-wrap" id="${id}" data-idx="0" data-total="${imgs.length}">
+      <div class="slide-track" id="${id}t">${items}</div>
+      ${imgs.length>1?`
+        <button class="slide-btn prev" onclick="sMov('${id}',-1)"><i class="ri-arrow-left-s-line"></i></button>
+        <button class="slide-btn next" onclick="sMov('${id}',1)"><i class="ri-arrow-right-s-line"></i></button>
+        <div class="slide-dots" id="${id}d">${imgs.map((_,i)=>`<span class="dot ${i===0?"active":""}"></span>`).join("")}</div>
+        <div class="slide-counter"><span id="${id}c">1</span>/${imgs.length}</div>`:""}
+      ${p.audioUrl?`
+        <button class="slide-audio-btn" id="${id}ab" onclick="toggleAudio('${id}')"><i class="ri-music-line"></i></button>
+        <audio id="${id}au" src="${p.audioUrl}" loop></audio>`:""}
+    </div>`;
+}
+function sMov(id, dir) {
+  const w = document.getElementById(id); if(!w) return;
+  const t = parseInt(w.dataset.total);
+  let   i = parseInt(w.dataset.idx)+dir;
+  if(i<0) i=t-1; if(i>=t) i=0;
+  w.dataset.idx = i;
+  const tr = document.getElementById(`${id}t`);
+  if(tr) tr.style.transform = `translateX(-${i*100}%)`;
+  document.querySelectorAll(`#${id}d .dot`).forEach((d,j)=>d.classList.toggle("active",j===i));
+  const c = document.getElementById(`${id}c`); if(c) c.textContent = String(i+1);
+}
+function toggleAudio(id) {
+  const au = document.getElementById(`${id}au`);
+  const bt = document.getElementById(`${id}ab`);
+  if(!au) return;
+  if(au.paused) {
+    document.querySelectorAll("audio").forEach(a=>{ if(a!==au) a.pause(); });
+    au.play();
+    if(bt){ bt.classList.add("playing"); bt.innerHTML=`<i class="ri-pause-line"></i>`; }
+  } else {
+    au.pause();
+    if(bt){ bt.classList.remove("playing"); bt.innerHTML=`<i class="ri-music-line"></i>`; }
+  }
+}
+function initSlideshows() {
+  document.querySelectorAll(".slide-wrap").forEach(w => {
+    if(w.dataset.sw) return; w.dataset.sw="1";
+    let sx=0;
+    w.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;},{passive:true});
+    w.addEventListener("touchend",  e=>{const dx=e.changedTouches[0].clientX-sx; if(Math.abs(dx)>40) sMov(w.id, dx<0?1:-1);});
+  });
+}
+
+/* ── POLL EN FEED ── */
+function buildPoll(p) {
+  const total = p.opciones.reduce((s,o)=>s+(o.votos?.length||0), 0);
+  const voted = !!p.miVoto;
+  const opts  = p.opciones.map(op => {
+    const v   = op.votos?.length||0;
+    const pct = total>0?Math.round((v/total)*100):0;
+    const mio = p.miVoto && p.miVoto.toString()===op._id.toString();
+    return `
+      <button class="poll-opt-btn ${voted?(mio?"voted":"voted-other"):""}"
+              id="po${op._id}" ${voted?"disabled":""} onclick="votar('${p._id}','${op._id}',this)">
+        <div class="poll-bar" style="width:${voted?pct:0}%"></div>
+        <div class="poll-opt-inner">
+          <span>${esc(op.texto)}</span>
+          ${mio?`<i class="ri-check-line poll-check"></i>`:""}
+          ${voted?`<span class="poll-pct">${pct}%</span>`:""}
+        </div>
+      </button>`;
+  }).join("");
+  return `<div class="poll-wrap" id="pw${p._id}">${opts}<p class="poll-total-txt">${total} voto${total!==1?"s":""}</p></div>`;
+}
+async function votar(postId, opId, btn) {
+  const w = document.getElementById(`pw${postId}`);
+  if(!w) return;
+  w.querySelectorAll(".poll-opt-btn").forEach(b=>b.disabled=true);
+  try {
+    const res  = await fetch(`${API}/posts/${postId}/votar`, {
+      method:"POST", headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},
+      body: JSON.stringify({opcion:opId})
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.mensaje||"Error");
+    const total = data.opciones.reduce((s,o)=>s+(o.votos?.length||0),0);
+    data.opciones.forEach(op=>{
+      const b = document.getElementById(`po${op._id}`); if(!b) return;
+      const v = op.votos?.length||0;
+      const pct = total>0?Math.round((v/total)*100):0;
+      const mio = op._id.toString()===opId;
+      b.className=`poll-opt-btn ${mio?"voted":"voted-other"}`; b.disabled=true;
+      b.innerHTML=`<div class="poll-bar" style="width:${pct}%"></div>
+        <div class="poll-opt-inner">
+          <span>${b.querySelector("span").textContent}</span>
+          ${mio?`<i class="ri-check-line poll-check"></i>`:""}
+          <span class="poll-pct">${pct}%</span>
+        </div>`;
+    });
+    w.querySelector(".poll-total-txt").textContent=`${total} voto${total!==1?"s":""}`;
+  } catch(e){ alert("Error: "+e.message); w.querySelectorAll(".poll-opt-btn").forEach(b=>b.disabled=false); }
+}
+
+/* ── NSFW overlay ── */
+function quitarNSFW(el) { el.style.opacity="0"; setTimeout(()=>el.remove(),200); }
+
+/* ── Media full ── */
+function verFull(url) {
+  const m = document.getElementById("mediaFullModal");
+  document.getElementById("mediaFullInner").innerHTML =
+    `<img src="${url}" style="max-width:96vw;max-height:96dvh;border-radius:14px;object-fit:contain" onclick="event.stopPropagation()"/>`;
+  m.classList.remove("hidden");
+}
+function cerrarMediaFull() {
+  document.getElementById("mediaFullModal").classList.add("hidden");
+  document.getElementById("mediaFullInner").innerHTML="";
+}
+
+/* ═══════════════════════════════════════════
+   LIKE / REPOST / BORRAR
+═══════════════════════════════════════════ */
+async function likear(id, btn) {
+  try {
+    const res  = await fetch(`${API}/posts/${id}/like`,{method:"POST",headers:{Authorization:`Bearer ${token}`}});
+    const data = await res.json();
+    btn.className = `pact ${data.yaLike?"liked":""}`;
+    btn.innerHTML = `<i class="${data.yaLike?"ri-heart-fill":"ri-heart-line"}"></i> ${data.likes}`;
+  } catch(e){}
+}
+async function repostear(id, btn) {
+  try {
+    const res  = await fetch(`${API}/posts/${id}/repost`,{method:"POST",headers:{Authorization:`Bearer ${token}`}});
+    const data = await res.json();
+    btn.className = `pact ${data.yaRepost?"reposted":""}`;
+    btn.innerHTML = `<i class="${data.yaRepost?"ri-repeat-fill":"ri-repeat-line"}"></i> ${data.reposts}`;
+  } catch(e){}
+}
+async function borrarPost(id, btn) {
+  if(!confirm("¿Borrar este post?")) return;
+  try {
+    await fetch(`${API}/posts/${id}`,{method:"DELETE",headers:{Authorization:`Bearer ${token}`}});
+    btn.closest(".post-card").remove();
+  } catch(e){ alert("Error al borrar"); }
+}
+function compartir(id) {
+  navigator.share?.({ url: `${location.origin}/post/${id}` }) ||
+  navigator.clipboard?.writeText(`${location.origin}/post/${id}`).then(()=>alert("Link copiado"));
+}
+
+/* ═══════════════════════════════════════════
+   COMENTARIOS
+═══════════════════════════════════════════ */
+let postComentarioActivo = null;
+async function verComentarios(postId) {
+  postComentarioActivo = postId;
+  document.getElementById("modalComentarios").classList.remove("hidden");
+  const box = document.getElementById("comentariosList");
+  box.innerHTML = `<div class="loading"><i class="ri-loader-4-line spin"></i></div>`;
+  try {
+    const res  = await fetch(`${API}/posts/${postId}/comments`,{headers:{Authorization:`Bearer ${token}`}});
+    const data = await res.json();
+    if(!data.length){ box.innerHTML=`<p style="color:var(--text-3);font-size:.83rem;padding:10px 0">Sin comentarios aún.</p>`; return; }
+    box.innerHTML = data.map(c=>{
+      const av = c.autor?.avatar
+        ? `<img src="${c.autor.avatar}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0"/>`
+        : `<div style="width:30px;height:30px;border-radius:50%;background:var(--surface3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:var(--green)">${(c.autor?.nombre||"?")[0].toUpperCase()}</div>`;
+      return `<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+        ${av}
+        <div style="flex:1;min-width:0">
+          <span style="font-size:.8rem;font-weight:700">${esc(c.autor?.nombre||"?")}</span>
+          <span style="font-size:.72rem;color:var(--text-3);margin-left:6px">@${esc(c.autor?.handle||"")}</span>
+          <p style="font-size:.85rem;margin-top:3px;word-break:break-word">${esc(c.texto)}</p>
+        </div>
+      </div>`;
+    }).join("");
+  } catch(e){ box.innerHTML=`<p style="color:var(--red);font-size:.83rem">Error al cargar</p>`; }
+}
+function cerrarComentarios() {
+  document.getElementById("modalComentarios").classList.add("hidden");
+  postComentarioActivo = null;
+}
+async function enviarComentario() {
+  if(!postComentarioActivo) return;
+  const inp  = document.getElementById("comentarioInput");
+  const text = inp.value.trim();
+  if(!text) return;
+  try {
+    const res = await fetch(`${API}/posts/${postComentarioActivo}/comments`,{
+      method:"POST", headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},
+      body: JSON.stringify({texto:text})
+    });
+    if(!res.ok) throw new Error();
+    inp.value="";
+    verComentarios(postComentarioActivo);
+    // Actualizar contador
+    const card = document.querySelector(`[data-id="${postComentarioActivo}"]`);
+    const cb   = card?.querySelector(".pact:nth-child(2) ");
+    if(cb){ const n=parseInt(cb.textContent.match(/\d+/)?.[0]||0)+1; cb.innerHTML=`<i class="ri-chat-3-line"></i> ${n}`; }
+  } catch(e){ alert("Error al comentar"); }
+}
+
+/* ═══════════════════════════════════════════
+   STICKER IA
+═══════════════════════════════════════════ */
+let stickerSelUrl = null;
+function abrirModalSticker() { document.getElementById("modalSticker").classList.remove("hidden"); }
+function cerrarModalSticker() { document.getElementById("modalSticker").classList.add("hidden"); stickerSelUrl=null; }
+async function generarStickers() {
+  const btn    = document.getElementById("btnGenerarSticker");
+  const prompt = document.getElementById("stickerPromptInput").value.trim();
+  if(!prompt) return;
+  btn.disabled=true; btn.innerHTML=`<i class="ri-loader-4-line spin"></i> Generando...`;
+  const res_el = document.getElementById("stickerResults");
+  const sel_el = document.getElementById("stickerSeleccionado");
+  res_el.innerHTML=""; res_el.classList.add("hidden"); sel_el.classList.add("hidden");
+  try {
+    // Generar 2 variantes
+    const urls = await Promise.all([
+      generarImgIA(prompt + ", sticker style, white outline, transparent background"),
+      generarImgIA(prompt + ", cute sticker, kawaii style, white border")
+    ]);
+    res_el.classList.remove("hidden");
+    res_el.innerHTML = urls.map((u,i)=>`
+      <div class="sticker-opt" onclick="selSticker(this,'${u}')">
+        <img src="${u}" alt="sticker ${i+1}"/>
+      </div>`).join("");
+  } catch(e){ alert("Error al generar: "+e.message); }
+  finally { btn.disabled=false; btn.innerHTML=`<i class="ri-sparkling-2-line"></i> Generar 2 stickers`; }
+}
+async function generarImgIA(prompt) {
+  const res = await fetch(`${API}/ia/generar-imagen`, {
+    method:"POST", headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},
+    body: JSON.stringify({prompt})
+  });
+  const d = await res.json();
+  if(!res.ok) throw new Error(d.mensaje||"Error IA");
+  return d.url;
+}
+function selSticker(el, url) {
+  document.querySelectorAll(".sticker-opt").forEach(e=>e.classList.remove("sel"));
+  el.classList.add("sel"); stickerSelUrl=url;
+  document.getElementById("stickerSeleccionado").classList.remove("hidden");
+}
+function adjuntarStickerAPost() {
+  if(!stickerSelUrl) return;
+  composerSticker = stickerSelUrl;
+  const box = document.getElementById("imagePreviewBox");
+  box.classList.remove("hidden");
+  document.getElementById("imagePreview").src = stickerSelUrl;
+  cerrarModalSticker();
+}
+
+/* ═══════════════════════════════════════════
+   SUGERENCIAS + VIDEOS RECIENTES
+═══════════════════════════════════════════ */
+async function cargarSugerencias() {
+  try {
+    const res  = await fetch(`${API}/users/sugerencias`, {headers:{Authorization:`Bearer ${token}`}});
+    const data = await res.json();
+    const el   = document.getElementById("sugerenciasList");
+    if(!data.length){ el.innerHTML=`<p style="color:var(--text-3);font-size:.82rem">Sin sugerencias</p>`; return; }
+    el.innerHTML = data.slice(0,5).map(u=>{
+      const av = u.avatarTipo==="video"
+        ? `<video src="${u.avatar}" autoplay loop muted playsinline class="sug-av"></video>`
+        : `<img src="${u.avatar||defAv(u.nombre)}" class="sug-av" alt=""/>`;
+      return `<div class="sug-item">
+        ${av}
+        <div class="sug-info" style="cursor:pointer" onclick="ir('profile.html?handle=${esc(u.handle)}')">
+          <div class="sug-name">${esc(u.nombre)}</div>
+          <div class="sug-handle">@${esc(u.handle)}</div>
+        </div>
+        <button class="btn-follow" onclick="seguir('${u._id}',this)">Seguir</button>
+      </div>`;
+    }).join("");
+  } catch(e){}
+}
+async function cargarVideosRecientes() {
+  try {
+    const res  = await fetch(`${API}/videos?limite=4`, {headers:{Authorization:`Bearer ${token}`}});
+    const data = await res.json();
+    const el   = document.getElementById("videosRecientesList");
+    if(!data.length){ el.innerHTML=`<p style="color:var(--text-3);font-size:.82rem">Sin videos</p>`; return; }
+    el.innerHTML = data.map(v=>`
+      <div class="vid-item" onclick="ir('videos.html')">
+        <video src="${v.videoUrl}" class="vid-thumb" muted></video>
+        <div class="vid-info">
+          <div class="vid-title">${esc(v.titulo||v.descripcion||"Video")}</div>
+          <div class="vid-sub">@${esc(v.autor?.handle||"")}</div>
+        </div>
+      </div>`).join("");
+  } catch(e){}
+}
+async function seguir(userId, btn) {
+  try {
+    const res = await fetch(`${API}/users/${userId}/follow`,{method:"POST",headers:{Authorization:`Bearer ${token}`}});
+    const d   = await res.json();
+    btn.textContent = d.siguiendo ? "Siguiendo" : "Seguir";
+    btn.style.background = d.siguiendo ? "transparent" : "";
+    btn.style.color      = d.siguiendo ? "var(--text-3)" : "";
+    btn.style.border     = d.siguiendo ? "1px solid var(--border)" : "";
+  } catch(e){}
+}
+
+/* ═══════════════════════════════════════════
+   MSG BADGE
+═══════════════════════════════════════════ */
+async function checkMsgBadge() {
+  try {
+    const res  = await fetch(`${API}/messages/noLeidos`, {headers:{Authorization:`Bearer ${token}`}});
+    const data = await res.json();
+    const b    = document.getElementById("msgBadge");
+    if(data.total > 0){ b.textContent=String(data.total); b.classList.remove("hidden"); }
+  } catch(e){}
+}
+
+/* ═══════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════ */
+function defAv(n="?") {
+  const l = (n||"?")[0].toUpperCase();
+  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" rx="20" fill="#1e1e1e"/><text x="20" y="26" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#5cdb6f">${l}</text></svg>`)}`;
+}
+function esc(s="") {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function tiempoCorto(f) {
+  const d=(Date.now()-new Date(f))/1000;
+  if(d<60)    return "ahora";
+  if(d<3600)  return `${Math.floor(d/60)}m`;
+  if(d<86400) return `${Math.floor(d/3600)}h`;
+  return new Date(f).toLocaleDateString("es",{day:"numeric",month:"short"});
+}
+function autoResizeTA(el) { el.style.height="auto"; el.style.height=Math.min(el.scrollHeight,200)+"px"; }
+function ir(url) { window.location.href=url; }
+
+document.addEventListener("keydown", e => {
+  if(e.key==="Escape") {
+    cerrarPostModal(); cerrarModalSticker(); cerrarComentarios(); cerrarMediaFull();
+  }
+});
+
+/* ══ INIT ══ */
+cargarFeed(true);
+cargarSugerencias();
+cargarVideosRecientes();
+checkMsgBadge();
+setInterval(checkMsgBadge, 30000);
+</script>
 </body>
 </html>
