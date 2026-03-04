@@ -6,32 +6,27 @@ const opcionSchema = new mongoose.Schema({
 }, { _id: true });
 
 const postSchema = new mongoose.Schema({
-  autor: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  texto: { type: String, default: "" },
+  autor:     { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  texto:     { type: String, default: "" },
+  tipo:      { type: String, enum: ["normal","slideshow","poll"], default: "normal" },
 
-  // ── Tipo de post ──
-  tipo: { type: String, enum: ["normal","slideshow","poll"], default: "normal" },
-
-  // ── Normal: 1 archivo ──
   mediaUrl:  { type: String, default: null },
   mediaTipo: { type: String, default: null },
 
-  // ── Slideshow: N imágenes + audio opcional ──
-  imagenes: [{ type: String }],
-  audioUrl: { type: String, default: null },
+  imagenes:  [{ type: String }],
+  audioUrl:  { type: String, default: null },
 
-  // ── Poll ──
-  opciones: [opcionSchema],
+  opciones:  [opcionSchema],
 
-  // ── Moderación ──
-  nsfw:   { type: Boolean, default: false },
-  nsfw_auto: { type: Boolean, default: false }, // detectado por IA
+  nsfw:      { type: Boolean, default: false },
+  nsfw_auto: { type: Boolean, default: false },
 
-  // ── Social ──
-  likes:    [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  reposts:  [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  likes:       [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  reposts:     [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   comentarios: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
-  comunidad: { type: mongoose.Schema.Types.ObjectId, ref: "Community", default: null }
+  comunidad:   { type: mongoose.Schema.Types.ObjectId, ref: "Community", default: null },
+
+  hashtags:    [{ type: String }]   // ← ÚNICO CAMBIO
 }, { timestamps: true });
 
 module.exports = mongoose.model("Post", postSchema);
