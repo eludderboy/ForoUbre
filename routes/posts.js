@@ -265,6 +265,22 @@ router.get("/:id/comments", auth, async (req, res) => {
   }
 });
 
+/* POST /comments/:id/like */
+router.post("/comments/:id/like", auth, async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) return res.status(404).json({ mensaje: "Comentario no encontrado" });
+    const uid = req.usuario._id.toString();
+    const idx = (comment.likes||[]).findIndex(l => l.toString() === uid);
+    if (idx === -1) comment.likes.push(req.usuario._id);
+    else            comment.likes.splice(idx, 1);
+    await comment.save();
+    res.json({ yaLike: idx === -1, likes: comment.likes.length });
+  } catch(e) {
+    res.status(500).json({ mensaje: e.message });
+  }
+});
+
 /* ════════════════════════════════════════════════════
    POST /:id/comments — Crear comentario
 ════════════════════════════════════════════════════ */
