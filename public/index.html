@@ -1011,13 +1011,21 @@ function prependPost(p) {
 ═══════════════════════════════════════════════════ */
 function renderPost(p) {
   const autor = p.autor || {};
-  const perf  = autor.personalizacion || {};
 
-  /* ── Avatar ── */
+  /* ── Parsear personalizacion si llegó como string ── */
+  let perf = {};
+  try {
+    const raw = autor.personalizacion;
+    if      (!raw)                   perf = {};
+    else if (typeof raw === "object") perf = raw;
+    else if (typeof raw === "string") perf = JSON.parse(raw);
+  } catch (_) { perf = {}; }
+
+  /* ── Avatar marco ── */
   let avClass = "avatar";
-  if      (perf.marco==="rainbow")  avClass += " avatar-rainbow";
-  else if (perf.marco==="animated") avClass += " avatar-animated";
-  else if (perf.marco==="gold")     avClass += " avatar-gold";
+  if      (perf.marco === "rainbow")  avClass += " avatar-rainbow";
+  else if (perf.marco === "animated") avClass += " avatar-animated";
+  else if (perf.marco === "gold")     avClass += " avatar-gold";
 
   const avEl = autor.avatarTipo === "video"
     ? `<video src="${autor.avatar||''}" class="${avClass}" autoplay loop muted playsinline
@@ -1025,17 +1033,32 @@ function renderPost(p) {
     : `<img src="${autor.avatar||defAv(autor.nombre)}" class="${avClass}" alt=""
            style="cursor:pointer" onclick="ir('profile.html?handle=${esc(autor.handle)}')"/>`;
 
-  /* ── Nombre decorado ── */
-  const nameStyle = perf.nombreColor ? `style="color:${perf.nombreColor}"` : "";
-  const badgeHTML = perf.badge ? ` <span title="Badge">${perf.badge}</span>` : "";
-  const vHTML     = autor.verificado ? `<i class="ri-verified-badge-fill" style="color:var(--green);font-size:.82rem"></i>` : "";
+  /* ── Verificado — manejar boolean, "true", "verified", 1 ── */
+  const esVerificado = autor.verificado === true
+    || autor.verificado === "true"
+    || autor.verificado === "verified"
+    || autor.verificado === 1;
+  const vHTML = esVerificado
+    ? `<i class="ri-verified-badge-fill" style="color:var(--green);font-size:.82rem"></i>`
+    : "";
+
+  /* ── Badge — ignorar "none", null, vacío, undefined ── */
+  const badgeVal = perf.badge;
+  const badgeHTML = (badgeVal && badgeVal !== "none" && badgeVal !== "false" && String(badgeVal).trim())
+    ? ` <span style="font-size:.9rem" title="Badge">${String(badgeVal).trim()}</span>`
+    : "";
+
+  /* ── Color nombre ── */
+  const nameStyle = (perf.nombreColor && perf.nombreColor !== "none" && perf.nombreColor !== "#f0f0f0")
+    ? `style="color:${perf.nombreColor}"`
+    : "";
 
   /* ── Media ── */
   let mediaHTML = "";
-  if      (p.tipo==="slideshow" && p.imagenes?.length) mediaHTML = buildSlide(p);
-  else if (p.tipo==="poll"      && p.opciones?.length) mediaHTML = buildPoll(p);
+  if      (p.tipo === "slideshow" && p.imagenes?.length) mediaHTML = buildSlide(p);
+  else if (p.tipo === "poll"      && p.opciones?.length) mediaHTML = buildPoll(p);
   else if (p.mediaUrl) {
-    if(p.mediaTipo==="video") {
+    if (p.mediaTipo === "video") {
       mediaHTML = `<video src="${p.mediaUrl}" controls playsinline class="post-img" style="object-fit:contain;height:auto;cursor:default"></video>`;
     } else {
       const inner = `<img src="${p.mediaUrl}" class="post-img" onclick="verFull('${p.mediaUrl}')" alt=""/>`;
@@ -1045,10 +1068,10 @@ function renderPost(p) {
     }
   }
 
-  const esMio  = (p.autor?._id||p.autor||"").toString()===yo._id;
-  const likes  = (p.likes||[]).length;
-  const coms   = (p.comentarios||[]).length;
-  const reposts= (p.reposts||[]).length;
+  const esMio   = (p.autor?._id || p.autor || "").toString() === yo._id;
+  const likes   = (p.likes   || []).length;
+  const coms    = (p.comentarios || []).length;
+  const reposts = (p.reposts || []).length;
 
   return `
     <article class="post-card" data-id="${p._id}">
@@ -1058,9 +1081,9 @@ function renderPost(p) {
           <strong ${nameStyle} onclick="ir('profile.html?handle=${esc(autor.handle)}')">${esc(autor.nombre||"?")}${vHTML}${badgeHTML}</strong>
           <span class="handle" onclick="ir('profile.html?handle=${esc(autor.handle)}')">@${esc(autor.handle||"")}</span>
           <span class="post-time">${tiempoCorto(p.createdAt)}</span>
-          ${esMio?`<button class="post-btn delete" onclick="borrarPost('${p._id}',this)" style="margin-left:auto"><i class="ri-delete-bin-line"></i></button>`:""}
+          ${esMio ? `<button class="post-btn delete" onclick="borrarPost('${p._id}',this)" style="margin-left:auto"><i class="ri-delete-bin-line"></i></button>` : ""}
         </div>
-        ${p.texto?`<p class="post-text">${esc(p.texto)}</p>`:""}
+        ${p.texto ? `<p class="post-text">${esc(p.texto)}</p>` : ""}
         ${mediaHTML}
         <div class="post-footer">
           <button class="post-btn ${p.yaLike?"liked":""}" id="like-${p._id}" onclick="likear('${p._id}',this)">
@@ -1076,7 +1099,6 @@ function renderPost(p) {
             <i class="ri-share-line"></i>
           </button>
         </div>
-        <!-- Comentarios inline -->
         <div class="comments-section hidden" id="cs-${p._id}">
           <div class="comments-list" id="cl-${p._id}"></div>
           <div class="comment-input-row">
