@@ -3,6 +3,7 @@ const multer  = require("multer");
 const mongoose = require("mongoose");
 const Post     = require("../models/Post");
 const User     = require("../models/User");
+const Comment = require("../models/Comment"); // ← añadir arriba del archivo
 const auth     = require("../middleware/authMiddleware");
 const { uploadFile } = require("../utils/gridfs");
 
