@@ -18,15 +18,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
+app.set("io", io); // ← NUEVO: disponible en todas las rutas via req.app.get("io")
+
 // ── Rutas ──
-app.use("/api/videos",   require("./routes/videos")); 
-app.use("/api/auth",     require("./routes/auth"));
-app.use("/api/posts",    require("./routes/posts"));
-app.use("/api/profile",  require("./routes/profile"));
-app.use("/api/messages", require("./routes/messages"));
-app.use("/api/search",   require("./routes/search"));
-app.use("/api/stickers", require("./routes/stickers"));
-app.use("/api/images",   require("./routes/images")); // ← Sirve imágenes de GridFS
+app.use("/api/videos",          require("./routes/videos"));
+app.use("/api/auth",            require("./routes/auth"));
+app.use("/api/posts",           require("./routes/posts"));
+app.use("/api/profile",         require("./routes/profile"));
+app.use("/api/messages",        require("./routes/messages"));
+app.use("/api/search",          require("./routes/search"));
+app.use("/api/stickers",        require("./routes/stickers"));
+app.use("/api/images",          require("./routes/images"));
+app.use("/api/notificaciones",  require("./routes/notificaciones")); // ← NUEVO
 
 // ── Socket.io ──
 const usuariosOnline = new Map();
@@ -42,8 +45,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("mensajesLeidos", ({ convId, destinatarioId }) => {
-  io.to(`user_${destinatarioId}`).emit("mensajesLeidos", { convId });
-});
+    io.to(`user_${destinatarioId}`).emit("mensajesLeidos", { convId });
+  });
 
   socket.on("escribiendo", ({ convId, nombre, destinatarioId }) => {
     io.to(`user_${destinatarioId}`).emit("usuarioEscribiendo", { convId, nombre });
@@ -67,10 +70,9 @@ app.get(/.*/, (req, res) => {
 });
 
 // ── Arrancar ──
-mongoose
-  .connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI)
   .then(() => {
-    initBucket(); // ← Inicializar GridFS después de conectar
+    initBucket();
     console.log("✅ MongoDB Atlas conectado");
     server.listen(process.env.PORT, "0.0.0.0", () =>
       console.log(`🚀 Servidor en puerto ${process.env.PORT}`)
