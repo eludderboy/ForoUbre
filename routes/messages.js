@@ -20,6 +20,40 @@ const uploadMedia = multer({
   }
 });
 
+// Agregar en routes/messages.js — ANTES de las rutas /:id
+router.get("/noLeidos", auth, async (req, res) => {
+  try {
+    const Conversation = require("../models/Conversation"); // ajusta el path si es distinto
+
+    const convs = await Conversation.find({
+      participantes: req.usuario._id
+    }).lean();
+
+    let total = 0;
+    const uid = req.usuario._id.toString();
+
+    convs.forEach(c => {
+      // Esquema con array noLeidos: [{ usuario, cantidad }]
+      if (Array.isArray(c.noLeidos)) {
+        const entry = c.noLeidos.find(n =>
+          (n.usuario || n.user || "").toString() === uid
+        );
+        if (entry) total += entry.cantidad || entry.count || 0;
+      }
+      // Esquema con mapa noLeidos: { [userId]: número }
+      else if (c.noLeidos && typeof c.noLeidos === "object") {
+        total += c.noLeidos[uid] || 0;
+      }
+    });
+
+    res.json({ total });
+  } catch(e) {
+    console.error("GET /messages/noLeidos:", e);
+    // Si el modelo no existe o falla, devuelve 0 sin romper la app
+    res.json({ total: 0 });
+  }
+});
+
 // ── GET /api/messages ── lista de conversaciones
 router.get("/", auth, async (req, res) => {
   try {
