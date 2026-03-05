@@ -30,8 +30,8 @@ if (_bnP)  _bnP.href  = `profile.html?handle=${yo.handle}`;
   el.innerHTML = av;
 })();
 
-document.getElementById("btnLogout").onclick = () => { localStorage.clear(); location.href = "/login.html"; };
 
+document.getElementById("btnLogout")?.addEventListener("click", () => { localStorage.clear(); location.href = "/login.html"; });
 /* ═══════════════════════════════════════════════════
    SOCKET — inicializado aquí, no en el HTML
 ═══════════════════════════════════════════════════ */
