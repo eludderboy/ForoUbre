@@ -227,66 +227,95 @@ async function cargarPerfil() {
 function renderPerfil(u) {
   const p      = u.personalizacion || {};
   const acento = p.acento || "#5cdb6f";
-  const marcoStyle = getMarcoStyle(p);
-  const extraClass = [
-    p.marco === "rainbow"  ? "avatar-rainbow"  : "",
-    p.marco === "animated" ? "avatar-animated" : "",
-    p.marco === "glitter"  ? "avatar-glitter"  : "",
-    p.aura && p.aura !== "none" ? `aura-${p.aura}` : ""
-  ].filter(Boolean).join(" ");
+  const mc     = p.marcoColor || acento;
 
-  const avatarEl = u.avatarTipo === "video"
-    ? `<video src="${u.avatar}" autoplay loop muted playsinline class="${extraClass}" style="width:80px;height:80px;object-fit:cover;border-radius:50%;--aura-color:${acento}"></video>`
-    : `<img src="${u.avatar}" alt="" class="${extraClass}" style="width:80px;height:80px;object-fit:cover;border-radius:50%;--aura-color:${acento}"/>`;
+  const marcoClass =
+    p.marco === "rainbow"  ? "av-marco-rainbow"  :
+    p.marco === "animated" ? "av-marco-animated" :
+    p.marco === "glitter"  ? "av-marco-glitter"  :
+    p.marco === "color"    ? "av-marco-color"     :
+    p.marco === "neon"     ? "av-marco-neon"      :
+    p.marco === "gold"     ? "av-marco-gold"      :
+    p.marco === "dashed"   ? "av-marco-dashed"    :
+    p.marco === "doble"    ? "av-marco-doble"     : "";
+
+  const auraClass =
+    p.aura === "soft"    ? "av-aura-soft"    :
+    p.aura === "neon"    ? "av-aura-neon"    :
+    p.aura === "fire"    ? "av-aura-fire"    :
+    p.aura === "ice"     ? "av-aura-ice"     :
+    p.aura === "rainbow" ? "av-aura-rainbow" : "";
+
+  // Card effect → va en el WRAP (banner + info juntos)
+  const cardClass =
+    p.cardEfecto === "glass"        ? "profile-card-glass"       :
+    p.cardEfecto === "neon-border"  ? "profile-card-neon-border" :
+    p.cardEfecto === "shadow-color" ? "profile-card-shadow"      : "";
 
   // Banner
   const bannerStyle = getBannerStyle(p);
-  const bannerAttr  = bannerStyle
-    ? `style="background:${bannerStyle}"`
-    : `style="background-image:url('${p.bannerImagen}');background-size:cover;background-position:center"`;
+  const bannerBg    = bannerStyle
+    ? `background:${bannerStyle}`
+    : `background-image:url('${p.bannerImagen}');background-size:cover;background-position:center`;
 
   const stickerEl = p.bannerSticker
     ? `<div class="banner-sticker">${p.bannerSticker}</div>`
     : "";
 
-  // Card efecto
-  const cardClass = p.cardEfecto === "glass"        ? "profile-card-glass"
-                  : p.cardEfecto === "neon-border"  ? "profile-card-neon-border"
-                  : p.cardEfecto === "shadow-color" ? "profile-card-shadow"
-                  : "";
+  const mediaEl = u.avatarTipo === "video"
+    ? `<video src="${u.avatar}" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;display:block"></video>`
+    : `<img src="${u.avatar}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"/>`;
 
   document.getElementById("profileContent").innerHTML = `
-    <div class="profile-banner" ${bannerAttr}>${stickerEl}</div>
-    <div class="profile-info ${cardClass}" style="--perfil-acento:${acento}">
-      <div class="profile-avatar-wrap" style="${marcoStyle}">${avatarEl}</div>
-      <div class="profile-actions">
-        ${u.esTuPerfil ? `
-          <button class="btn-edit-profile" onclick="abrirModalEditar()">
-            <i class="ri-edit-box-line"></i> Editar perfil
-          </button>` : `
-          <button class="btn-mensaje" onclick="iniciarChat('${u._id}')">
-            <i class="ri-message-3-line"></i> Mensaje
-          </button>
-          <button class="btn-follow ${u.sigues?"siguiendo":""}" id="btnFollow" onclick="toggleFollow('${u._id}')">
-            ${u.sigues?`<i class="ri-user-follow-line"></i> Siguiendo`:`<i class="ri-user-add-line"></i> Seguir`}
-          </button>`}
+    <div class="profile-card-wrap ${cardClass}" style="--perfil-acento:${acento}">
+
+      <div class="profile-banner" style="${bannerBg}">${stickerEl}</div>
+
+      <div class="profile-info">
+        <div class="av-outer av-lg ${marcoClass} ${auraClass}"
+             style="--marco-color:${mc}">
+          <div class="av-inner">${mediaEl}</div>
+        </div>
+
+        <div class="profile-actions">
+          ${u.esTuPerfil
+            ? `<button class="btn-edit-profile" onclick="abrirModalEditar()">
+                 <i class="ri-edit-box-line"></i> Editar perfil
+               </button>`
+            : `<button class="btn-mensaje" onclick="iniciarChat('${u._id}')">
+                 <i class="ri-message-3-line"></i> Mensaje
+               </button>
+               <button class="btn-follow ${u.sigues?"siguiendo":""}" id="btnFollow"
+                       onclick="toggleFollow('${u._id}')">
+                 ${u.sigues
+                   ? `<i class="ri-user-follow-line"></i> Siguiendo`
+                   : `<i class="ri-user-add-line"></i> Seguir`}
+               </button>`}
+        </div>
+
+        <div style="margin-top:10px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+          ${renderNombreEl(u)}
+        </div>
+        <p class="profile-handle">@${esc(u.handle)}</p>
+        ${u.bio  ? `<p class="profile-bio">${esc(u.bio)}</p>` : ""}
+        ${u.link
+          ? `<a href="${esc(u.link)}" target="_blank" rel="noopener"
+                class="profile-link" style="color:${acento}">
+               <i class="ri-link"></i>
+               ${esc(u.link.replace(/^https?:\/\//,""))}
+             </a>`
+          : ""}
+        <div class="profile-stats">
+          <span><strong>${perfilData.totalPosts}</strong> Posts</span>
+          <span><strong id="statSeguidores">${u.totalSeguidores}</strong> Seguidores</span>
+          <span><strong>${u.totalSiguiendo}</strong> Siguiendo</span>
+        </div>
       </div>
-      <div style="margin-top:10px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-        ${renderNombreEl(u)}
-      </div>
-      <p class="profile-handle">@${esc(u.handle)}</p>
-      ${u.bio  ? `<p class="profile-bio">${esc(u.bio)}</p>` : ""}
-      ${u.link ? `<a href="${esc(u.link)}" target="_blank" rel="noopener" class="profile-link" style="color:${acento}"><i class="ri-link"></i>${esc(u.link.replace(/^https?:\/\//,""))}</a>` : ""}
-      <div class="profile-stats">
-        <span><strong>${perfilData.totalPosts}</strong> Posts</span>
-        <span><strong id="statSeguidores">${u.totalSeguidores}</strong> Seguidores</span>
-        <span><strong>${u.totalSiguiendo}</strong> Siguiendo</span>
-      </div>
+
     </div>`;
 
   iniciarBgEfecto(p.bgEfecto, acento);
 }
-
 /* ════════════════════════
    TABS
 ════════════════════════ */
