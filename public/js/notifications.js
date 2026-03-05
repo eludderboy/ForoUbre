@@ -1,6 +1,3 @@
-/* ════════════════════════
-   INIT
-════════════════════════ */
 const API   = "/api";
 const token = localStorage.getItem("fu_token");
 const yo    = JSON.parse(localStorage.getItem("fu_usuario") || "null");
@@ -24,11 +21,19 @@ document.getElementById("bnPerfil")?.setAttribute("href", `profile.html?handle=$
 ════════════════════════ */
 async function cargarNotificaciones() {
   const lista = document.getElementById("notifList");
+  lista.innerHTML = `
+    <div class="empty-state">
+      <i class="ri-loader-4-line spin" style="font-size:2rem;color:var(--green)"></i>
+      <h3>Cargando...</h3>
+    </div>`;
   try {
-    const res  = await fetch(`${API}/notifications`, {
+    const res = await fetch(`${API}/notifications`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.mensaje || `HTTP ${res.status}`);
+    }
     const data = await res.json();
 
     if (!data.length) {
@@ -57,28 +62,31 @@ async function cargarNotificaciones() {
 ════════════════════════ */
 function renderNotif(n) {
   const tipos = {
-    like:    { icon: "ri-heart-fill",           css: "tipo-like",    label: "le dio like a tu post" },
-    comment: { icon: "ri-chat-1-fill",           css: "tipo-comment", label: "comentó tu post" },
-    follow:  { icon: "ri-user-follow-fill",      css: "tipo-follow",  label: "comenzó a seguirte" },
-    mention: { icon: "ri-at-line",               css: "tipo-mention", label: "te mencionó" },
-    repost:  { icon: "ri-repeat-2-fill",         css: "tipo-repost",  label: "reposteó tu post" },
+    like:    { icon:"ri-heart-fill",       css:"tipo-like",    label:"le dio like a tu post" },
+    comment: { icon:"ri-chat-1-fill",      css:"tipo-comment", label:"comentó tu post" },
+    follow:  { icon:"ri-user-follow-fill", css:"tipo-follow",  label:"comenzó a seguirte" },
+    mention: { icon:"ri-at-line",          css:"tipo-mention", label:"te mencionó" },
+    repost:  { icon:"ri-repeat-2-fill",    css:"tipo-repost",  label:"reposteó tu post" },
   };
 
-  const cfg    = tipos[n.tipo] || { icon: "ri-notification-4-fill", css: "tipo-comment", label: "" };
-  const origen = n.origen || {};
+  const cfg    = tipos[n.tipo] || { icon:"ri-notification-4-fill", css:"tipo-comment", label:"interactuó contigo" };
+  const origen = n.origen || {};   // ya viene populado: { nombre, handle, avatar, avatarTipo }
+  const post   = n.post   || {};   // populado: { texto, tipo }
   const leida  = n.leida ? "" : "no-leida";
 
   const avEl = origen.avatarTipo === "video"
-    ? `<video src="${origen.avatar || ''}" autoplay loop muted playsinline style="width:42px;height:42px;border-radius:50%;object-fit:cover"></video>`
-    : `<img src="${origen.avatar || getDefaultAv(origen.nombre)}" style="width:42px;height:42px;border-radius:50%;object-fit:cover" alt=""/>`;
+    ? `<video src="${origen.avatar||''}" autoplay loop muted playsinline
+           style="width:42px;height:42px;border-radius:50%;object-fit:cover"></video>`
+    : `<img src="${origen.avatar || getDefaultAv(origen.nombre)}"
+            style="width:42px;height:42px;border-radius:50%;object-fit:cover" alt=""/>`;
 
-  const thumbEl = n.postImagen
-    ? `<img src="${n.postImagen}" class="notif-thumb" alt=""/>`
-    : "";
-
-  const destino = n.postId
+  const destino = origen.handle
     ? `profile.html?handle=${esc(origen.handle)}`
-    : `profile.html?handle=${esc(origen.handle)}`;
+    : "/";
+
+  const extracto = post.texto
+    ? `<span style="color:var(--text-3)"> · "${esc(post.texto.slice(0,60))}${post.texto.length>60?"…":""}"</span>`
+    : "";
 
   return `
     <div class="notif-item ${leida}" onclick="irNotif('${destino}','${n._id}',this)">
@@ -92,11 +100,10 @@ function renderNotif(n) {
         <p class="notif-texto">
           <strong>${esc(origen.nombre || "Alguien")}</strong>
           ${cfg.label}
-          ${n.comentario ? `<span style="color:var(--text-3)"> · "${esc(n.comentario)}"</span>` : ""}
+          ${extracto}
         </p>
         <p class="notif-time">${tiempoRelativo(n.createdAt)}</p>
       </div>
-      ${thumbEl}
     </div>`;
 }
 
@@ -107,8 +114,10 @@ async function irNotif(url, notifId, el) {
   if (el.classList.contains("no-leida")) {
     el.classList.remove("no-leida");
     try {
-      await fetch(`${API}/notifications/${notifId}/read`, {
-        method: "PUT", headers: { Authorization: `Bearer ${token}` }
+      // ✅ ruta correcta: /:id/leer
+      await fetch(`${API}/notifications/${notifId}/leer`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` }
       });
     } catch (_) {}
   }
@@ -120,12 +129,20 @@ async function leerTodas() {
   btn.disabled  = true;
   btn.innerHTML = '<i class="ri-loader-4-line spin"></i> Marcando...';
   try {
-    await fetch(`${API}/notifications/read-all`, {
-      method: "PUT", headers: { Authorization: `Bearer ${token}` }
+    // ✅ ruta correcta: /leer
+    const res = await fetch(`${API}/notifications/leer`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` }
     });
-    document.querySelectorAll(".notif-item.no-leida").forEach(el => el.classList.remove("no-leida"));
-  } catch (e) { alert(e.message); }
-  finally {
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.mensaje || `HTTP ${res.status}`);
+    }
+    document.querySelectorAll(".notif-item.no-leida")
+      .forEach(el => el.classList.remove("no-leida"));
+  } catch (e) {
+    alert("Error: " + e.message);
+  } finally {
     btn.disabled  = false;
     btn.innerHTML = '<i class="ri-check-double-line"></i> Marcar todas leídas';
   }
@@ -152,5 +169,4 @@ function tiempoRelativo(f) {
   return new Date(f).toLocaleDateString("es", { day:"numeric", month:"short" });
 }
 
-/* ── Init ── */
 cargarNotificaciones();
