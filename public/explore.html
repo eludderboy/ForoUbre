@@ -14,17 +14,22 @@
 
   <aside class="sidebar">
     <div class="logo"><i class="ri-leaf-fill"></i><span>Foro Ubre</span></div>
-    <nav>
-      <a href="/"            class="nav-item"><span class="nav-icon"><i class="ri-home-5-line"></i></span><span>Inicio</span></a>
-      <a href="explore.html" class="nav-item active"><span class="nav-icon"><i class="ri-search-fill"></i></span><span>Explorar</span></a>
-      <a href="videos.html"  class="nav-item"><span class="nav-icon"><i class="ri-video-line"></i></span><span>Videos</span></a>
-      <a href="messages.html"class="nav-item"><span class="nav-icon"><i class="ri-message-3-line"></i></span><span>Mensajes</span></a>
-      <a href="#"            class="nav-item" id="navPerfil"><span class="nav-icon"><i class="ri-user-3-line"></i></span><span>Perfil</span></a>
-    </nav>
-    <button class="btn-post-sidebar" onclick="window.location.href='/'">
-      <i class="ri-quill-pen-line"></i><span>Nuevo post</span>
-    </button>
-    <div class="sidebar-user" id="sidebarUser"></div>
+<nav>
+  <a href="/"                  class="nav-item"><span class="nav-icon"><i class="ri-home-5-line"></i></span><span>Inicio</span></a>
+  <a href="explore.html"       class="nav-item active"><span class="nav-icon"><i class="ri-search-fill"></i></span><span>Explorar</span></a>
+  <a href="videos.html"        class="nav-item"><span class="nav-icon"><i class="ri-video-line"></i></span><span>Videos</span></a>
+  <a href="messages.html"      class="nav-item"><span class="nav-icon"><i class="ri-message-3-line"></i></span><span>Mensajes</span></a>
+  <a href="notifications.html" class="nav-item" id="navNotifs">
+    <span class="nav-icon"><i class="ri-notification-4-line"></i></span>
+    <span>Notificaciones</span>
+    <span class="nav-badge" id="notifBadge" style="display:none">0</span>
+  </a>
+  <a href="#" class="nav-item" id="navPerfil"><span class="nav-icon"><i class="ri-user-3-line"></i></span><span>Perfil</span></a>
+</nav>
+<button class="btn-post-sidebar" onclick="window.location.href='/'">
+  <i class="ri-quill-pen-line"></i><span>Nuevo post</span>
+</button>
+<div class="sidebar-user" id="sidebarUser"></div>
   </aside>
 
   <main class="feed">
@@ -74,12 +79,12 @@
 
 <nav class="bottom-nav">
   <div class="bottom-nav-inner">
-    <a href="/"            class="bottom-nav-btn"><span class="bn-icon"><i class="ri-home-5-line"></i></span><span>Inicio</span></a>
-    <a href="explore.html" class="bottom-nav-btn active"><span class="bn-icon"><i class="ri-search-fill"></i></span><span>Explorar</span></a>
-    <a href="videos.html"  class="bottom-nav-btn"><span class="bn-icon"><i class="ri-video-line"></i></span><span>Videos</span></a>
-    <a href="messages.html"class="bottom-nav-btn"><span class="bn-icon"><i class="ri-message-3-line"></i></span><span>Mensajes</span></a>
-    <a href="#"            class="bottom-nav-btn" id="bnPerfil"><span class="bn-icon"><i class="ri-user-3-line"></i></span><span>Perfil</span></a>
-  </div>
+    <a href="/"                  class="bottom-nav-btn"><span class="bn-icon"><i class="ri-home-5-line"></i></span><span>Inicio</span></a>
+<a href="explore.html"       class="bottom-nav-btn active"><span class="bn-icon"><i class="ri-search-fill"></i></span><span>Explorar</span></a>
+<a href="videos.html"        class="bottom-nav-btn"><span class="bn-icon"><i class="ri-video-line"></i></span><span>Videos</span></a>
+<a href="messages.html"      class="bottom-nav-btn"><span class="bn-icon"><i class="ri-message-3-line"></i></span><span>Mensajes</span></a>
+<a href="notifications.html" class="bottom-nav-btn" id="bnNotifs"><span class="bn-icon"><i class="ri-notification-4-line"></i></span><span>Notifs</span></a>
+<a href="#"                  class="bottom-nav-btn" id="bnPerfil"><span class="bn-icon"><i class="ri-user-3-line"></i></span><span>Perfil</span></a>  </div>
 </nav>
 
 <script src="/js/explore.js"></script>
