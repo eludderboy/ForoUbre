@@ -17,15 +17,22 @@
   display: block;
 }
 
-/* ── Info ── */
-.profile-info { padding:0 20px 16px; border-bottom:8px solid var(--surface); position:relative; }
+/* ── Profile info ── */
+.profile-info {
+  padding: 0 20px 16px;
+  border-bottom: 8px solid var(--surface);
+  position: relative;
+  /* SIN overflow:hidden — para no cortar el marco del avatar */
+}
 
-/* ═══════════════════════════════════════
-   AVATAR WRAP — el fix principal
-   overflow:hidden recorta la imagen al círculo
-   las animaciones/marco van en el WRAP
-   no en el img/video de dentro
-═══════════════════════════════════════ */
+/* ══════════════════════════════════════
+   AVATAR WRAP
+   overflow:hidden  → recorta img/video al círculo
+   position:relative + z-index:2 → evita que lo tape otro elemento
+   box-shadow del propio elemento NO es cortado por su propio overflow:hidden
+   PERO sí puede ser cortado por un ancestro con overflow:hidden →
+   añadimos un ::after para el marco estático como capa encima
+══════════════════════════════════════ */
 .profile-avatar-wrap {
   width: 80px;
   height: 80px;
@@ -33,9 +40,10 @@
   margin-top: -40px;
   border: 3px solid var(--bg);
   background: var(--surface-3);
-  overflow: hidden;          /* ← recorta img/video al círculo */
+  overflow: hidden;
   flex-shrink: 0;
   position: relative;
+  z-index: 2;             /* encima de las acciones que tienen margin-top negativo */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -45,31 +53,76 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%;        /* redundante pero previene artefactos */
+  border-radius: 50%;
   display: block;
   flex-shrink: 0;
 }
 
-/* Avatar pequeño en posts/comentarios */
-.post-av-wrap {
-  flex-shrink: 0;
+/* Marco como capa encima (no afectado por overflow:hidden del padre) */
+.profile-avatar-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  pointer-events: none;
+  z-index: 3;
+  /* el color/estilo se aplica vía las clases de abajo */
 }
-.post-av-wrap img,
-.post-av-wrap video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-  display: block;
+
+/* Marcos estáticos vía ::after */
+.av-marco-color::after  { box-shadow: inset 0 0 0 2.5px var(--marco-color, var(--green)); }
+.av-marco-neon::after   { box-shadow: inset 0 0 0 2px var(--marco-color, var(--green)); filter: drop-shadow(0 0 6px var(--marco-color, var(--green))); }
+.av-marco-gold::after   { box-shadow: inset 0 0 0 2.5px #ffd43b; }
+.av-marco-dashed::after { border: 2.5px dashed var(--marco-color, var(--green)); }
+.av-marco-doble::after  { box-shadow: inset 0 0 0 2px var(--marco-color, var(--green)), inset 0 0 0 5px color-mix(in srgb,var(--marco-color, var(--green)) 30%,transparent); }
+
+/* Marcos animados — box-shadow exterior al wrap
+   (funcionan porque los pinta el PROPIO elemento, no su contenido) */
+@keyframes rainbowSpin {
+  0%   { box-shadow: 0 0 0 0 var(--bg), 0 0 0 3px #ff4444; }
+  20%  { box-shadow: 0 0 0 0 var(--bg), 0 0 0 3px #ffaa00; }
+  40%  { box-shadow: 0 0 0 0 var(--bg), 0 0 0 3px #5cdb6f; }
+  60%  { box-shadow: 0 0 0 0 var(--bg), 0 0 0 3px #4dabf7; }
+  80%  { box-shadow: 0 0 0 0 var(--bg), 0 0 0 3px #cc5de8; }
+  100% { box-shadow: 0 0 0 0 var(--bg), 0 0 0 3px #ff4444; }
 }
+@keyframes avatarPulse {
+  0%,100% { box-shadow: 0 0 0 3px var(--marco-color, var(--green)), 0 0 10px 1px var(--marco-color, var(--green)); }
+  50%      { box-shadow: 0 0 0 4px var(--marco-color, var(--green)), 0 0 22px 4px var(--marco-color, var(--green)); }
+}
+@keyframes glitter {
+  0%,100% { box-shadow: 0 0 0 2px #fff, 0 -10px 0 2px #ffd43b, 10px 0 0 2px #ff4466,  0 10px 0 2px #4dabf7, -10px 0 0 2px #5cdb6f; }
+  25%      { box-shadow: 0 0 0 2px #fff, 10px -10px 0 2px #ffd43b, 10px 10px 0 2px #ff4466, -10px 10px 0 2px #4dabf7, -10px -10px 0 2px #5cdb6f; }
+  50%      { box-shadow: 0 0 0 2px #fff, 0 10px 0 2px #ffd43b, -10px 0 0 2px #ff4466,  0 -10px 0 2px #4dabf7,  10px 0 0 2px #5cdb6f; }
+  75%      { box-shadow: 0 0 0 2px #fff, -10px 10px 0 2px #ffd43b, -10px -10px 0 2px #ff4466, 10px -10px 0 2px #4dabf7, 10px 10px 0 2px #5cdb6f; }
+}
+/* Auras */
+@keyframes auraFire    { 0%,100%{box-shadow:0 0 0 3px rgba(255,107,53,.4),0 0 22px 6px rgba(255,107,53,.5)}50%{box-shadow:0 0 0 4px rgba(255,107,53,.6),0 0 34px 10px rgba(255,107,53,.4)} }
+@keyframes auraIce     { 0%,100%{box-shadow:0 0 0 3px rgba(100,200,255,.4),0 0 22px 6px rgba(100,200,255,.5)}50%{box-shadow:0 0 0 4px rgba(100,200,255,.6),0 0 34px 10px rgba(100,200,255,.4)} }
+@keyframes auraRainbow { 0%{box-shadow:0 0 0 3px rgba(255,68,68,.5),0 0 22px 8px rgba(255,68,68,.3)}25%{box-shadow:0 0 0 3px rgba(92,219,111,.5),0 0 22px 8px rgba(92,219,111,.3)}50%{box-shadow:0 0 0 3px rgba(77,171,247,.5),0 0 22px 8px rgba(77,171,247,.3)}75%{box-shadow:0 0 0 3px rgba(204,93,232,.5),0 0 22px 8px rgba(204,93,232,.3)}100%{box-shadow:0 0 0 3px rgba(255,68,68,.5),0 0 22px 8px rgba(255,68,68,.3)} }
+
+.av-rainbow  { animation: rainbowSpin 2.5s linear infinite; overflow:visible; }
+.av-animated { animation: avatarPulse 1.8s ease-in-out infinite; overflow:visible; }
+.av-glitter  { animation: glitter 1.5s linear infinite; overflow:visible; }
+.av-aura-soft    { box-shadow: 0 0 0 3px var(--marco-color,var(--green)), 0 0 14px 4px var(--marco-color,var(--green)); overflow:visible; }
+.av-aura-neon    { box-shadow: 0 0 0 3px var(--marco-color,var(--green)), 0 0 20px 8px var(--marco-color,var(--green)), 0 0 40px 12px color-mix(in srgb,var(--marco-color,var(--green)) 35%,transparent); overflow:visible; }
+.av-aura-fire    { animation: auraFire    2s ease-in-out infinite; overflow:visible; }
+.av-aura-ice     { animation: auraIce     2s ease-in-out infinite; overflow:visible; }
+.av-aura-rainbow { animation: auraRainbow 3s linear infinite; overflow:visible; }
+
+/* Cuando hay animación/aura el overflow pasa a visible
+   el ::after ya no se necesita para esos casos */
+.av-rainbow::after,
+.av-animated::after,
+.av-glitter::after,
+.av-aura-soft::after,
+.av-aura-neon::after,
+.av-aura-fire::after,
+.av-aura-ice::after,
+.av-aura-rainbow::after { display:none; }
 
 /* ── Acciones ── */
-.profile-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:-36px; margin-bottom:8px; flex-wrap:wrap; }
+.profile-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:-36px; margin-bottom:8px; flex-wrap:wrap; position:relative; z-index:1; }
 
 .btn-edit-profile { background:transparent; border:1px solid var(--border-2); color:var(--text); border-radius:var(--radius-full); padding:7px 18px; font-size:.85rem; font-weight:700; cursor:pointer; font-family:inherit; transition:all var(--transition); display:flex; align-items:center; gap:6px; }
 .btn-edit-profile:hover { border-color:var(--green); color:var(--green); }
@@ -103,43 +156,6 @@
 /* ── Sticker en banner ── */
 .banner-sticker { position:absolute; bottom:12px; right:16px; font-size:2.8rem; filter:drop-shadow(0 2px 8px rgba(0,0,0,.7)); pointer-events:none; user-select:none; }
 
-/* ══════════════════════════════════════
-   MARCOS Y AURAS — van en el WRAP (no en img/video)
-   el box-shadow del propio elemento
-   NO es cortado por su propio overflow:hidden
-══════════════════════════════════════ */
-@keyframes rainbowSpin {
-  0%   { box-shadow: 0 0 0 0 transparent, 0 0 0 2.5px #ff4444; }
-  20%  { box-shadow: 0 0 0 0 transparent, 0 0 0 2.5px #ffaa00; }
-  40%  { box-shadow: 0 0 0 0 transparent, 0 0 0 2.5px #5cdb6f; }
-  60%  { box-shadow: 0 0 0 0 transparent, 0 0 0 2.5px #4dabf7; }
-  80%  { box-shadow: 0 0 0 0 transparent, 0 0 0 2.5px #cc5de8; }
-  100% { box-shadow: 0 0 0 0 transparent, 0 0 0 2.5px #ff4444; }
-}
-@keyframes avatarPulse {
-  0%,100% { box-shadow: 0 0 0 2px var(--marco-color, var(--green)), 0 0 8px  var(--marco-color, var(--green)); }
-  50%      { box-shadow: 0 0 0 4px var(--marco-color, var(--green)), 0 0 20px var(--marco-color, var(--green)); }
-}
-@keyframes glitter {
-  0%,100% { box-shadow: 0 0 0 2px #fff, 0 -9px 0 2px #ffd43b,  9px 0 0 2px #ff4466,  0 9px 0 2px #4dabf7, -9px 0 0 2px #5cdb6f; }
-  25%      { box-shadow: 0 0 0 2px #fff, 9px -9px 0 2px #ffd43b, 9px 9px 0 2px #ff4466, -9px 9px 0 2px #4dabf7, -9px -9px 0 2px #5cdb6f; }
-  50%      { box-shadow: 0 0 0 2px #fff, 0 9px 0 2px #ffd43b,  -9px 0 0 2px #ff4466, 0 -9px 0 2px #4dabf7,   9px 0 0 2px #5cdb6f; }
-  75%      { box-shadow: 0 0 0 2px #fff, -9px 9px 0 2px #ffd43b, -9px -9px 0 2px #ff4466, 9px -9px 0 2px #4dabf7, 9px 9px 0 2px #5cdb6f; }
-}
-@keyframes auraFire    { 0%,100%{box-shadow:0 0 0 2px rgba(255,107,53,.3),0 0 20px 6px rgba(255,107,53,.5),0 0 40px 12px rgba(255,107,53,.2)}50%{box-shadow:0 0 0 2px rgba(255,107,53,.5),0 0 30px 10px rgba(255,107,53,.7),0 0 60px 20px rgba(255,107,53,.3)} }
-@keyframes auraIce     { 0%,100%{box-shadow:0 0 0 2px rgba(100,200,255,.3),0 0 20px 6px rgba(100,200,255,.5),0 0 40px 12px rgba(100,200,255,.2)}50%{box-shadow:0 0 0 2px rgba(100,200,255,.5),0 0 30px 10px rgba(100,200,255,.7),0 0 60px 20px rgba(100,200,255,.3)} }
-@keyframes auraRainbow { 0%{box-shadow:0 0 0 2px rgba(255,68,68,.5),0 0 20px 8px rgba(255,68,68,.4)}25%{box-shadow:0 0 0 2px rgba(92,219,111,.5),0 0 20px 8px rgba(92,219,111,.4)}50%{box-shadow:0 0 0 2px rgba(77,171,247,.5),0 0 20px 8px rgba(77,171,247,.4)}75%{box-shadow:0 0 0 2px rgba(204,93,232,.5),0 0 20px 8px rgba(204,93,232,.4)}100%{box-shadow:0 0 0 2px rgba(255,68,68,.5),0 0 20px 8px rgba(255,68,68,.4)} }
-
-/* Estas clases van en el .profile-avatar-wrap */
-.av-rainbow  { animation: rainbowSpin 2.5s linear infinite; }
-.av-animated { animation: avatarPulse 1.8s ease-in-out infinite; }
-.av-glitter  { animation: glitter 1.5s linear infinite; }
-.av-aura-soft    { box-shadow: 0 0 0 2px var(--marco-color,var(--green)), 0 0 16px 4px var(--marco-color,var(--green)); }
-.av-aura-neon    { box-shadow: 0 0 0 2px var(--marco-color,var(--green)), 0 0 20px 8px var(--marco-color,var(--green)), 0 0 40px 12px color-mix(in srgb,var(--marco-color,var(--green)) 40%,transparent); }
-.av-aura-fire    { animation: auraFire    2s ease-in-out infinite; }
-.av-aura-ice     { animation: auraIce     2s ease-in-out infinite; }
-.av-aura-rainbow { animation: auraRainbow 3s linear infinite; }
-
 /* ── Card efectos ── */
 .profile-card-glass       { background:rgba(255,255,255,.04) !important; backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.08); }
 .profile-card-neon-border { border:1.5px solid var(--perfil-acento,var(--green)) !important; box-shadow:0 0 20px rgba(92,219,111,.15),inset 0 0 20px rgba(92,219,111,.03); }
@@ -161,6 +177,28 @@
 .btn-send-comment { background:none; border:none; color:var(--green); font-size:1rem; cursor:pointer; padding:2px; flex-shrink:0; transition:opacity var(--transition); }
 .btn-send-comment:hover { opacity:.7; }
 .no-comments { color:var(--text-3); font-size:.83rem; padding:10px 0; display:flex; align-items:center; gap:6px; }
+
+/* ══════════════════════════════════════
+   BOTTOM NAV — siempre visible abajo
+══════════════════════════════════════ */
+.bottom-nav {
+  position: fixed !important;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(8,8,8,.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  /* Safe area para notch/gesture bar de iOS y Android */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* El feed necesita padding-bottom para no quedar tapado por el nav */
+.feed {
+  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+}
 
 /* ══════════════════════════════════════
    MODAL
@@ -188,7 +226,7 @@
 .modal-tab-panel        { display:none; padding:16px 20px 20px; flex-direction:column; gap:14px; }
 .modal-tab-panel.active { display:flex; }
 
-/* Avatar picker */
+/* Avatar picker en modal */
 .avatar-picker { display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:4px; }
 .avatar-preview-wrap { width:80px; height:80px; border-radius:50%; background:var(--surface-3); border:2px solid var(--border-2); overflow:hidden; display:flex; align-items:center; justify-content:center; transition:border-color var(--transition); flex-shrink:0; }
 .avatar-preview-wrap:hover { border-color:var(--green); }
@@ -211,7 +249,7 @@
 .btn-auth:hover    { background:var(--green-dk); }
 .btn-auth:disabled { opacity:.5; cursor:not-allowed; }
 
-/* Banner preview */
+/* Banner preview en modal */
 .banner-preview-wrap { position:relative; width:100%; height:90px; border-radius:var(--radius-sm); overflow:hidden; border:1px solid var(--border-2); margin-bottom:14px; flex-shrink:0; }
 .banner-preview { width:100%; height:100%; background:linear-gradient(135deg,#0d2010,#1a3a14); background-size:cover; background-position:center; transition:all .3s ease; }
 .banner-sticker-preview { position:absolute; bottom:8px; right:12px; font-size:2rem; filter:drop-shadow(0 2px 6px rgba(0,0,0,.6)); pointer-events:none; }
@@ -224,7 +262,7 @@
 .banner-file-info { display:flex; align-items:center; gap:8px; font-size:.78rem; color:var(--text-3); margin-top:6px; flex-wrap:wrap; }
 .banner-file-info button { background:none; border:none; color:var(--red); cursor:pointer; font-size:.85rem; padding:0; }
 
-/* Options */
+/* Options grids */
 .marco-options, .banner-options, .nombre-options { display:flex; flex-wrap:wrap; gap:6px; }
 .option-btn { background:var(--surface-2); border:1px solid var(--border-2); color:var(--text-2); border-radius:var(--radius-full); padding:6px 14px; font-size:.78rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all var(--transition); display:flex; align-items:center; gap:5px; }
 .option-btn:hover  { border-color:var(--green); color:var(--green); }
@@ -238,7 +276,7 @@
 .color-custom-row .color-picker-row { flex:1; min-width:120px; }
 .custom-section-title { font-size:.75rem; font-weight:800; color:var(--text-3); letter-spacing:.5px; text-transform:uppercase; display:flex; align-items:center; gap:6px; margin-bottom:8px; }
 
-/* Stickers */
+/* Sticker grid */
 .sticker-grid { display:flex; flex-wrap:wrap; gap:6px; }
 .sticker-btn { width:42px; height:42px; font-size:1.3rem; background:var(--surface-2); border:1.5px solid var(--border-2); border-radius:var(--radius-sm); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all var(--transition); font-family:inherit; flex-shrink:0; }
 .sticker-btn:hover  { border-color:var(--green); transform:scale(1.1); }
@@ -270,7 +308,7 @@
 .modal-img.active { display:flex; }
 .modal-img img { max-width:94vw; max-height:94dvh; border-radius:var(--radius); object-fit:contain; }
 
-/* Fondo animado */
+/* Fondo animado canvas */
 #bgCanvas { position:fixed; inset:0; pointer-events:none; z-index:0; }
 .app-layout, .bottom-nav { position:relative; z-index:1; }
 
@@ -279,44 +317,46 @@
 @keyframes spin { to{transform:rotate(360deg)} }
 
 /* ══════════════════════════════════════
-   RESPONSIVE — fixes principales
+   SAFE AREA + OVERSCROLL
 ══════════════════════════════════════ */
-@media (max-width:768px) {
-  .profile-banner  { height:110px; }
-
-  /* Avatar responsive sin huevo */
-  .profile-avatar-wrap { width:66px; height:66px; margin-top:-33px; border-width:2px; }
-
-  .profile-stats   { gap:12px; }
-  .profile-actions { margin-top:-20px; gap:6px; }
-  .btn-edit-profile, .btn-follow, .btn-mensaje { padding:6px 14px; font-size:.8rem; }
-
-  .modal-box { max-height:96dvh; }
-  .modal-tab-btn i { display:none; }
-  .modal-tab-btn   { padding:10px 8px; font-size:.72rem; }
-}
-
-@media (max-width:400px) {
-  .profile-actions { flex-wrap:wrap; justify-content:flex-start; margin-top:8px; }
-  .profile-stats   { gap:10px; }
-  .profile-stats span { font-size:.8rem; }
-}
-
-/* ══════════════════════════════════════
-   SAFE AREA — negro debajo del nav
-   (iOS notch / Android gesture bar)
-══════════════════════════════════════ */
-.bottom-nav {
-  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-}
-
-/* evita fondo negro en overscroll en móvil */
 html {
   background-color: var(--bg, #080808);
-  overscroll-behavior: none;
+  overscroll-behavior-y: none;
 }
 body {
   background-color: var(--bg, #080808);
-  overscroll-behavior: none;
+  overscroll-behavior-y: none;
   min-height: 100dvh;
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width:768px) {
+  .profile-banner { height:110px; }
+
+  .profile-avatar-wrap {
+    width: 66px;
+    height: 66px;
+    margin-top: -33px;
+    border-width: 2px;
+  }
+
+  .profile-stats   { gap:12px; }
+  .profile-actions { margin-top:-18px; gap:6px; }
+  .btn-edit-profile, .btn-follow, .btn-mensaje { padding:6px 14px; font-size:.8rem; }
+
+  .modal-box     { max-height:96dvh; border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
+  .modal-overlay { padding:0; align-items:flex-end; }
+  .modal-tab-btn { font-size:.7rem; padding:10px 8px; }
+  .modal-tab-btn i { display:none; }
+
+  .tab-btn { font-size:.8rem; padding:12px 6px; gap:4px; }
+  .tab-btn i { font-size:.9rem; }
+}
+
+@media (max-width:400px) {
+  .profile-actions { margin-top:8px; flex-wrap:wrap; justify-content:flex-start; }
+  .profile-stats span { font-size:.78rem; }
+  .profile-stats { gap:10px; }
 }
