@@ -6,8 +6,10 @@ const token = localStorage.getItem("fu_token");
 const yo    = JSON.parse(localStorage.getItem("fu_usuario") || "null");
 if (!token || !yo) location.href = "/login.html";
 
-document.getElementById("navPerfil").href = `profile.html?handle=${yo.handle}`;
-document.getElementById("bnPerfil").href  = `profile.html?handle=${yo.handle}`;
+const _navP = document.getElementById("navPerfil");
+const _bnP  = document.getElementById("bnPerfil");
+if (_navP) _navP.href = `profile.html?handle=${yo.handle}`;
+if (_bnP)  _bnP.href  = `profile.html?handle=${yo.handle}`;
 
 /* ── Sidebar user ── */
 (function(){
