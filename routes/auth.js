@@ -7,10 +7,12 @@ const { uploadFile, deleteFile } = require("../utils/gridfs");
 
 const router = express.Router();
 
-// Multer memory storage para avatares
+/* ══════════════════════════════════════
+   MULTER — Avatar (3MB, img + video)
+══════════════════════════════════════ */
 const uploadAvatar = multer({
-  storage:    multer.memoryStorage(),
-  limits:     { fileSize: 3 * 1024 * 1024 }, // 3 MB
+  storage: multer.memoryStorage(),
+  limits:  { fileSize: 3 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const ok = [
       "image/jpeg","image/png","image/gif","image/webp",
@@ -20,13 +22,57 @@ const uploadAvatar = multer({
   }
 });
 
+/* ══════════════════════════════════════
+   MULTER — Banner (8MB, solo imagen)
+══════════════════════════════════════ */
+const uploadBanner = multer({
+  storage: multer.memoryStorage(),
+  limits:  { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ok = [
+      "image/jpeg","image/png","image/gif","image/webp"
+    ].includes(file.mimetype);
+    cb(null, ok);
+  }
+});
+
+/* ══════════════════════════════════════
+   MULTER — Ambos campos en /personalizacion
+══════════════════════════════════════ */
+const uploadPersonalizacion = multer({
+  storage: multer.memoryStorage(),
+  limits:  { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ok = [
+      "image/jpeg","image/png","image/gif","image/webp"
+    ].includes(file.mimetype);
+    cb(null, ok);
+  }
+}).single("bannerImagen");
+
+/* ══════════════════════════════════════
+   UTILS
+══════════════════════════════════════ */
 const generarToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 
 const avatarPorDefecto = (nombre) =>
   `https://api.dicebear.com/7.x/thumbs/svg?seed=${encodeURIComponent(nombre)}`;
 
-// ── POST /api/auth/register ──
+const camposPublicos = (u) => ({
+  _id:             u._id,
+  nombre:          u.nombre,
+  handle:          u.handle,
+  avatar:          u.avatar,
+  avatarTipo:      u.avatarTipo,
+  bio:             u.bio,
+  link:            u.link,
+  personalizacion: u.personalizacion
+});
+
+/* ══════════════════════════════════════
+   POST /api/auth/register
+══════════════════════════════════════ */
 router.post("/register", uploadAvatar.single("avatar"), async (req, res) => {
   try {
     const { nombre, handle, email, password } = req.body;
@@ -46,6 +92,7 @@ router.post("/register", uploadAvatar.single("avatar"), async (req, res) => {
     const existe = await User.findOne({
       $or: [{ email: email.toLowerCase() }, { handle: handle.toLowerCase() }]
     });
+
     if (existe) {
       return res.status(400).json({
         mensaje: existe.email === email.toLowerCase()
@@ -54,7 +101,6 @@ router.post("/register", uploadAvatar.single("avatar"), async (req, res) => {
       });
     }
 
-    // Avatar
     let avatar     = avatarPorDefecto(nombre);
     let avatarTipo = "imagen";
 
@@ -74,53 +120,45 @@ router.post("/register", uploadAvatar.single("avatar"), async (req, res) => {
     });
 
     res.status(201).json({
-      token: generarToken(usuario._id),
-      usuario: {
-        _id:             usuario._id,
-        nombre:          usuario.nombre,
-        handle:          usuario.handle,
-        avatar:          usuario.avatar,
-        avatarTipo:      usuario.avatarTipo,
-        personalizacion: usuario.personalizacion
-      }
+      token:   generarToken(usuario._id),
+      usuario: camposPublicos(usuario)
     });
   } catch (err) {
     if (err.code === "LIMIT_FILE_SIZE")
       return res.status(400).json({ mensaje: "Avatar máximo 3MB" });
-    console.error(err);
+    console.error("POST /register:", err);
     res.status(500).json({ mensaje: "Error al registrar" });
   }
 });
 
-// ── POST /api/auth/login ──
+/* ══════════════════════════════════════
+   POST /api/auth/login
+══════════════════════════════════════ */
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+
     if (!email || !password)
       return res.status(400).json({ mensaje: "Email y contraseña requeridos" });
 
     const usuario = await User.findOne({ email: email.toLowerCase() });
+
     if (!usuario || !(await usuario.compararPassword(password)))
       return res.status(401).json({ mensaje: "Credenciales incorrectas" });
 
     res.json({
-      token: generarToken(usuario._id),
-      usuario: {
-        _id:             usuario._id,
-        nombre:          usuario.nombre,
-        handle:          usuario.handle,
-        avatar:          usuario.avatar,
-        avatarTipo:      usuario.avatarTipo,
-        personalizacion: usuario.personalizacion
-      }
+      token:   generarToken(usuario._id),
+      usuario: camposPublicos(usuario)
     });
   } catch (err) {
-    console.error(err);
+    console.error("POST /login:", err);
     res.status(500).json({ mensaje: "Error al iniciar sesión" });
   }
 });
 
-// ── GET /api/auth/yo ──
+/* ══════════════════════════════════════
+   GET /api/auth/yo
+══════════════════════════════════════ */
 router.get("/yo", auth, async (req, res) => {
   try {
     const usuario = await User.findById(req.usuario._id).select("-password");
@@ -131,10 +169,13 @@ router.get("/yo", auth, async (req, res) => {
   }
 });
 
-// ── PUT /api/auth/perfil ──
+/* ══════════════════════════════════════
+   PUT /api/auth/perfil
+   — nombre, bio, link, avatar
+══════════════════════════════════════ */
 router.put("/perfil", auth, uploadAvatar.single("avatar"), async (req, res) => {
   try {
-    const { nombre, bio } = req.body;
+    const { nombre, bio, link } = req.body;
 
     if (nombre && (nombre.length < 2 || nombre.length > 50))
       return res.status(400).json({ mensaje: "Nombre: 2–50 caracteres" });
@@ -142,15 +183,16 @@ router.put("/perfil", auth, uploadAvatar.single("avatar"), async (req, res) => {
     const update = {};
     if (nombre !== undefined) update.nombre = nombre.trim();
     if (bio    !== undefined) update.bio    = bio.trim().slice(0, 160);
+    if (link   !== undefined) update.link   = link.trim().slice(0, 100); // ← NUEVO
 
     if (req.file) {
       // Borrar avatar viejo de GridFS si era interno
       const viejo = await User.findById(req.usuario._id).select("avatar");
-      if (viejo?.avatar?.startsWith("/api/images/"))
-        await deleteFile(viejo.avatar);
-
-      const fileId   = await uploadFile(req.file);
-      update.avatar    = `/api/images/${fileId}`;
+      if (viejo?.avatar?.startsWith("/api/images/")) {
+        await deleteFile(viejo.avatar).catch(() => {});
+      }
+      const fileId      = await uploadFile(req.file);
+      update.avatar     = `/api/images/${fileId}`;
       update.avatarTipo = req.file.mimetype.startsWith("video/") ? "video" : "imagen";
     }
 
@@ -160,44 +202,52 @@ router.put("/perfil", auth, uploadAvatar.single("avatar"), async (req, res) => {
       { new: true }
     ).select("-password");
 
-    res.json({
-      usuario: {
-        _id:             usuario._id,
-        nombre:          usuario.nombre,
-        handle:          usuario.handle,
-        avatar:          usuario.avatar,
-        avatarTipo:      usuario.avatarTipo,
-        bio:             usuario.bio,
-        personalizacion: usuario.personalizacion
-      }
-    });
+    res.json({ usuario: camposPublicos(usuario) });
   } catch (err) {
     if (err.code === "LIMIT_FILE_SIZE")
       return res.status(400).json({ mensaje: "Avatar máximo 3MB" });
-    console.error(err);
+    console.error("PUT /perfil:", err);
     res.status(500).json({ mensaje: "Error al actualizar perfil" });
   }
 });
 
-// ── PUT /api/auth/personalizacion 
-// ── PUT /api/auth/personalizacion ──
-router.put("/personalizacion", auth, async (req, res) => {
+/* ══════════════════════════════════════
+   PUT /api/auth/personalizacion
+   — todo lo visual incluido bannerImagen
+══════════════════════════════════════ */
+router.put("/personalizacion", auth, uploadPersonalizacion, async (req, res) => {
   try {
-    const campos = [
+    // Todos los campos de texto que pueden venir
+    const camposTexto = [
       "marco", "marcoColor",
-      "bannerPreset", "bannerColor1", "bannerColor2",
+      "aura",
+      "bannerTipo", "bannerPreset", "bannerColor1", "bannerColor2", "bannerSticker",
       "nombreEfecto", "nombreGradiente", "nombreColor", "gradColor1", "gradColor2",
-      "badge", "temaColor"
+      "badge",
+      "bgEfecto", "cardEfecto", "acento",
+      "temaColor"
     ];
 
-    // ✅ Dot notation → actualiza SOLO los campos enviados
-    // ❌ Antes: $set: { personalizacion: { marco: "x" } } → borraba todo lo demás
+    // Construir update con dot notation (no borra campos que no se envían)
     const setUpdate = {};
-    campos.forEach(campo => {
+    camposTexto.forEach(campo => {
       if (req.body[campo] !== undefined) {
         setUpdate[`personalizacion.${campo}`] = req.body[campo];
       }
     });
+
+    // Si subió imagen de banner → sube a GridFS
+    if (req.file) {
+      // Borrar banner viejo si era interno
+      const viejo = await User.findById(req.usuario._id).select("personalizacion.bannerImagen");
+      if (viejo?.personalizacion?.bannerImagen?.startsWith("/api/images/")) {
+        await deleteFile(viejo.personalizacion.bannerImagen).catch(() => {});
+      }
+
+      const fileId = await uploadFile(req.file);
+      setUpdate["personalizacion.bannerImagen"] = `/api/images/${fileId}`;
+      setUpdate["personalizacion.bannerTipo"]   = "imagen";
+    }
 
     if (!Object.keys(setUpdate).length)
       return res.status(400).json({ mensaje: "Nada que actualizar" });
@@ -208,9 +258,11 @@ router.put("/personalizacion", auth, async (req, res) => {
       { new: true, runValidators: false }
     ).select("-password");
 
-    res.json({ usuario });
+    res.json({ usuario: camposPublicos(usuario) });
   } catch (err) {
-    console.error(err);
+    if (err.code === "LIMIT_FILE_SIZE")
+      return res.status(400).json({ mensaje: "Banner máximo 8MB" });
+    console.error("PUT /personalizacion:", err);
     res.status(500).json({ mensaje: "Error al guardar personalización" });
   }
 });
