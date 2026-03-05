@@ -34,10 +34,10 @@ async function cargarNotificaciones() {
       <h3>Cargando...</h3>
     </div>`;
 
-  console.log("[notifs] fetch →", `${API}/notifications`);
+  console.log("[notifs] fetch →", `${API}/notificaciones`);
 
   try {
-    const res = await fetch(`${API}/notifications`, {
+    const res = await fetch(`${API}/notificaciones`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -125,7 +125,7 @@ function renderNotif(n) {
 async function irNotif(url, notifId, el) {
   if (el.classList.contains("no-leida")) {
     el.classList.remove("no-leida");
-    fetch(`${API}/notifications/${notifId}/leer`, {
+    fetch(`${API}/notificaciones/${notifId}/leer`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` }
     }).catch(() => {});
