@@ -1302,6 +1302,15 @@ function cerrarImgFull(){document.getElementById("modalImgFull").classList.remov
 /* ═══════════════════════════════════════════════════
    UTILS
 ═══════════════════════════════════════════════════ */
+
+function parsearTextoHTML(texto = "") {
+  return esc(texto)
+    .replace(/@([a-zA-Z0-9_]+)/g,
+      '<a href="profile.html?handle=$1" style="color:var(--green);font-weight:600" onclick="event.stopPropagation()">@$1</a>')
+    .replace(/#([a-zA-Z0-9_]+)/g,
+      '<a href="explore.html?tag=$1" style="color:#4dabf7;font-weight:600" onclick="event.stopPropagation()">#$1</a>');
+}
+
 function defAv(n="?"){
   const l=(n||"?")[0].toUpperCase();
   return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" rx="20" fill="#1c1c1c"/><text x="20" y="26" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#5cdb6f">${l}</text></svg>`)}`;
