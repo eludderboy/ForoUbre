@@ -5,18 +5,7 @@
 .btn-back { display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--text-2); font-size:.88rem; font-weight:600; cursor:pointer; padding:4px 0; font-family:inherit; transition:color var(--transition); }
 .btn-back:hover { color:var(--green); }
 
-.profile-banner {
-  width:100%; height:150px; flex-shrink:0;
-  background-size:cover; background-position:center;
-  position:relative; display:block;
-}
 
-.profile-info {
-  padding:0 20px 16px;
-  border-bottom:8px solid var(--surface);
-  position:relative;
-  /* SIN overflow:hidden aquí — nunca */
-}
 
 /* ══════════════════════════════════════
    AVATAR — DOBLE WRAPPER (fix definitivo)
@@ -151,10 +140,6 @@
 .banner-sticker { position:absolute; bottom:12px; right:16px; font-size:2.8rem; filter:drop-shadow(0 2px 8px rgba(0,0,0,.7)); pointer-events:none; user-select:none; }
 
 /* ── Card efectos ── */
-.profile-card-glass       { background:rgba(255,255,255,.04) !important; backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.08); }
-.profile-card-neon-border { border:1.5px solid var(--perfil-acento,var(--green)) !important; box-shadow:0 0 20px rgba(92,219,111,.15); }
-.profile-card-shadow      { box-shadow:0 8px 40px rgba(92,219,111,.15); }
-
 /* ── Comentarios ── */
 .comments-section { border-top:1px solid var(--border); margin-top:8px; }
 .comments-section.hidden { display:none; }
@@ -313,4 +298,69 @@ body { background-color:var(--bg,#080808); overscroll-behavior-y:none; min-heigh
   .profile-actions { margin-top:8px; flex-wrap:wrap; justify-content:flex-start; }
   .profile-stats span { font-size:.78rem; }
   .profile-stats { gap:10px; }
+}
+
+/* ══════════════════════════════════════
+   PROFILE CARD WRAP
+   Envuelve banner + info → el efecto
+   de tarjeta cubre todo el header
+══════════════════════════════════════ */
+.profile-card-wrap {
+  position: relative;
+  overflow: visible;
+}
+
+/* ── Banner ── */
+.profile-banner {
+  width: 100%;
+  height: 150px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg,#0d2010,#1a3a14); /* fallback siempre visible */
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: block;
+  border-radius: 0;
+}
+
+/* ── Profile info ── */
+.profile-info {
+  padding: 0 20px 16px;
+  border-bottom: 8px solid var(--surface);
+  position: relative;
+  /* SIN overflow:hidden — nunca */
+}
+
+/* ══════════════════════════════════════
+   CARD EFFECTS — en el WRAP (no en info)
+   así el banner + info quedan dentro
+══════════════════════════════════════ */
+.profile-card-glass .profile-banner,
+.profile-card-glass .profile-info {
+  background: rgba(255,255,255,.04) !important;
+  backdrop-filter: blur(20px);
+}
+.profile-card-glass {
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.profile-card-neon-border {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1.5px var(--perfil-acento, var(--green)),
+    0 0 16px 2px color-mix(in srgb, var(--perfil-acento, var(--green)) 40%, transparent),
+    0 0 40px 6px color-mix(in srgb, var(--perfil-acento, var(--green)) 15%, transparent);
+}
+/* El banner dentro del neon-border también tiene border-radius */
+.profile-card-neon-border .profile-banner {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.profile-card-shadow {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 8px 40px color-mix(in srgb, var(--perfil-acento, var(--green)) 20%, transparent);
 }
