@@ -16,11 +16,10 @@ let acentoActual  = "#5cdb6f";
 let bgAnimId      = null;
 const likingPosts = new Set();
 
-/* ── Nav ── */
 document.getElementById("navPerfil").href = `profile.html?handle=${yo.handle}`;
 document.getElementById("bnPerfil").href  = `profile.html?handle=${yo.handle}`;
 
-/* ── Sidebar user ── */
+/* Sidebar user */
 (function () {
   const el = document.getElementById("sidebarUser");
   if (!el) return;
@@ -31,32 +30,75 @@ document.getElementById("bnPerfil").href  = `profile.html?handle=${yo.handle}`;
 })();
 
 /* ════════════════════════
-   HELPERS PERSONALIZACIÓN
+   HELPERS
 ════════════════════════ */
-function getMarcoStyle(p) {
-  if (!p || !p.marco || p.marco === "none") return "";
-  if (p.marco === "color")  return `box-shadow:0 0 0 2.5px ${p.marcoColor||"var(--green)"};`;
-  if (p.marco === "neon")   return `box-shadow:0 0 0 2px ${p.marcoColor||"var(--green)"},0 0 14px ${p.marcoColor||"var(--green)"};`;
-  if (p.marco === "gold")   return `box-shadow:0 0 0 2.5px #ffd43b;`;
-  if (p.marco === "dashed") return `outline:2.5px dashed ${p.marcoColor||"var(--green)"};outline-offset:2px;`;
-  if (p.marco === "doble")  return `box-shadow:0 0 0 2px ${p.marcoColor||"var(--green)"},0 0 0 5px ${(p.marcoColor||"#5cdb6f")}30;`;
-  return "";
+function getBannerStyle(p) {
+  const presets = {
+    default:  "linear-gradient(135deg,#0d2010,#1a3a14,#0f2808)",
+    purple:   "linear-gradient(135deg,#1a0a2e,#2d1b69,#1a0a2e)",
+    blue:     "linear-gradient(135deg,#0a1628,#1a3a6b,#0a1628)",
+    sunset:   "linear-gradient(135deg,#2a0a00,#8b3a0a,#4a1500)",
+    ocean:    "linear-gradient(135deg,#001a2e,#004d6b,#001a2e)",
+    fire:     "linear-gradient(135deg,#2a0000,#8b1a00,#4a0a00)",
+    neon:     "linear-gradient(135deg,#0a001a,#1a002e,#001a0a)",
+    midnight: "linear-gradient(135deg,#000000,#1a1a2e,#000000)",
+    rose:     "linear-gradient(135deg,#2a0015,#8b1a4a,#2a0015)",
+    gold:     "linear-gradient(135deg,#1a1000,#8b6914,#1a1000)"
+  };
+  if (!p) return presets.default;
+  /* Si tiene imagen guardada Y el tipo es imagen → usa imagen */
+  if (p.bannerTipo === "imagen" && p.bannerImagen && p.bannerImagen.length > 5)
+    return null; /* señal para usar background-image */
+  /* Custom gradient */
+  if (p.bannerPreset === "custom" && p.bannerColor1)
+    return `linear-gradient(135deg,${p.bannerColor1},${p.bannerColor2 || p.bannerColor1})`;
+  /* Preset o default */
+  return presets[p.bannerPreset] || presets.default;
+}
+
+function buildBannerStyle(p) {
+  const gradient = getBannerStyle(p);
+  if (gradient) {
+    /* gradiente — siempre visible */
+    return `background:${gradient};background-size:cover;background-position:center`;
+  }
+  /* imagen */
+  return `background-image:url('${p.bannerImagen}');background-size:cover;background-position:center;background-color:#0d1f0a`;
 }
 
 function renderAvatarEl(autor, size = 44) {
-  const p  = autor.personalizacion || {};
-  const ms = getMarcoStyle(p);
+  const p      = autor.personalizacion || {};
   const acento = p.acento || "var(--green)";
-  const extraClass = [
-    p.marco === "rainbow"  ? "avatar-rainbow"  : "",
-    p.marco === "animated" ? "avatar-animated" : "",
-    p.marco === "glitter"  ? "avatar-glitter"  : "",
-    p.aura && p.aura !== "none" ? `aura-${p.aura}` : ""
-  ].filter(Boolean).join(" ");
-  const style = `width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0;${ms}--aura-color:${acento};`;
-  if (autor.avatarTipo === "video")
-    return `<video src="${autor.avatar||""}" autoplay loop muted playsinline class="${extraClass}" style="${style}"></video>`;
-  return `<img src="${autor.avatar||"https://api.dicebear.com/7.x/thumbs/svg?seed=x"}" class="${extraClass}" style="${style}" alt="" loading="lazy"/>`;
+  const mc     = p.marcoColor || acento;
+
+  const sizeClass = size >= 70 ? "av-lg" : size >= 38 ? "av-md" : "av-sm";
+
+  const marcoClass =
+    p.marco === "rainbow"  ? "av-marco-rainbow"  :
+    p.marco === "animated" ? "av-marco-animated" :
+    p.marco === "glitter"  ? "av-marco-glitter"  :
+    p.marco === "color"    ? "av-marco-color"     :
+    p.marco === "neon"     ? "av-marco-neon"      :
+    p.marco === "gold"     ? "av-marco-gold"      :
+    p.marco === "dashed"   ? "av-marco-dashed"    :
+    p.marco === "doble"    ? "av-marco-doble"     : "";
+
+  const auraClass =
+    p.aura === "soft"    ? "av-aura-soft"    :
+    p.aura === "neon"    ? "av-aura-neon"    :
+    p.aura === "fire"    ? "av-aura-fire"    :
+    p.aura === "ice"     ? "av-aura-ice"     :
+    p.aura === "rainbow" ? "av-aura-rainbow" : "";
+
+  const mediaEl = autor.avatarTipo === "video"
+    ? `<video src="${autor.avatar||""}" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;display:block"></video>`
+    : `<img src="${autor.avatar||"https://api.dicebear.com/7.x/thumbs/svg?seed=x"}" style="width:100%;height:100%;object-fit:cover;display:block" alt="" loading="lazy"/>`;
+
+  return `
+    <div class="av-outer ${sizeClass} ${marcoClass} ${auraClass}"
+         style="width:${size}px;height:${size}px;--marco-color:${mc}">
+      <div class="av-inner">${mediaEl}</div>
+    </div>`;
 }
 
 function renderNombreEl(autor) {
@@ -70,7 +112,7 @@ function renderNombreEl(autor) {
     vip:      `<span style="background:linear-gradient(90deg,#ffd43b,#ff6b35);color:#050505;font-size:.58em;padding:1px 6px;border-radius:4px;margin-left:3px;font-weight:900;vertical-align:middle">VIP</span>`,
     new:      `<span style="background:var(--green);color:#050505;font-size:.58em;padding:1px 6px;border-radius:4px;margin-left:3px;font-weight:900;vertical-align:middle">NEW</span>`
   };
-  const badgeHTML = (p.badge && p.badge !== "none") ? (badges[p.badge]||"") : "";
+  const badgeHTML = (p.badge && p.badge !== "none") ? (badges[p.badge] || "") : "";
   const grads = {
     "green-blue": "linear-gradient(90deg,#5cdb6f,#4dabf7)",
     "fire":       "linear-gradient(90deg,#ff6b35,#ffd43b)",
@@ -88,26 +130,6 @@ function renderNombreEl(autor) {
     else if (ef === "color")  { style += `color:${p.nombreColor||"inherit"};`; }
     else if (ef === "shadow") { style += `text-shadow:2px 2px 4px rgba(0,0,0,.9);`; }
   return `<strong style="${style}">${esc(autor.nombre)}</strong>${badgeHTML}`;
-}
-
-function getBannerStyle(p) {
-  const presets = {
-    default:  "linear-gradient(135deg,#0d2010,#1a3a14,#0f2808)",
-    purple:   "linear-gradient(135deg,#1a0a2e,#2d1b69,#1a0a2e)",
-    blue:     "linear-gradient(135deg,#0a1628,#1a3a6b,#0a1628)",
-    sunset:   "linear-gradient(135deg,#2a0a00,#8b3a0a,#4a1500)",
-    ocean:    "linear-gradient(135deg,#001a2e,#004d6b,#001a2e)",
-    fire:     "linear-gradient(135deg,#2a0000,#8b1a00,#4a0a00)",
-    neon:     "linear-gradient(135deg,#0a001a,#1a002e,#001a0a)",
-    midnight: "linear-gradient(135deg,#000000,#1a1a2e,#000000)",
-    rose:     "linear-gradient(135deg,#2a0015,#8b1a4a,#2a0015)",
-    gold:     "linear-gradient(135deg,#1a1000,#8b6914,#1a1000)"
-  };
-  if (!p) return presets.default;
-  if (p.bannerTipo === "imagen" && p.bannerImagen) return null; // usa background-image
-  if (p.bannerPreset === "custom" && p.bannerColor1)
-    return `linear-gradient(135deg,${p.bannerColor1},${p.bannerColor2||p.bannerColor1})`;
-  return presets[p.bannerPreset] || presets.default;
 }
 
 /* ════════════════════════
@@ -136,10 +158,9 @@ function iniciarBgEfecto(tipo, color) {
     let drops   = Array(cols()).fill(1);
     window.addEventListener("resize", () => { drops = Array(cols()).fill(1); });
     bgAnimId = setInterval(() => {
-      ctx.fillStyle = "rgba(0,0,0,.06)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "rgba(0,0,0,.06)"; ctx.fillRect(0,0,canvas.width,canvas.height);
       ctx.fillStyle = color; ctx.font = "13px monospace";
-      drops.forEach((y, i) => {
+      drops.forEach((y,i) => {
         ctx.fillText(chars[Math.floor(Math.random()*chars.length)], i*18, y*18);
         if (y*18 > canvas.height && Math.random() > .975) drops[i] = 0;
         drops[i]++;
@@ -147,46 +168,40 @@ function iniciarBgEfecto(tipo, color) {
     }, 55);
     return;
   }
-
   if (tipo === "grid") {
     const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = color + "22"; ctx.lineWidth = 1;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.strokeStyle = color+"22"; ctx.lineWidth = 1;
       const sz = 40;
-      for (let x = 0; x < canvas.width; x += sz)  { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
-      for (let y = 0; y < canvas.height; y += sz) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
+      for (let x=0; x<canvas.width; x+=sz)  { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
+      for (let y=0; y<canvas.height; y+=sz) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
     };
     draw(); window.addEventListener("resize", draw); return;
   }
-
   const count = tipo === "rain" ? 130 : 90;
   const pts   = Array.from({length:count}, () => ({
-    x:  Math.random() * window.innerWidth,
-    y:  Math.random() * window.innerHeight,
-    r:  tipo === "stars" ? Math.random()*1.5+.5 : Math.random()*2.5+1,
-    dx: tipo === "rain"  ? 0 : (Math.random()-.5)*.5,
-    dy: tipo === "rain"  ? Math.random()*2+.8 : (Math.random()-.5)*.5,
-    o:  Math.random()*.7+.2
+    x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight,
+    r: tipo === "stars" ? Math.random()*1.5+.5 : Math.random()*2.5+1,
+    dx: tipo === "rain" ? 0 : (Math.random()-.5)*.5,
+    dy: tipo === "rain" ? Math.random()*2+.8 : (Math.random()-.5)*.5,
+    o: Math.random()*.7+.2
   }));
-
   const draw = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
     pts.forEach(p => {
       ctx.beginPath();
       if (tipo === "rain") {
-        ctx.moveTo(p.x, p.y); ctx.lineTo(p.x+.8, p.y+14);
-        ctx.strokeStyle = color + Math.round(p.o*220).toString(16).padStart(2,"0");
+        ctx.moveTo(p.x,p.y); ctx.lineTo(p.x+.8,p.y+14);
+        ctx.strokeStyle = color+Math.round(p.o*220).toString(16).padStart(2,"0");
         ctx.lineWidth = 1; ctx.stroke();
       } else {
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        ctx.fillStyle = color + Math.round(p.o*220).toString(16).padStart(2,"0");
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle = color+Math.round(p.o*220).toString(16).padStart(2,"0");
         ctx.fill();
       }
       p.x += p.dx; p.y += p.dy;
-      if (p.x < 0) p.x = canvas.width;
-      if (p.x > canvas.width)  p.x = 0;
-      if (p.y < 0) p.y = canvas.height;
-      if (p.y > canvas.height) p.y = 0;
+      if (p.x < 0) p.x = canvas.width;  if (p.x > canvas.width)  p.x = 0;
+      if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
     });
     bgAnimId = requestAnimationFrame(draw);
   };
@@ -222,7 +237,7 @@ async function cargarPerfil() {
 }
 
 /* ════════════════════════
-   RENDER PERFIL HEADER
+   RENDER PERFIL
 ════════════════════════ */
 function renderPerfil(u) {
   const p      = u.personalizacion || {};
@@ -246,21 +261,14 @@ function renderPerfil(u) {
     p.aura === "ice"     ? "av-aura-ice"     :
     p.aura === "rainbow" ? "av-aura-rainbow" : "";
 
-  // Card effect → va en el WRAP (banner + info juntos)
   const cardClass =
     p.cardEfecto === "glass"        ? "profile-card-glass"       :
     p.cardEfecto === "neon-border"  ? "profile-card-neon-border" :
     p.cardEfecto === "shadow-color" ? "profile-card-shadow"      : "";
 
-  // Banner
-  const bannerStyle = getBannerStyle(p);
-  const bannerBg    = bannerStyle
-    ? `background:${bannerStyle}`
-    : `background-image:url('${p.bannerImagen}');background-size:cover;background-position:center`;
-
-  const stickerEl = p.bannerSticker
-    ? `<div class="banner-sticker">${p.bannerSticker}</div>`
-    : "";
+  /* Banner — buildBannerStyle SIEMPRE devuelve algo visible */
+  const bannerInlineStyle = buildBannerStyle(p);
+  const stickerEl = p.bannerSticker ? `<div class="banner-sticker">${p.bannerSticker}</div>` : "";
 
   const mediaEl = u.avatarTipo === "video"
     ? `<video src="${u.avatar}" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;display:block"></video>`
@@ -269,7 +277,7 @@ function renderPerfil(u) {
   document.getElementById("profileContent").innerHTML = `
     <div class="profile-card-wrap ${cardClass}" style="--perfil-acento:${acento}">
 
-      <div class="profile-banner" style="${bannerBg}">${stickerEl}</div>
+      <div class="profile-banner" style="${bannerInlineStyle}">${stickerEl}</div>
 
       <div class="profile-info">
         <div class="av-outer av-lg ${marcoClass} ${auraClass}"
@@ -298,13 +306,10 @@ function renderPerfil(u) {
         </div>
         <p class="profile-handle">@${esc(u.handle)}</p>
         ${u.bio  ? `<p class="profile-bio">${esc(u.bio)}</p>` : ""}
-        ${u.link
-          ? `<a href="${esc(u.link)}" target="_blank" rel="noopener"
-                class="profile-link" style="color:${acento}">
-               <i class="ri-link"></i>
-               ${esc(u.link.replace(/^https?:\/\//,""))}
-             </a>`
-          : ""}
+        ${u.link ? `<a href="${esc(u.link)}" target="_blank" rel="noopener"
+                       class="profile-link" style="color:${acento}">
+                     <i class="ri-link"></i>${esc(u.link.replace(/^https?:\/\//,""))}
+                   </a>` : ""}
         <div class="profile-stats">
           <span><strong>${perfilData.totalPosts}</strong> Posts</span>
           <span><strong id="statSeguidores">${u.totalSeguidores}</strong> Seguidores</span>
@@ -316,6 +321,7 @@ function renderPerfil(u) {
 
   iniciarBgEfecto(p.bgEfecto, acento);
 }
+
 /* ════════════════════════
    TABS
 ════════════════════════ */
@@ -334,19 +340,16 @@ async function cargarTabPerfil(tab) {
   if (tab === "posts") { renderPostsTab(postsCache); return; }
   feed.innerHTML = `<div class="loading"><i class="ri-loader-4-line spin"></i> Cargando...</div>`;
   try {
-    const ruta = tab === "videos" ? `${API}/videos/user/${handle}` : `${API}/videos/compartidos/${handle}`;
+    const ruta = tab === "videos"
+      ? `${API}/videos/user/${handle}`
+      : `${API}/videos/compartidos/${handle}`;
     const res  = await fetch(ruta, { headers:{ Authorization:`Bearer ${token}` } });
     const data = await res.json();
     feed.innerHTML = "";
     if (!data.length) {
       const icon = tab === "videos" ? "ri-video-line" : "ri-share-forward-line";
       const msg  = tab === "videos" ? "Sin videos todavía" : "Sin videos compartidos";
-      feed.innerHTML = `
-        <div class="empty-state">
-          <i class="${icon}" style="font-size:3rem;color:var(--text-3)"></i>
-          <p>${msg}</p>
-          ${tab === "videos" && handle === yo.handle ? `<a href="videos.html" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:var(--green);color:#050505;border-radius:999px;padding:10px 20px;font-weight:800;text-decoration:none;font-size:.88rem"><i class="ri-video-add-line"></i> Subir primer video</a>` : ""}
-        </div>`;
+      feed.innerHTML = `<div class="empty-state"><i class="${icon}" style="font-size:3rem;color:var(--text-3)"></i><p>${msg}</p></div>`;
     } else {
       renderVideoGrid(data, feed);
     }
@@ -365,9 +368,6 @@ function renderPostsTab(posts) {
   posts.forEach(p => renderPost(p));
 }
 
-/* ════════════════════════
-   VIDEO GRID
-════════════════════════ */
 function renderVideoGrid(videos, container) {
   const grid = document.createElement("div");
   grid.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px;";
@@ -382,7 +382,7 @@ function renderVideoGrid(videos, container) {
         <span style="font-size:.72rem;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:3px"><i class="ri-eye-line"></i>${formatNum(v.reproducciones)}</span>
       </div>`;
     el.addEventListener("mouseenter", () => el.querySelector("video")?.play().catch(()=>{}));
-    el.addEventListener("mouseleave", () => { const vid = el.querySelector("video"); if (vid){vid.pause();vid.currentTime=0;} });
+    el.addEventListener("mouseleave", () => { const vid = el.querySelector("video"); if(vid){vid.pause();vid.currentTime=0;} });
     el.addEventListener("click", () => window.location.href = "videos.html");
     grid.appendChild(el);
   });
@@ -435,7 +435,9 @@ async function toggleFollow(userId) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.mensaje);
     btn.className = `btn-follow ${data.sigues?"siguiendo":""}`;
-    btn.innerHTML = data.sigues ? `<i class="ri-user-follow-line"></i> Siguiendo` : `<i class="ri-user-add-line"></i> Seguir`;
+    btn.innerHTML = data.sigues
+      ? `<i class="ri-user-follow-line"></i> Siguiendo`
+      : `<i class="ri-user-add-line"></i> Seguir`;
     const st = document.getElementById("statSeguidores");
     if (st) st.textContent = data.totalSeguidores;
   } catch (e) { alert(e.message); }
@@ -451,7 +453,6 @@ async function iniciarChat(userId) {
   } catch (e) { alert(e.message); }
 }
 
-/* ── LIKES — optimista + anti doble click ── */
 async function toggleLike(postId, btn) {
   if (likingPosts.has(postId)) return;
   likingPosts.add(postId);
@@ -498,14 +499,19 @@ async function toggleComentarios(postId) {
     const data = await res.json();
     section.innerHTML = `
       <div id="commentsList-${postId}">
-        ${!data.length ? `<p class="no-comments"><i class="ri-chat-3-line"></i> Sin comentarios aún</p>` : data.map(c=>renderComentarioHTML(c)).join("")}
+        ${!data.length
+          ? `<p class="no-comments"><i class="ri-chat-3-line"></i> Sin comentarios aún</p>`
+          : data.map(c => renderComentarioHTML(c)).join("")}
       </div>
       <div class="comment-input-row">
         ${renderAvatarEl(yo, 32)}
         <div class="comment-input-wrap">
-          <input type="text" class="comment-input" id="commentInput-${postId}" placeholder="Escribe un comentario..." maxlength="280"
+          <input type="text" class="comment-input" id="commentInput-${postId}"
+                 placeholder="Escribe un comentario..." maxlength="280"
                  onkeydown="if(event.key==='Enter')agregarComentario('${postId}')"/>
-          <button class="btn-send-comment" onclick="agregarComentario('${postId}')"><i class="ri-send-plane-fill"></i></button>
+          <button class="btn-send-comment" onclick="agregarComentario('${postId}')">
+            <i class="ri-send-plane-fill"></i>
+          </button>
         </div>
       </div>`;
   } catch (_) {
@@ -524,7 +530,8 @@ function renderComentarioHTML(c) {
           <span class="post-time">· ${tiempoRelativo(c.createdAt)}</span>
         </div>
         <p class="comment-text">${esc(c.texto)}</p>
-        <button class="post-btn ${c.yaLike?"liked":""}" style="padding:2px 6px;font-size:.73rem" onclick="likeComentario('${c._id}',this)">
+        <button class="post-btn ${c.yaLike?"liked":""}" style="padding:2px 6px;font-size:.73rem"
+                onclick="likeComentario('${c._id}',this)">
           <i class="${c.yaLike?"ri-heart-fill":"ri-heart-line"}"></i><span>${c.totalLikes}</span>
         </button>
       </div>
@@ -537,7 +544,11 @@ async function agregarComentario(postId) {
   if (!texto) return;
   inp.value = ""; inp.disabled = true;
   try {
-    const res  = await fetch(`${API}/posts/${postId}/comments`, { method:"POST", headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"}, body:JSON.stringify({texto}) });
+    const res  = await fetch(`${API}/posts/${postId}/comments`, {
+      method:"POST",
+      headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},
+      body:JSON.stringify({texto})
+    });
     const data = await res.json();
     if (!res.ok) throw new Error(data.mensaje);
     const list = document.getElementById(`commentsList-${postId}`);
@@ -558,7 +569,7 @@ async function likeComentario(id, btn) {
 }
 
 /* ════════════════════════
-   MODAL EDITAR — HELPERS
+   MODAL EDITAR
 ════════════════════════ */
 function setBannerTipo(tipo) {
   bannerTipo = tipo;
@@ -591,12 +602,13 @@ function actualizarBannerPreview() {
   if (bannerTipo === "imagen" && bannerFile) {
     prev.style.background = "none";
     prev.style.backgroundImage = `url(${URL.createObjectURL(bannerFile)})`;
-    prev.style.backgroundSize     = "cover";
+    prev.style.backgroundSize = "cover";
     prev.style.backgroundPosition = "center";
   } else {
     const preset = document.querySelector("#bannerOptions .option-btn.active")?.dataset.banner || "default";
-    const style  = getBannerStyle({ bannerPreset: preset, bannerColor1: document.getElementById("bannerColor1")?.value, bannerColor2: document.getElementById("bannerColor2")?.value });
-    prev.style.background = style || ""; prev.style.backgroundImage = "";
+    const fakeP  = { bannerPreset: preset, bannerColor1: document.getElementById("bannerColor1")?.value, bannerColor2: document.getElementById("bannerColor2")?.value };
+    const style  = getBannerStyle(fakeP);
+    if (style) { prev.style.background = style; prev.style.backgroundImage = ""; }
   }
   const sticker = document.querySelector("#stickerOptions .sticker-btn.active")?.dataset.sticker || "";
   document.getElementById("bannerStickerPreview").textContent = sticker;
@@ -630,21 +642,16 @@ function actualizarPreviewNombre() {
   prev.textContent   = nombre || "Tu Nombre";
 }
 
-/* ════════════════════════
-   ABRIR / CERRAR MODAL
-════════════════════════ */
 function abrirModalEditar() {
   const u = perfilData.usuario;
   const p = u.personalizacion || {};
 
-  /* Info */
   document.getElementById("editNombre").value        = u.nombre;
   document.getElementById("editBio").value           = u.bio   || "";
   document.getElementById("editLink").value          = u.link  || "";
   document.getElementById("cEditNombre").textContent = 50 - u.nombre.length;
   document.getElementById("cEditBio").textContent    = 160 - (u.bio?.length||0);
 
-  /* Avatar preview */
   const img  = document.getElementById("editAvatarImg");
   const vid  = document.getElementById("editAvatarVid");
   const hold = document.getElementById("editAvatarHolder");
@@ -652,7 +659,6 @@ function abrirModalEditar() {
   if (u.avatarTipo === "video") { img.classList.add("hidden"); vid.src = u.avatar; vid.classList.remove("hidden"); }
   else                          { vid.classList.add("hidden"); img.src = u.avatar; img.classList.remove("hidden"); }
 
-  /* Banner */
   bannerFile = null;
   setBannerTipo(p.bannerTipo || "gradiente");
   document.querySelectorAll("#bannerOptions .option-btn").forEach(b => b.classList.toggle("active", b.dataset.banner === (p.bannerPreset||"default")));
@@ -661,17 +667,11 @@ function abrirModalEditar() {
   if (p.bannerColor2) document.getElementById("bannerColor2").value = p.bannerColor2;
   document.getElementById("bannerFileInfo")?.classList.add("hidden");
 
-  /* Sticker */
   document.querySelectorAll("#stickerOptions .sticker-btn").forEach(b => b.classList.toggle("active", b.dataset.sticker === (p.bannerSticker||"")));
-
-  /* Marco */
   document.querySelectorAll("#marcoOptions .option-btn").forEach(b => b.classList.toggle("active", b.dataset.marco === (p.marco||"none")));
   document.getElementById("marcoColorPicker").value = p.marcoColor || "#5cdb6f";
-
-  /* Aura */
   document.querySelectorAll("#auraOptions .option-btn").forEach(b => b.classList.toggle("active", b.dataset.aura === (p.aura||"none")));
 
-  /* Nombre */
   document.querySelectorAll("#nombreOptions .option-btn").forEach(b => b.classList.toggle("active", b.dataset.efecto === (p.nombreEfecto||"none")));
   const ef = p.nombreEfecto || "none";
   document.getElementById("gradienteRow").style.display = ef === "gradient" ? "block" : "none";
@@ -682,15 +682,12 @@ function abrirModalEditar() {
   if (p.gradColor1)  document.getElementById("gradColor1").value        = p.gradColor1;
   if (p.gradColor2)  document.getElementById("gradColor2").value        = p.gradColor2;
 
-  /* Efectos */
   document.querySelectorAll("#bgEfectoOptions .option-btn").forEach(b => b.classList.toggle("active", b.dataset.bgefecto === (p.bgEfecto||"none")));
   document.querySelectorAll("#cardEfectoOptions .option-btn").forEach(b => b.classList.toggle("active", b.dataset.cardefecto === (p.cardEfecto||"none")));
   seleccionarAcento(p.acento || "#5cdb6f");
 
-  /* Badge */
   document.querySelectorAll(".badge-option").forEach(b => b.classList.toggle("active", b.dataset.badge === (p.badge||"none")));
 
-  /* Reset tab */
   document.querySelectorAll(".modal-tab-btn").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".modal-tab-panel").forEach(t => t.classList.remove("active"));
   document.querySelector(".modal-tab-btn[data-tab='info']").classList.add("active");
@@ -707,10 +704,7 @@ function cerrarModalEditar() {
   avatarFile = null; bannerFile = null;
 }
 
-/* ════════════════════════
-   EVENTOS DEL MODAL
-════════════════════════ */
-/* Tabs */
+/* ── Tabs del modal ── */
 document.querySelectorAll(".modal-tab-btn").forEach(btn => {
   btn.addEventListener("click", function () {
     document.querySelectorAll(".modal-tab-btn").forEach(b => b.classList.remove("active"));
@@ -721,13 +715,12 @@ document.querySelectorAll(".modal-tab-btn").forEach(btn => {
   });
 });
 
-/* Banner presets */
 document.querySelectorAll("#bannerOptions .option-btn").forEach(btn => {
   btn.addEventListener("click", function () {
     document.querySelectorAll("#bannerOptions .option-btn").forEach(b => b.classList.remove("active"));
     this.classList.add("active");
     const row = document.getElementById("bannerCustomRow");
-    if (this.dataset.banner === "custom") { row.classList.remove("hidden"); row.style.display = "flex"; }
+    if (this.dataset.banner === "custom") { row.classList.remove("hidden"); row.style.display="flex"; }
     else row.classList.add("hidden");
     actualizarBannerPreview();
   });
@@ -735,7 +728,6 @@ document.querySelectorAll("#bannerOptions .option-btn").forEach(btn => {
 document.getElementById("bannerColor1")?.addEventListener("input", actualizarBannerPreview);
 document.getElementById("bannerColor2")?.addEventListener("input", actualizarBannerPreview);
 
-/* Banner file */
 document.getElementById("bannerFileInput")?.addEventListener("change", function () {
   const file = this.files[0]; if (!file) return;
   if (file.size > 8*1024*1024) { alert("Máximo 8MB"); this.value=""; return; }
@@ -746,7 +738,6 @@ document.getElementById("bannerFileInput")?.addEventListener("change", function 
   actualizarBannerPreview();
 });
 
-/* Stickers */
 document.querySelectorAll("#stickerOptions .sticker-btn").forEach(btn => {
   btn.addEventListener("click", function () {
     document.querySelectorAll("#stickerOptions .sticker-btn").forEach(b => b.classList.remove("active"));
@@ -755,7 +746,6 @@ document.querySelectorAll("#stickerOptions .sticker-btn").forEach(btn => {
   });
 });
 
-/* Marco */
 document.querySelectorAll("#marcoOptions .option-btn").forEach(btn => {
   btn.addEventListener("click", function () {
     document.querySelectorAll("#marcoOptions .option-btn").forEach(b => b.classList.remove("active"));
@@ -763,7 +753,6 @@ document.querySelectorAll("#marcoOptions .option-btn").forEach(btn => {
   });
 });
 
-/* Aura */
 document.querySelectorAll("#auraOptions .option-btn").forEach(btn => {
   btn.addEventListener("click", function () {
     document.querySelectorAll("#auraOptions .option-btn").forEach(b => b.classList.remove("active"));
@@ -771,7 +760,6 @@ document.querySelectorAll("#auraOptions .option-btn").forEach(btn => {
   });
 });
 
-/* Nombre efecto */
 document.querySelectorAll("#nombreOptions .option-btn").forEach(btn => {
   btn.addEventListener("click", function () {
     document.querySelectorAll("#nombreOptions .option-btn").forEach(b => b.classList.remove("active"));
@@ -783,19 +771,17 @@ document.querySelectorAll("#nombreOptions .option-btn").forEach(btn => {
   });
 });
 
-/* Gradiente */
 document.querySelectorAll("#gradOptions .option-btn").forEach(btn => {
   btn.addEventListener("click", function () {
     document.querySelectorAll("#gradOptions .option-btn").forEach(b => b.classList.remove("active"));
     this.classList.add("active");
     const row = document.getElementById("gradCustomRow");
-    if (this.dataset.grad === "custom") { row.classList.remove("hidden"); row.style.display = "flex"; }
+    if (this.dataset.grad === "custom") { row.classList.remove("hidden"); row.style.display="flex"; }
     else row.classList.add("hidden");
     actualizarPreviewNombre();
   });
 });
 
-/* Efectos bg */
 document.querySelectorAll("#bgEfectoOptions .option-btn").forEach(btn => {
   btn.addEventListener("click", function () {
     document.querySelectorAll("#bgEfectoOptions .option-btn").forEach(b => b.classList.remove("active"));
@@ -803,7 +789,6 @@ document.querySelectorAll("#bgEfectoOptions .option-btn").forEach(btn => {
   });
 });
 
-/* Card efecto */
 document.querySelectorAll("#cardEfectoOptions .option-btn").forEach(btn => {
   btn.addEventListener("click", function () {
     document.querySelectorAll("#cardEfectoOptions .option-btn").forEach(b => b.classList.remove("active"));
@@ -811,12 +796,10 @@ document.querySelectorAll("#cardEfectoOptions .option-btn").forEach(btn => {
   });
 });
 
-/* Acento presets */
 document.querySelectorAll(".acento-btn").forEach(btn => {
   btn.addEventListener("click", function () { seleccionarAcento(this.dataset.acento, true); });
 });
 
-/* Badge */
 document.querySelectorAll(".badge-option").forEach(btn => {
   btn.addEventListener("click", function () {
     document.querySelectorAll(".badge-option").forEach(b => b.classList.remove("active"));
@@ -824,7 +807,6 @@ document.querySelectorAll(".badge-option").forEach(btn => {
   });
 });
 
-/* Inputs que actualizan preview */
 document.getElementById("editNombre")?.addEventListener("input", function () {
   document.getElementById("cEditNombre").textContent = 50 - this.value.length;
   actualizarPreviewNombre();
@@ -836,7 +818,6 @@ document.getElementById("nombreColorPicker")?.addEventListener("input", actualiz
 document.getElementById("gradColor1")?.addEventListener("input", actualizarPreviewNombre);
 document.getElementById("gradColor2")?.addEventListener("input", actualizarPreviewNombre);
 
-/* Avatar file */
 document.getElementById("editAvatarInput")?.addEventListener("change", function () {
   const file = this.files[0]; if (!file) return;
   if (file.size > 3*1024*1024) { alert("Máximo 3MB"); this.value=""; return; }
@@ -852,7 +833,6 @@ document.getElementById("editAvatarInput")?.addEventListener("change", function 
 /* ════════════════════════
    GUARDAR
 ════════════════════════ */
-/* Info */
 document.getElementById("btnGuardarInfo")?.addEventListener("click", async () => {
   const btn = document.getElementById("btnGuardarInfo");
   const errBox  = document.getElementById("editError");
@@ -874,7 +854,6 @@ document.getElementById("btnGuardarInfo")?.addEventListener("click", async () =>
   finally { btn.innerHTML = '<i class="ri-save-line"></i> Guardar info'; btn.disabled = false; }
 });
 
-/* Banner */
 document.getElementById("btnGuardarBanner")?.addEventListener("click", async () => {
   const btn = document.getElementById("btnGuardarBanner");
   btn.innerHTML = '<i class="ri-loader-4-line spin"></i> Guardando...'; btn.disabled = true;
@@ -890,14 +869,13 @@ document.getElementById("btnGuardarBanner")?.addEventListener("click", async () 
     if (!res.ok) throw new Error("Error al guardar");
     const d = await res.json();
     const s = JSON.parse(localStorage.getItem("fu_usuario")||"{}");
-    s.personalizacion = {...(s.personalizacion||{}), ...(d.personalizacion||{})};
+    s.personalizacion = {...(s.personalizacion||{}), ...(d.usuario?.personalizacion||{})};
     localStorage.setItem("fu_usuario", JSON.stringify(s));
     cerrarModalEditar(); cargarPerfil();
   } catch (e) { alert(e.message); }
   finally { btn.innerHTML = '<i class="ri-save-line"></i> Guardar banner'; btn.disabled = false; }
 });
 
-/* Avatar + Marco + Aura */
 document.getElementById("btnGuardarAvatar")?.addEventListener("click", async () => {
   const btn = document.getElementById("btnGuardarAvatar");
   btn.innerHTML = '<i class="ri-loader-4-line spin"></i> Guardando...'; btn.disabled = true;
@@ -917,7 +895,6 @@ document.getElementById("btnGuardarAvatar")?.addEventListener("click", async () 
   finally { btn.innerHTML = '<i class="ri-save-line"></i> Guardar avatar'; btn.disabled = false; }
 });
 
-/* Nombre */
 document.getElementById("btnGuardarNombre")?.addEventListener("click", async () => {
   const btn = document.getElementById("btnGuardarNombre");
   btn.innerHTML = '<i class="ri-loader-4-line spin"></i> Guardando...'; btn.disabled = true;
@@ -939,7 +916,6 @@ document.getElementById("btnGuardarNombre")?.addEventListener("click", async () 
   finally { btn.innerHTML = '<i class="ri-save-line"></i> Guardar nombre'; btn.disabled = false; }
 });
 
-/* Efectos */
 document.getElementById("btnGuardarEfectos")?.addEventListener("click", async () => {
   const btn = document.getElementById("btnGuardarEfectos");
   btn.innerHTML = '<i class="ri-loader-4-line spin"></i> Guardando...'; btn.disabled = true;
@@ -959,7 +935,6 @@ document.getElementById("btnGuardarEfectos")?.addEventListener("click", async ()
   finally { btn.innerHTML = '<i class="ri-save-line"></i> Guardar efectos'; btn.disabled = false; }
 });
 
-/* Badge */
 document.getElementById("btnGuardarBadge")?.addEventListener("click", async () => {
   const btn   = document.getElementById("btnGuardarBadge");
   const badge = document.querySelector(".badge-option.active")?.dataset.badge || "none";
@@ -1010,5 +985,4 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape") { cerrarModalEditar(); cerrarModalImg(); }
 });
 
-/* ── INIT ── */
 cargarPerfil();
