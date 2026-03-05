@@ -6,279 +6,73 @@
   <title>Foro Ubre — Notificaciones</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #080808; --surface: #101010; --surface-2: #161616; --surface-3: #1c1c1c;
-      --border: #1e1e1e; --border-2: #2a2a2a;
-      --text: #f0f0f0; --text-2: #a0a0a0; --text-3: #505050;
-      --green: #5cdb6f; --green-dk: #4bc45e;
-      --green-subtle: rgba(92,219,111,0.08); --green-glow: rgba(92,219,111,0.15);
-      --red: #ff4466; --orange: #f59e0b;
-      --radius: 14px; --radius-full: 999px;
-      --shadow: 0 4px 24px rgba(0,0,0,0.4);
-      --transition: 0.18s cubic-bezier(0.4,0,0.2,1);
-      --bnav-h: 54px;
-    }
-    html, body { min-height: 100dvh; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; }
-    a { color: inherit; text-decoration: none; }
-
-    /* ── Layout ── */
-    .layout { display: grid; grid-template-columns: 250px 1fr; min-height: 100dvh; max-width: 900px; margin: 0 auto; }
-
-    /* ── Sidebar ── */
-    .sidebar {
-      position: sticky; top: 0; height: 100vh;
-      display: flex; flex-direction: column;
-      padding: 20px 12px; border-right: 1px solid var(--border);
-    }
-    .logo { font-size: 1.6rem; font-weight: 900; color: var(--green); padding: 10px 14px 24px; display: flex; align-items: center; gap: 8px; }
-    nav { display: flex; flex-direction: column; gap: 2px; }
-    .nav-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: var(--radius-full); font-size: 0.97rem; font-weight: 500; color: var(--text-2); transition: all var(--transition); }
-    .nav-item:hover  { background: var(--surface-2); color: var(--text); }
-    .nav-item.active { background: var(--green-subtle); color: var(--green); font-weight: 700; }
-    .nav-item .ni    { font-size: 1.1rem; width: 24px; text-align: center; }
-    .sidebar-user { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px 10px; border-radius: var(--radius); cursor: pointer; transition: background var(--transition); }
-    .sidebar-user:hover { background: var(--surface-2); }
-    .sidebar-user img, .sidebar-user video { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
-    .sidebar-user strong { font-size: 0.87rem; font-weight: 700; display: block; }
-    .sidebar-user small  { color: var(--text-3); font-size: 0.75rem; }
-
-    /* ── Main ── */
-    .main { padding: 0 0 40px; }
-    .page-hdr {
-      position: sticky; top: 0; z-index: 10;
-      background: rgba(8,8,8,.9); backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
-    }
-    .page-hdr h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.3px; }
-    .btn-leer-todo {
-      background: none; border: 1px solid var(--border-2); border-radius: var(--radius-full);
-      color: var(--text-2); font-size: 0.8rem; font-weight: 600; padding: 6px 14px;
-      cursor: pointer; font-family: inherit; transition: all var(--transition);
-    }
-    .btn-leer-todo:hover { border-color: var(--green); color: var(--green); }
-
-    /* ── Notif Items ── */
-    .notif-list { display: flex; flex-direction: column; }
-    .notif-item {
-      display: flex; align-items: flex-start; gap: 12px;
-      padding: 14px 20px; border-bottom: 1px solid var(--border);
-      cursor: pointer; transition: background var(--transition); position: relative;
-    }
-    .notif-item:hover { background: var(--surface-2); }
-    .notif-item.no-leida { background: rgba(92,219,111,0.04); }
-    .notif-item.no-leida::before {
-      content: ""; position: absolute; left: 0; top: 0; bottom: 0;
-      width: 3px; background: var(--green); border-radius: 0 2px 2px 0;
-    }
-
-    .notif-av-wrap { position: relative; flex-shrink: 0; }
-    .notif-av { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: var(--surface-3); display: block; }
-    .notif-icon-badge {
-      position: absolute; bottom: -2px; right: -4px;
-      width: 20px; height: 20px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.65rem; border: 2px solid var(--bg);
-    }
-    .notif-icon-badge.like      { background: var(--red); }
-    .notif-icon-badge.comentario { background: var(--green); }
-    .notif-icon-badge.mencion   { background: var(--orange); }
-    .notif-icon-badge.repost    { background: #4dabf7; }
-    .notif-icon-badge.seguidor  { background: #a78bfa; }
-
-    .notif-body { flex: 1; min-width: 0; }
-    .notif-txt  { font-size: 0.88rem; line-height: 1.5; }
-    .notif-txt strong { font-weight: 700; }
-    .notif-txt em     { font-style: normal; color: var(--text-2); }
-    .notif-meta { font-size: 0.73rem; color: var(--text-3); margin-top: 3px; }
-
-    .notif-preview {
-      margin-top: 6px; padding: 8px 10px;
-      background: var(--surface-3); border-radius: var(--radius-sm, 8px);
-      font-size: 0.8rem; color: var(--text-2);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
-    /* ── States ── */
-    .spin { display: inline-block; animation: spin .8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .empty-state {
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; gap: 14px; padding: 60px 20px;
-      color: var(--text-3); text-align: center;
-    }
-    .empty-state i { font-size: 3rem; }
-    .empty-state h3 { font-size: .95rem; color: var(--text-2); font-weight: 700; }
-
-    /* ── Bottom nav mobile ── */
-    .bnav { display: none; }
-    @media (max-width: 768px) {
-      .layout { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
-      .main    { padding-bottom: calc(var(--bnav-h) + 16px); }
-      .bnav {
-        display: block; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-        background: rgba(8,8,8,.95); backdrop-filter: blur(20px);
-        border-top: 1px solid var(--border);
-        padding-bottom: env(safe-area-inset-bottom,0);
-      }
-      .bnav-inner { display: flex; align-items: center; justify-content: space-around; height: var(--bnav-h); }
-      .nbtn { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--text-3); font-size: .6rem; font-weight: 600; padding: 4px 12px; transition: color var(--transition); }
-      .nbtn.active { color: var(--green); }
-      .nbtn i { font-size: 1.3rem; }
-    }
-  </style>
+  <link rel="stylesheet" href="/css/notifications.css"/>
 </head>
 <body>
 
-<div class="layout">
-  <!-- Sidebar -->
+<div class="app-layout">
+
+  <!-- ══ SIDEBAR ══ -->
   <aside class="sidebar">
     <div class="logo"><i class="ri-leaf-fill"></i><span>Foro Ubre</span></div>
     <nav>
-      <a href="/"                    class="nav-item"><span class="ni"><i class="ri-home-5-line"></i></span><span>Inicio</span></a>
-      <a href="explore.html"         class="nav-item"><span class="ni"><i class="ri-search-line"></i></span><span>Explorar</span></a>
-      <a href="videos.html"          class="nav-item"><span class="ni"><i class="ri-video-line"></i></span><span>Videos</span></a>
-      <a href="messages.html"        class="nav-item"><span class="ni"><i class="ri-message-3-line"></i></span><span>Mensajes</span></a>
-      <a href="notifications.html"   class="nav-item active"><span class="ni"><i class="ri-notification-4-fill"></i></span><span>Notificaciones</span></a>
-      <a href="#" class="nav-item" id="navPerfil"><span class="ni"><i class="ri-user-3-line"></i></span><span>Perfil</span></a>
+      <a href="/"                  class="nav-item"><span class="nav-icon"><i class="ri-home-5-line"></i></span><span>Inicio</span></a>
+      <a href="explore.html"       class="nav-item"><span class="nav-icon"><i class="ri-search-line"></i></span><span>Explorar</span></a>
+      <a href="videos.html"        class="nav-item"><span class="nav-icon"><i class="ri-video-line"></i></span><span>Videos</span></a>
+      <a href="messages.html"      class="nav-item"><span class="nav-icon"><i class="ri-message-3-line"></i></span><span>Mensajes</span></a>
+      <a href="notifications.html" class="nav-item active"><span class="nav-icon"><i class="ri-notification-4-fill"></i></span><span>Notificaciones</span></a>
+      <a href="#" class="nav-item" id="navPerfil"><span class="nav-icon"><i class="ri-user-3-line"></i></span><span>Perfil</span></a>
     </nav>
+    <button class="btn-post-sidebar" onclick="window.location.href='/'">
+      <i class="ri-quill-pen-line"></i><span>Nuevo post</span>
+    </button>
     <div class="sidebar-user" id="sidebarUser"></div>
   </aside>
 
-  <!-- Main -->
-  <main class="main">
-    <div class="page-hdr">
-      <h1><i class="ri-notification-4-fill" style="color:var(--green);margin-right:7px;vertical-align:middle"></i>Notificaciones</h1>
-      <button class="btn-leer-todo" onclick="leerTodas()">Marcar todas como leídas</button>
-    </div>
+  <!-- ══ FEED ══ -->
+  <main class="feed">
+    <header class="feed-header">
+      <h2><i class="ri-notification-4-fill" style="color:var(--green);vertical-align:middle;margin-right:6px"></i>Notificaciones</h2>
+      <button class="btn-leer-todo" id="btnLeerTodo" onclick="leerTodas()">
+        <i class="ri-check-double-line"></i> Marcar todas leídas
+      </button>
+    </header>
+
     <div class="notif-list" id="notifList">
       <div class="empty-state">
-        <i class="ri-loader-4-line spin" style="color:var(--green)"></i>
+        <i class="ri-loader-4-line spin" style="color:var(--green);font-size:2rem"></i>
         <h3>Cargando...</h3>
       </div>
     </div>
   </main>
+
+  <!-- ══ ASIDE ══ -->
+  <aside class="trends">
+    <div class="trends-box">
+      <h3><i class="ri-fire-line"></i> Tendencias</h3>
+      <ul>
+        <li><span>#BajoCoRtisol</span><small>1.2K posts</small></li>
+        <li><span>#NaulChop</span><small>890 posts</small></li>
+        <li><span>#Banana</span><small>540 posts</small></li>
+        <li><span>#NaulDespuesDelMerecido</span><small>310 posts</small></li>
+      </ul>
+    </div>
+  </aside>
+
 </div>
 
-<!-- Bottom nav -->
-<nav class="bnav">
-  <div class="bnav-inner">
-    <a href="/"                   class="nbtn"><i class="ri-home-5-line"></i><span>Inicio</span></a>
-    <a href="explore.html"        class="nbtn"><i class="ri-search-line"></i><span>Buscar</span></a>
-    <a href="videos.html"         class="nbtn"><i class="ri-video-line"></i><span>Videos</span></a>
-    <a href="messages.html"       class="nbtn"><i class="ri-message-3-line"></i><span>Mensajes</span></a>
-    <a href="notifications.html"  class="nbtn active"><i class="ri-notification-4-fill"></i><span>Notifs</span></a>
+<!-- ══ BOTTOM NAV ══ -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a href="/"                  class="nbtn"><span class="bn-icon"><i class="ri-home-5-line"></i></span><span>Inicio</span></a>
+    <a href="explore.html"       class="nbtn"><span class="bn-icon"><i class="ri-search-line"></i></span><span>Buscar</span></a>
+    <a href="videos.html"        class="nbtn"><span class="bn-icon"><i class="ri-video-line"></i></span><span>Videos</span></a>
+    <a href="messages.html"      class="nbtn"><span class="bn-icon"><i class="ri-message-3-line"></i></span><span>Mensajes</span></a>
+    <a href="notifications.html" class="nbtn active"><span class="bn-icon"><i class="ri-notification-4-fill"></i></span><span>Notifs</span></a>
+    <a href="#"                  class="nbtn" id="bnPerfil"><span class="bn-icon"><i class="ri-user-3-line"></i></span><span>Perfil</span></a>
   </div>
 </nav>
 
-<script>
-const API   = "/api";
-const token = localStorage.getItem("fu_token");
-const yo    = JSON.parse(localStorage.getItem("fu_usuario") || "null");
-if (!token || !yo) window.location.href = "/login.html";
-
-document.getElementById("navPerfil").href = `profile.html?handle=${yo.handle}`;
-
-/* Sidebar user */
-(function(){
-  const el = document.getElementById("sidebarUser");
-  if (!el) return;
-  const av = yo.avatarTipo === "video"
-    ? `<video src="${yo.avatar}" autoplay loop muted playsinline style="width:38px;height:38px;border-radius:50%;object-fit:cover"></video>`
-    : `<img src="${yo.avatar}" alt=""/>`;
-  el.innerHTML = `${av}<div><strong>${esc(yo.nombre)}</strong><small>@${esc(yo.handle)}</small></div>`;
-  el.onclick = () => window.location.href = `profile.html?handle=${yo.handle}`;
-})();
-
-/* Tipos */
-const TIPO_INFO = {
-  like:       { icon: "ri-heart-fill",          color: "like",       label: "le dio like a tu post" },
-  comentario: { icon: "ri-chat-3-fill",          color: "comentario", label: "comentó tu post" },
-  mencion:    { icon: "ri-at-line",              color: "mencion",    label: "te mencionó" },
-  repost:     { icon: "ri-repeat-2-line",        color: "repost",     label: "hizo repost de tu post" },
-  seguidor:   { icon: "ri-user-follow-fill",     color: "seguidor",   label: "te empezó a seguir" }
-};
-
-async function cargarNotifs() {
-  try {
-    const res   = await fetch(`${API}/notificaciones`, { headers: { Authorization: `Bearer ${token}` } });
-    const notifs = await res.json();
-    renderNotifs(notifs);
-  } catch(e) {
-    document.getElementById("notifList").innerHTML =
-      `<div class="empty-state"><i class="ri-error-warning-line" style="color:var(--red)"></i><h3>Error al cargar</h3></div>`;
-  }
-}
-
-function renderNotifs(notifs) {
-  const el = document.getElementById("notifList");
-  if (!notifs.length) {
-    el.innerHTML = `
-      <div class="empty-state">
-        <i class="ri-notification-off-line"></i>
-        <h3>Sin notificaciones</h3>
-        <p style="font-size:.84rem">Cuando alguien interactúe contigo aparecerá aquí.</p>
-      </div>`;
-    return;
-  }
-  el.innerHTML = notifs.map(htmlNotif).join("");
-}
-
-function htmlNotif(n) {
-  const info  = TIPO_INFO[n.tipo] || { icon: "ri-notification-line", color: "like", label: "" };
-  const av    = n.origen?.avatarTipo === "video"
-    ? `<video src="${n.origen.avatar||''}" class="notif-av" autoplay loop muted playsinline></video>`
-    : `<img src="${n.origen?.avatar || defAv(n.origen?.nombre)}" class="notif-av" alt=""/>`;
-  const href  = n.post ? `/?post=${n.post._id}` : `profile.html?handle=${n.origen?.handle}`;
-  const prev  = n.texto ? `<div class="notif-preview">${esc(n.texto)}</div>` : "";
-  return `
-    <div class="notif-item ${n.leida ? "" : "no-leida"}" onclick="abrirNotif('${n._id}','${href}')">
-      <div class="notif-av-wrap">
-        ${av}
-        <div class="notif-icon-badge ${info.color}"><i class="${info.icon}"></i></div>
-      </div>
-      <div class="notif-body">
-        <div class="notif-txt">
-          <strong>${esc(n.origen?.nombre || "Alguien")}</strong>
-          <em> ${info.label}</em>
-        </div>
-        ${prev}
-        <div class="notif-meta">${tiempoCorto(n.createdAt)}</div>
-      </div>
-    </div>`;
-}
-
-async function abrirNotif(id, href) {
-  // Marcar como leída y navegar
-  fetch(`${API}/notificaciones/${id}/leer`, { method: "PUT", headers: { Authorization: `Bearer ${token}` } }).catch(()=>{});
-  window.location.href = href;
-}
-
-async function leerTodas() {
-  await fetch(`${API}/notificaciones/leer`, { method: "PUT", headers: { Authorization: `Bearer ${token}` } });
-  document.querySelectorAll(".notif-item.no-leida").forEach(el => el.classList.remove("no-leida"));
-}
-
-/* Utils */
-function esc(s="")  { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-function defAv(n="?") {
-  const l = (n||"?")[0].toUpperCase();
-  return `data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" rx="20" fill="#1c1c1c"/><text x="20" y="26" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#5cdb6f">${l}</text></svg>`
-  )}`;
-}
-function tiempoCorto(f) {
-  const d = (Date.now() - new Date(f)) / 1000;
-  if (d < 60)    return "ahora";
-  if (d < 3600)  return `${Math.floor(d/60)}m`;
-  if (d < 86400) return `${Math.floor(d/3600)}h`;
-  return new Date(f).toLocaleDateString("es",{day:"numeric",month:"short"});
-}
-
-cargarNotifs();
-</script>
+<script src="/js/notifications.js"></script>
 </body>
 </html>
