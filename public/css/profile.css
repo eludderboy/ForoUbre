@@ -2,54 +2,60 @@
    PROFILE CSS
 ══════════════════════════════════════ */
 
-/* ── Back button ── */
 .btn-back { display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--text-2); font-size:.88rem; font-weight:600; cursor:pointer; padding:4px 0; font-family:inherit; transition:color var(--transition); }
 .btn-back:hover { color:var(--green); }
 
-/* ── Banner ── */
 .profile-banner {
-  width: 100%;
-  height: 150px;
-  flex-shrink: 0;
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  display: block;
+  width:100%; height:150px; flex-shrink:0;
+  background-size:cover; background-position:center;
+  position:relative; display:block;
 }
 
-/* ── Profile info ── */
 .profile-info {
-  padding: 0 20px 16px;
-  border-bottom: 8px solid var(--surface);
-  position: relative;
-  /* SIN overflow:hidden — para no cortar el marco del avatar */
+  padding:0 20px 16px;
+  border-bottom:8px solid var(--surface);
+  position:relative;
+  /* SIN overflow:hidden aquí — nunca */
 }
 
 /* ══════════════════════════════════════
-   AVATAR WRAP
-   overflow:hidden  → recorta img/video al círculo
-   position:relative + z-index:2 → evita que lo tape otro elemento
-   box-shadow del propio elemento NO es cortado por su propio overflow:hidden
-   PERO sí puede ser cortado por un ancestro con overflow:hidden →
-   añadimos un ::after para el marco estático como capa encima
+   AVATAR — DOBLE WRAPPER (fix definitivo)
+
+   .av-outer → recibe el marco/aura (box-shadow)
+               NO tiene overflow:hidden
+               el box-shadow nunca se corta
+
+   .av-inner → overflow:hidden + border-radius:50%
+               recorta la img/video al círculo
 ══════════════════════════════════════ */
-.profile-avatar-wrap {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  margin-top: -40px;
-  border: 3px solid var(--bg);
-  background: var(--surface-3);
-  overflow: hidden;
-  flex-shrink: 0;
+.av-outer {
   position: relative;
-  z-index: 2;             /* encima de las acciones que tienen margin-top negativo */
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  /* el border visible (borde de separación con el banner) */
+  box-shadow: 0 0 0 3px var(--bg, #080808);
 }
-.profile-avatar-wrap img,
-.profile-avatar-wrap video {
+
+/* Tamaños */
+.av-outer.av-lg { width:80px; height:80px; margin-top:-40px; }
+.av-outer.av-md { width:44px; height:44px; }
+.av-outer.av-sm { width:32px; height:32px; }
+
+.av-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;      /* ← aquí sí, solo recorta img/video */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.av-inner img,
+.av-inner video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -58,89 +64,78 @@
   flex-shrink: 0;
 }
 
-/* Marco como capa encima (no afectado por overflow:hidden del padre) */
-.profile-avatar-wrap::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 3;
-  /* el color/estilo se aplica vía las clases de abajo */
-}
+/* ══════════════════════════════════════
+   MARCOS — van en .av-outer
+   box-shadow exterior nunca se corta
+   porque .av-outer NO tiene overflow:hidden
+══════════════════════════════════════ */
+.av-marco-none     { /* nada */ }
+.av-marco-color    { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 6px var(--marco-color, var(--green)); }
+.av-marco-neon     { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px var(--marco-color, var(--green)), 0 0 14px 3px var(--marco-color, var(--green)); }
+.av-marco-gold     { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px #ffd43b, 0 0 12px 2px #ffd43b80; }
+.av-marco-dashed   { outline:2.5px dashed var(--marco-color, var(--green)); outline-offset:4px; }
+.av-marco-doble    { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px var(--marco-color,var(--green)), 0 0 0 8px var(--bg,#080808), 0 0 0 10px var(--marco-color,var(--green)); }
 
-/* Marcos estáticos vía ::after */
-.av-marco-color::after  { box-shadow: inset 0 0 0 2.5px var(--marco-color, var(--green)); }
-.av-marco-neon::after   { box-shadow: inset 0 0 0 2px var(--marco-color, var(--green)); filter: drop-shadow(0 0 6px var(--marco-color, var(--green))); }
-.av-marco-gold::after   { box-shadow: inset 0 0 0 2.5px #ffd43b; }
-.av-marco-dashed::after { border: 2.5px dashed var(--marco-color, var(--green)); }
-.av-marco-doble::after  { box-shadow: inset 0 0 0 2px var(--marco-color, var(--green)), inset 0 0 0 5px color-mix(in srgb,var(--marco-color, var(--green)) 30%,transparent); }
-
-/* Marcos animados — box-shadow exterior al wrap
-   (funcionan porque los pinta el PROPIO elemento, no su contenido) */
+/* ── Marcos animados ── */
 @keyframes rainbowSpin {
-  0%   { box-shadow: 0 0 0 0 var(--bg), 0 0 0 3px #ff4444; }
-  20%  { box-shadow: 0 0 0 0 var(--bg), 0 0 0 3px #ffaa00; }
-  40%  { box-shadow: 0 0 0 0 var(--bg), 0 0 0 3px #5cdb6f; }
-  60%  { box-shadow: 0 0 0 0 var(--bg), 0 0 0 3px #4dabf7; }
-  80%  { box-shadow: 0 0 0 0 var(--bg), 0 0 0 3px #cc5de8; }
-  100% { box-shadow: 0 0 0 0 var(--bg), 0 0 0 3px #ff4444; }
+  0%   { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px #ff4444, 0 0 10px 1px #ff444480; }
+  20%  { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px #ffaa00, 0 0 10px 1px #ffaa0080; }
+  40%  { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px #5cdb6f, 0 0 10px 1px #5cdb6f80; }
+  60%  { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px #4dabf7, 0 0 10px 1px #4dabf780; }
+  80%  { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px #cc5de8, 0 0 10px 1px #cc5de880; }
+  100% { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px #ff4444, 0 0 10px 1px #ff444480; }
 }
 @keyframes avatarPulse {
-  0%,100% { box-shadow: 0 0 0 3px var(--marco-color, var(--green)), 0 0 10px 1px var(--marco-color, var(--green)); }
-  50%      { box-shadow: 0 0 0 4px var(--marco-color, var(--green)), 0 0 22px 4px var(--marco-color, var(--green)); }
+  0%,100% { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 4px var(--marco-color,var(--green)), 0 0 10px 1px var(--marco-color,var(--green)); }
+  50%      { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 6px var(--marco-color,var(--green)), 0 0 22px 4px var(--marco-color,var(--green)); }
 }
 @keyframes glitter {
-  0%,100% { box-shadow: 0 0 0 2px #fff, 0 -10px 0 2px #ffd43b, 10px 0 0 2px #ff4466,  0 10px 0 2px #4dabf7, -10px 0 0 2px #5cdb6f; }
-  25%      { box-shadow: 0 0 0 2px #fff, 10px -10px 0 2px #ffd43b, 10px 10px 0 2px #ff4466, -10px 10px 0 2px #4dabf7, -10px -10px 0 2px #5cdb6f; }
-  50%      { box-shadow: 0 0 0 2px #fff, 0 10px 0 2px #ffd43b, -10px 0 0 2px #ff4466,  0 -10px 0 2px #4dabf7,  10px 0 0 2px #5cdb6f; }
-  75%      { box-shadow: 0 0 0 2px #fff, -10px 10px 0 2px #ffd43b, -10px -10px 0 2px #ff4466, 10px -10px 0 2px #4dabf7, 10px 10px 0 2px #5cdb6f; }
+  0%,100% { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px #fff, 0 -12px 0 5px #ffd43b, 12px 0 0 5px #ff4466, 0 12px 0 5px #4dabf7, -12px 0 0 5px #5cdb6f; }
+  25%      { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px #fff, 12px -12px 0 5px #ffd43b, 12px 12px 0 5px #ff4466, -12px 12px 0 5px #4dabf7, -12px -12px 0 5px #5cdb6f; }
+  50%      { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px #fff, 0 12px 0 5px #ffd43b, -12px 0 0 5px #ff4466, 0 -12px 0 5px #4dabf7, 12px 0 0 5px #5cdb6f; }
+  75%      { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px #fff, -12px 12px 0 5px #ffd43b, -12px -12px 0 5px #ff4466, 12px -12px 0 5px #4dabf7, 12px 12px 0 5px #5cdb6f; }
 }
-/* Auras */
-@keyframes auraFire    { 0%,100%{box-shadow:0 0 0 3px rgba(255,107,53,.4),0 0 22px 6px rgba(255,107,53,.5)}50%{box-shadow:0 0 0 4px rgba(255,107,53,.6),0 0 34px 10px rgba(255,107,53,.4)} }
-@keyframes auraIce     { 0%,100%{box-shadow:0 0 0 3px rgba(100,200,255,.4),0 0 22px 6px rgba(100,200,255,.5)}50%{box-shadow:0 0 0 4px rgba(100,200,255,.6),0 0 34px 10px rgba(100,200,255,.4)} }
-@keyframes auraRainbow { 0%{box-shadow:0 0 0 3px rgba(255,68,68,.5),0 0 22px 8px rgba(255,68,68,.3)}25%{box-shadow:0 0 0 3px rgba(92,219,111,.5),0 0 22px 8px rgba(92,219,111,.3)}50%{box-shadow:0 0 0 3px rgba(77,171,247,.5),0 0 22px 8px rgba(77,171,247,.3)}75%{box-shadow:0 0 0 3px rgba(204,93,232,.5),0 0 22px 8px rgba(204,93,232,.3)}100%{box-shadow:0 0 0 3px rgba(255,68,68,.5),0 0 22px 8px rgba(255,68,68,.3)} }
 
-.av-rainbow  { animation: rainbowSpin 2.5s linear infinite; overflow:visible; }
-.av-animated { animation: avatarPulse 1.8s ease-in-out infinite; overflow:visible; }
-.av-glitter  { animation: glitter 1.5s linear infinite; overflow:visible; }
-.av-aura-soft    { box-shadow: 0 0 0 3px var(--marco-color,var(--green)), 0 0 14px 4px var(--marco-color,var(--green)); overflow:visible; }
-.av-aura-neon    { box-shadow: 0 0 0 3px var(--marco-color,var(--green)), 0 0 20px 8px var(--marco-color,var(--green)), 0 0 40px 12px color-mix(in srgb,var(--marco-color,var(--green)) 35%,transparent); overflow:visible; }
-.av-aura-fire    { animation: auraFire    2s ease-in-out infinite; overflow:visible; }
-.av-aura-ice     { animation: auraIce     2s ease-in-out infinite; overflow:visible; }
-.av-aura-rainbow { animation: auraRainbow 3s linear infinite; overflow:visible; }
+/* ── Auras ── */
+@keyframes auraFire {
+  0%,100% { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 4px rgba(255,107,53,.5), 0 0 22px 6px rgba(255,107,53,.4); }
+  50%      { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px rgba(255,107,53,.7), 0 0 34px 10px rgba(255,107,53,.3); }
+}
+@keyframes auraIce {
+  0%,100% { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 4px rgba(100,200,255,.5), 0 0 22px 6px rgba(100,200,255,.4); }
+  50%      { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 5px rgba(100,200,255,.7), 0 0 34px 10px rgba(100,200,255,.3); }
+}
+@keyframes auraRainbow {
+  0%   { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 4px rgba(255,68,68,.6),   0 0 22px 6px rgba(255,68,68,.3); }
+  25%  { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 4px rgba(92,219,111,.6),  0 0 22px 6px rgba(92,219,111,.3); }
+  50%  { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 4px rgba(77,171,247,.6),  0 0 22px 6px rgba(77,171,247,.3); }
+  75%  { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 4px rgba(204,93,232,.6),  0 0 22px 6px rgba(204,93,232,.3); }
+  100% { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 4px rgba(255,68,68,.6),   0 0 22px 6px rgba(255,68,68,.3); }
+}
 
-/* Cuando hay animación/aura el overflow pasa a visible
-   el ::after ya no se necesita para esos casos */
-.av-rainbow::after,
-.av-animated::after,
-.av-glitter::after,
-.av-aura-soft::after,
-.av-aura-neon::after,
-.av-aura-fire::after,
-.av-aura-ice::after,
-.av-aura-rainbow::after { display:none; }
+.av-marco-rainbow  { animation: rainbowSpin 2.5s linear infinite; }
+.av-marco-animated { animation: avatarPulse 1.8s ease-in-out infinite; }
+.av-marco-glitter  { animation: glitter 1.5s linear infinite; }
+.av-aura-soft    { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 4px var(--marco-color,var(--green)), 0 0 18px 5px var(--marco-color,var(--green)); }
+.av-aura-neon    { box-shadow: 0 0 0 3px var(--bg,#080808), 0 0 0 4px var(--marco-color,var(--green)), 0 0 22px 8px var(--marco-color,var(--green)), 0 0 44px 14px color-mix(in srgb,var(--marco-color,var(--green)) 30%,transparent); }
+.av-aura-fire    { animation: auraFire    2s ease-in-out infinite; }
+.av-aura-ice     { animation: auraIce     2s ease-in-out infinite; }
+.av-aura-rainbow { animation: auraRainbow 3s linear infinite; }
 
 /* ── Acciones ── */
 .profile-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:-36px; margin-bottom:8px; flex-wrap:wrap; position:relative; z-index:1; }
-
 .btn-edit-profile { background:transparent; border:1px solid var(--border-2); color:var(--text); border-radius:var(--radius-full); padding:7px 18px; font-size:.85rem; font-weight:700; cursor:pointer; font-family:inherit; transition:all var(--transition); display:flex; align-items:center; gap:6px; }
 .btn-edit-profile:hover { border-color:var(--green); color:var(--green); }
-
 .btn-follow { background:var(--text); color:var(--bg); border:1px solid transparent; border-radius:var(--radius-full); padding:7px 18px; font-size:.85rem; font-weight:700; cursor:pointer; font-family:inherit; transition:all var(--transition); display:flex; align-items:center; gap:6px; }
-.btn-follow:hover      { background:#d0d0d0; }
-.btn-follow.siguiendo  { background:transparent; border-color:var(--border-2); color:var(--text); }
+.btn-follow:hover     { background:#d0d0d0; }
+.btn-follow.siguiendo { background:transparent; border-color:var(--border-2); color:var(--text); }
 .btn-follow.siguiendo:hover { border-color:var(--red); color:var(--red); background:var(--red-subtle); }
-
 .btn-mensaje { background:transparent; border:1px solid var(--border-2); color:var(--text); border-radius:var(--radius-full); padding:7px 18px; font-size:.85rem; font-weight:700; cursor:pointer; font-family:inherit; transition:all var(--transition); display:flex; align-items:center; gap:6px; }
 .btn-mensaje:hover { border-color:var(--green); color:var(--green); }
-
 .profile-handle { color:var(--text-3); font-size:.88rem; margin-top:2px; }
 .profile-bio    { font-size:.9rem; color:var(--text-2); margin-top:8px; line-height:1.55; word-break:break-word; }
-
-.profile-link { display:inline-flex; align-items:center; gap:5px; margin-top:6px; color:var(--green); font-size:.85rem; font-weight:600; text-decoration:none; transition:opacity var(--transition); word-break:break-all; }
+.profile-link   { display:inline-flex; align-items:center; gap:5px; margin-top:6px; color:var(--green); font-size:.85rem; font-weight:600; text-decoration:none; transition:opacity var(--transition); word-break:break-all; }
 .profile-link:hover { opacity:.7; }
-
 .profile-stats  { display:flex; gap:20px; margin-top:12px; flex-wrap:wrap; }
 .profile-stats span   { font-size:.88rem; color:var(--text-2); }
 .profile-stats strong { color:var(--text); font-weight:800; }
@@ -153,12 +148,11 @@
 .tab-btn.active { color:var(--green); border-bottom-color:var(--green); background:none; }
 .tab-btn i      { font-size:1rem; }
 
-/* ── Sticker en banner ── */
 .banner-sticker { position:absolute; bottom:12px; right:16px; font-size:2.8rem; filter:drop-shadow(0 2px 8px rgba(0,0,0,.7)); pointer-events:none; user-select:none; }
 
 /* ── Card efectos ── */
 .profile-card-glass       { background:rgba(255,255,255,.04) !important; backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.08); }
-.profile-card-neon-border { border:1.5px solid var(--perfil-acento,var(--green)) !important; box-shadow:0 0 20px rgba(92,219,111,.15),inset 0 0 20px rgba(92,219,111,.03); }
+.profile-card-neon-border { border:1.5px solid var(--perfil-acento,var(--green)) !important; box-shadow:0 0 20px rgba(92,219,111,.15); }
 .profile-card-shadow      { box-shadow:0 8px 40px rgba(92,219,111,.15); }
 
 /* ── Comentarios ── */
@@ -172,32 +166,27 @@
 .comment-input-row  { display:flex; align-items:center; gap:10px; padding:10px 0 4px; }
 .comment-input-wrap { flex:1; display:flex; align-items:center; gap:8px; background:var(--surface-2); border:1px solid var(--border-2); border-radius:var(--radius-full); padding:6px 14px; transition:border-color var(--transition); }
 .comment-input-wrap:focus-within { border-color:rgba(92,219,111,.4); }
-.comment-input  { flex:1; background:none; border:none; color:var(--text); font-size:.85rem; outline:none; font-family:inherit; min-width:0; }
+.comment-input      { flex:1; background:none; border:none; color:var(--text); font-size:.85rem; outline:none; font-family:inherit; min-width:0; }
 .comment-input::placeholder { color:var(--text-3); }
 .btn-send-comment { background:none; border:none; color:var(--green); font-size:1rem; cursor:pointer; padding:2px; flex-shrink:0; transition:opacity var(--transition); }
 .btn-send-comment:hover { opacity:.7; }
 .no-comments { color:var(--text-3); font-size:.83rem; padding:10px 0; display:flex; align-items:center; gap:6px; }
 
 /* ══════════════════════════════════════
-   BOTTOM NAV — siempre visible abajo
+   BOTTOM NAV — siempre fijo abajo
 ══════════════════════════════════════ */
 .bottom-nav {
   position: fixed !important;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 0; left: 0; right: 0;
   z-index: 100;
-  background: rgba(8,8,8,.95);
+  background: rgba(8,8,8,.96);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--border);
-  /* Safe area para notch/gesture bar de iOS y Android */
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-
-/* El feed necesita padding-bottom para no quedar tapado por el nav */
 .feed {
-  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ══════════════════════════════════════
@@ -206,37 +195,31 @@
 .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:500; display:flex; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(8px); animation:fadeIn .2s ease; }
 .modal-overlay.hidden { display:none; }
 @keyframes fadeIn { from{opacity:0}to{opacity:1} }
-
 .modal-box { background:var(--surface); border:1px solid var(--border-2); border-radius:var(--radius-lg); width:100%; max-height:90dvh; overflow-y:auto; box-shadow:var(--shadow); }
 .modal-box::-webkit-scrollbar { width:3px; }
 .modal-box::-webkit-scrollbar-thumb { background:var(--border-2); border-radius:2px; }
-
 .modal-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface); z-index:2; }
 .modal-header h3 { font-size:.97rem; font-weight:800; display:flex; align-items:center; gap:8px; }
 .btn-cerrar-modal { background:none; border:none; color:var(--text-2); font-size:1.25rem; cursor:pointer; padding:4px; border-radius:50%; transition:all var(--transition); }
 .btn-cerrar-modal:hover { color:var(--text); background:var(--surface-2); }
-
 .modal-tabs { display:flex; border-bottom:1px solid var(--border); position:sticky; top:53px; background:var(--surface); z-index:1; overflow-x:auto; scrollbar-width:none; }
 .modal-tabs::-webkit-scrollbar { display:none; }
 .modal-tab-btn { flex-shrink:0; padding:10px 12px; background:none; border:none; border-bottom:2px solid transparent; color:var(--text-3); font-size:.75rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all var(--transition); display:flex; align-items:center; justify-content:center; gap:4px; white-space:nowrap; }
 .modal-tab-btn:hover  { color:var(--text); }
 .modal-tab-btn.active { color:var(--green); border-bottom-color:var(--green); }
 .modal-tab-btn i { font-size:.9rem; }
-
 .modal-tab-panel        { display:none; padding:16px 20px 20px; flex-direction:column; gap:14px; }
 .modal-tab-panel.active { display:flex; }
 
-/* Avatar picker en modal */
 .avatar-picker { display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:4px; }
-.avatar-preview-wrap { width:80px; height:80px; border-radius:50%; background:var(--surface-3); border:2px solid var(--border-2); overflow:hidden; display:flex; align-items:center; justify-content:center; transition:border-color var(--transition); flex-shrink:0; }
+.avatar-preview-wrap { width:80px; height:80px; border-radius:50%; background:var(--surface-3); border:2px solid var(--border-2); overflow:hidden; display:flex; align-items:center; justify-content:center; transition:border-color var(--transition); flex-shrink:0; cursor:pointer; }
 .avatar-preview-wrap:hover { border-color:var(--green); }
 .avatar-preview-wrap img, .avatar-preview-wrap video { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
 .avatar-placeholder { display:flex; align-items:center; justify-content:center; width:100%; height:100%; }
 .btn-pick-avatar { display:flex; flex-direction:column; align-items:center; gap:2px; background:var(--surface-2); border:1px solid var(--border-2); color:var(--text-2); border-radius:var(--radius-full); padding:8px 18px; font-size:.82rem; font-weight:600; cursor:pointer; transition:all var(--transition); font-family:inherit; text-align:center; }
 .btn-pick-avatar:hover { border-color:var(--green); color:var(--green); }
-.btn-pick-avatar small  { color:var(--text-3); font-size:.7rem; font-weight:400; }
+.btn-pick-avatar small { color:var(--text-3); font-size:.7rem; font-weight:400; }
 
-/* Form */
 .form-group { display:flex; flex-direction:column; gap:6px; }
 .form-group label { font-size:.8rem; font-weight:700; color:var(--text-2); display:flex; align-items:center; gap:5px; }
 .form-group label small { color:var(--text-3); font-weight:400; }
@@ -249,25 +232,21 @@
 .btn-auth:hover    { background:var(--green-dk); }
 .btn-auth:disabled { opacity:.5; cursor:not-allowed; }
 
-/* Banner preview en modal */
 .banner-preview-wrap { position:relative; width:100%; height:90px; border-radius:var(--radius-sm); overflow:hidden; border:1px solid var(--border-2); margin-bottom:14px; flex-shrink:0; }
 .banner-preview { width:100%; height:100%; background:linear-gradient(135deg,#0d2010,#1a3a14); background-size:cover; background-position:center; transition:all .3s ease; }
 .banner-sticker-preview { position:absolute; bottom:8px; right:12px; font-size:2rem; filter:drop-shadow(0 2px 6px rgba(0,0,0,.6)); pointer-events:none; }
-
 .banner-tipo-btns { display:flex; gap:8px; margin-bottom:12px; }
 .banner-upload-area { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; border:2px dashed var(--border-2); border-radius:var(--radius); padding:24px 16px; cursor:pointer; color:var(--text-3); transition:all var(--transition); font-size:.88rem; text-align:center; }
-.banner-upload-area i    { font-size:2rem; }
+.banner-upload-area i     { font-size:2rem; }
 .banner-upload-area small { font-size:.72rem; }
 .banner-upload-area:hover { border-color:var(--green); color:var(--green); background:var(--green-subtle); }
 .banner-file-info { display:flex; align-items:center; gap:8px; font-size:.78rem; color:var(--text-3); margin-top:6px; flex-wrap:wrap; }
 .banner-file-info button { background:none; border:none; color:var(--red); cursor:pointer; font-size:.85rem; padding:0; }
 
-/* Options grids */
 .marco-options, .banner-options, .nombre-options { display:flex; flex-wrap:wrap; gap:6px; }
 .option-btn { background:var(--surface-2); border:1px solid var(--border-2); color:var(--text-2); border-radius:var(--radius-full); padding:6px 14px; font-size:.78rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all var(--transition); display:flex; align-items:center; gap:5px; }
 .option-btn:hover  { border-color:var(--green); color:var(--green); }
 .option-btn.active { border-color:var(--green); background:var(--green-subtle); color:var(--green); }
-
 .banner-dot { display:inline-block; width:12px; height:12px; border-radius:50%; vertical-align:middle; margin-right:4px; flex-shrink:0; }
 .color-picker-row { display:flex; align-items:center; gap:10px; }
 .color-picker-row label { font-size:.8rem; color:var(--text-2); font-weight:600; display:flex; align-items:center; gap:5px; flex:1; }
@@ -276,23 +255,19 @@
 .color-custom-row .color-picker-row { flex:1; min-width:120px; }
 .custom-section-title { font-size:.75rem; font-weight:800; color:var(--text-3); letter-spacing:.5px; text-transform:uppercase; display:flex; align-items:center; gap:6px; margin-bottom:8px; }
 
-/* Sticker grid */
 .sticker-grid { display:flex; flex-wrap:wrap; gap:6px; }
 .sticker-btn { width:42px; height:42px; font-size:1.3rem; background:var(--surface-2); border:1.5px solid var(--border-2); border-radius:var(--radius-sm); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all var(--transition); font-family:inherit; flex-shrink:0; }
 .sticker-btn:hover  { border-color:var(--green); transform:scale(1.1); }
 .sticker-btn.active { border-color:var(--green); background:var(--green-subtle); }
 .sticker-btn[data-sticker=""] { font-size:.65rem; color:var(--text-3); font-weight:700; }
 
-/* Acento presets */
 .acento-presets { display:flex; gap:8px; flex-wrap:wrap; }
 .acento-btn { width:28px; height:28px; border-radius:50%; border:2.5px solid transparent; cursor:pointer; transition:all var(--transition); flex-shrink:0; }
 .acento-btn:hover, .acento-btn.active { border-color:#fff; transform:scale(1.18); box-shadow:0 0 8px rgba(255,255,255,.3); }
 
-/* Preview nombre */
 .preview-nombre { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:14px 18px; text-align:center; }
 .preview-label  { font-size:.7rem; color:var(--text-3); margin-bottom:8px; letter-spacing:.5px; text-transform:uppercase; font-weight:700; display:flex; align-items:center; justify-content:center; gap:4px; }
 
-/* Badge list */
 .badge-list { display:flex; flex-direction:column; gap:4px; }
 .badge-option { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--surface-2); border:1px solid var(--border-2); border-radius:var(--radius-sm); cursor:pointer; transition:all var(--transition); font-family:inherit; text-align:left; width:100%; box-sizing:border-box; }
 .badge-option:hover  { border-color:var(--green); background:var(--green-subtle); }
@@ -303,58 +278,37 @@
 .badge-vip { background:linear-gradient(90deg,#ffd43b,#ff6b35); color:#050505; padding:3px 8px; border-radius:6px; font-weight:900; font-size:.75rem; flex-shrink:0; }
 .badge-new { background:var(--green); color:#050505; padding:3px 8px; border-radius:6px; font-weight:900; font-size:.75rem; flex-shrink:0; }
 
-/* Modal imagen */
 .modal-img { position:fixed; inset:0; background:rgba(0,0,0,.93); z-index:600; display:none; align-items:center; justify-content:center; cursor:zoom-out; backdrop-filter:blur(4px); }
 .modal-img.active { display:flex; }
 .modal-img img { max-width:94vw; max-height:94dvh; border-radius:var(--radius); object-fit:contain; }
 
-/* Fondo animado canvas */
 #bgCanvas { position:fixed; inset:0; pointer-events:none; z-index:0; }
-.app-layout, .bottom-nav { position:relative; z-index:1; }
+.app-layout { position:relative; z-index:1; }
 
-/* Spin */
 .spin { display:inline-block; animation:spin .8s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg)} }
 
 /* ══════════════════════════════════════
    SAFE AREA + OVERSCROLL
 ══════════════════════════════════════ */
-html {
-  background-color: var(--bg, #080808);
-  overscroll-behavior-y: none;
-}
-body {
-  background-color: var(--bg, #080808);
-  overscroll-behavior-y: none;
-  min-height: 100dvh;
-}
+html { background-color:var(--bg,#080808); overscroll-behavior-y:none; }
+body { background-color:var(--bg,#080808); overscroll-behavior-y:none; min-height:100dvh; }
 
 /* ══════════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════════ */
 @media (max-width:768px) {
   .profile-banner { height:110px; }
-
-  .profile-avatar-wrap {
-    width: 66px;
-    height: 66px;
-    margin-top: -33px;
-    border-width: 2px;
-  }
-
-  .profile-stats   { gap:12px; }
+  .av-outer.av-lg { width:66px; height:66px; margin-top:-33px; }
+  .profile-stats  { gap:12px; }
   .profile-actions { margin-top:-18px; gap:6px; }
   .btn-edit-profile, .btn-follow, .btn-mensaje { padding:6px 14px; font-size:.8rem; }
-
-  .modal-box     { max-height:96dvh; border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
-  .modal-overlay { padding:0; align-items:flex-end; }
-  .modal-tab-btn { font-size:.7rem; padding:10px 8px; }
+  .modal-box      { max-height:96dvh; border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
+  .modal-overlay  { padding:0; align-items:flex-end; }
+  .modal-tab-btn  { font-size:.7rem; padding:10px 8px; }
   .modal-tab-btn i { display:none; }
-
-  .tab-btn { font-size:.8rem; padding:12px 6px; gap:4px; }
-  .tab-btn i { font-size:.9rem; }
+  .tab-btn { font-size:.8rem; padding:12px 6px; }
 }
-
 @media (max-width:400px) {
   .profile-actions { margin-top:8px; flex-wrap:wrap; justify-content:flex-start; }
   .profile-stats span { font-size:.78rem; }
