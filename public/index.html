@@ -10,83 +10,235 @@
 </head>
 <body>
 
-  <!-- ══ LAYOUT ══ -->
-  <div class="layout" id="layout">
+<div class="layout">
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="logo"><i class="ri-leaf-fill"></i><span>Foro Ubre</span></div>
-      <nav>
-        <a href="/"                  class="nav-item active"><span class="nav-icon"><i class="ri-home-5-fill"></i></span><span>Inicio</span></a>
-        <a href="explore.html"       class="nav-item"><span class="nav-icon"><i class="ri-search-line"></i></span><span>Explorar</span></a>
-        <a href="videos.html"        class="nav-item"><span class="nav-icon"><i class="ri-video-line"></i></span><span>Videos</span></a>
-        <a href="messages.html"      class="nav-item"><span class="nav-icon"><i class="ri-message-3-line"></i></span><span>Mensajes</span></a>
-        <a href="notifications.html" class="nav-item" id="navNotifs">
-          <span class="nav-icon"><i class="ri-notification-4-line"></i></span>
-          <span>Notificaciones</span>
-          <span class="nav-badge" id="notifBadge" style="display:none">0</span>
-        </a>
-        <a href="#" class="nav-item" id="navPerfil"><span class="nav-icon"><i class="ri-user-3-line"></i></span><span>Perfil</span></a>
-      </nav>
-      <button class="btn-post-sidebar" id="btnAbrirModal">
-        <i class="ri-quill-pen-line"></i><span>Publicar</span>
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="logo"><i class="ri-leaf-fill"></i><span>Foro Ubre</span></div>
+    <nav>
+      <a href="/"                  class="nav-item active"><span class="nav-icon"><i class="ri-home-5-fill"></i></span><span>Inicio</span></a>
+      <a href="explore.html"       class="nav-item"><span class="nav-icon"><i class="ri-search-line"></i></span><span>Explorar</span></a>
+      <a href="videos.html"        class="nav-item"><span class="nav-icon"><i class="ri-video-line"></i></span><span>Videos</span></a>
+      <a href="messages.html"      class="nav-item">
+        <span class="nav-icon"><i class="ri-message-3-line"></i></span>
+        <span>Mensajes</span>
+        <span class="nav-badge hidden" id="msgBadge"></span>
+      </a>
+      <a href="notifications.html" class="nav-item" id="navNotifs">
+        <span class="nav-icon"><i class="ri-notification-4-line"></i></span>
+        <span>Notificaciones</span>
+        <span class="nav-badge" id="notifBadge" style="display:none">0</span>
+      </a>
+      <a href="#" class="nav-item" id="navPerfil"><span class="nav-icon"><i class="ri-user-3-line"></i></span><span>Perfil</span></a>
+    </nav>
+    <button class="btn-post-sidebar" id="btnAbrirModal">
+      <i class="ri-quill-pen-line"></i><span>Publicar</span>
+    </button>
+    <div class="sidebar-user" id="sidebarUser">
+      <button id="btnLogout" title="Cerrar sesión" style="margin-left:auto;background:none;border:none;color:var(--text-3);font-size:1.1rem;cursor:pointer;padding:4px;border-radius:8px;transition:color .15s">
+        <i class="ri-logout-box-r-line"></i>
       </button>
-      <div class="sidebar-user" id="sidebarUser"></div>
-    </aside>
+    </div>
+  </aside>
 
-    <!-- FEED -->
-    <main class="feed-col" id="feedCol">
-      <div class="feed-hdr">
-        <h1>Inicio</h1>
-      </div>
-      <!-- Composer -->
-      <div class="composer" id="composer"></div>
-      <!-- Posts -->
-      <div class="post-list" id="postList">
-        <div class="feed-loading">
-          <i class="ri-loader-4-line spin" style="color:var(--green);font-size:1.5rem"></i>
+  <!-- ══ FEED ══ -->
+  <main class="feed-col">
+    <div class="feed-hdr">
+      <h1>Inicio</h1>
+    </div>
+
+    <!-- Composer -->
+    <div class="composer-box">
+      <div class="composer-top">
+        <div id="composerAvWrap" class="composer-av"></div>
+        <div class="composer-right">
+          <textarea id="postInput" class="composer-input" placeholder="¿Qué está pasando?" rows="1"
+            oninput="onComposerInput(this)"
+            onkeydown="if(event.key==='Enter'&&event.ctrlKey) publicarNormal()"></textarea>
+          <div id="imagePreviewBox" class="hidden" style="position:relative;margin-top:8px;border-radius:var(--radius);overflow:hidden;">
+            <button class="remove-image" onclick="quitarMediaComposer()"><i class="ri-close-line"></i></button>
+            <img id="imagePreview" src="" alt="" style="width:100%;max-height:280px;object-fit:contain;display:block;border-radius:var(--radius)"/>
+          </div>
         </div>
       </div>
-    </main>
-
-    <!-- PANEL DERECHO -->
-    <aside class="right-col" id="rightCol">
-      <div class="trends-box" id="trendsBox"></div>
-      <div class="who-follow-box" id="whoFollowBox"></div>
-    </aside>
-
-  </div>
-
-  <!-- ══ BOTTOM NAV ══ -->
-  <nav class="bnav">
-    <div class="bnav-inner">
-      <a href="/"                  class="nbtn active"><i class="ri-home-5-fill"></i><span>Inicio</span></a>
-      <a href="explore.html"       class="nbtn"><i class="ri-search-line"></i><span>Buscar</span></a>
-      <a href="videos.html"        class="nbtn"><i class="ri-video-line"></i><span>Videos</span></a>
-      <a href="messages.html"      class="nbtn"><i class="ri-message-3-line"></i><span>Mensajes</span></a>
-      <a href="notifications.html" class="nbtn" id="bnNotifs"><i class="ri-notification-4-line"></i><span>Notifs</span></a>
-      <a href="#" class="nbtn" id="bnPerfil"><i class="ri-user-3-line"></i><span>Perfil</span></a>
+      <div class="composer-footer">
+        <label for="imageInput" class="composer-btn" title="Foto/Video">
+          <i class="ri-image-add-line"></i>
+        </label>
+        <input type="file" id="imageInput" accept="image/*,video/mp4,video/webm" hidden onchange="onComposerMedia(this)"/>
+        <button class="composer-btn" onclick="abrirModalSticker()" title="Sticker IA">
+          <i class="ri-sparkling-2-line"></i>
+        </button>
+        <button class="composer-btn" onclick="abrirPostModal()" title="Post avanzado">
+          <i class="ri-layout-grid-line"></i>
+        </button>
+        <div class="composer-footer-right">
+          <span id="charCount" style="font-size:.78rem;color:var(--text-3)">280</span>
+          <button id="btnPost" class="btn-publish" onclick="publicarNormal()">
+            <i class="ri-send-plane-fill"></i> Publicar
+          </button>
+        </div>
+      </div>
     </div>
-  </nav>
 
-  <!-- ══ MODALES ══ -->
-  <!-- Modal crear post -->
-  <div class="modal-overlay hidden" id="modalPost">
-    <div class="modal-box" id="modalPostBox"></div>
+    <!-- Posts -->
+    <div id="feed">
+      <div class="feed-loading">
+        <i class="ri-loader-4-line spin" style="color:var(--green);font-size:1.5rem"></i>
+      </div>
+    </div>
+
+    <!-- Load more -->
+    <div id="loadMoreBox" class="hidden" style="text-align:center;padding:16px">
+      <button onclick="cargarMas()" style="background:var(--surface-2);border:1px solid var(--border-2);color:var(--text-2);padding:10px 24px;border-radius:var(--radius-full);font-size:.87rem;font-weight:600;cursor:pointer;font-family:inherit">
+        Cargar más
+      </button>
+    </div>
+  </main>
+
+  <!-- ══ PANEL DERECHO ══ -->
+  <aside class="right-col">
+
+    <!-- Sugerencias -->
+    <div class="widget-box">
+      <h3 class="widget-title">A quién seguir</h3>
+      <div id="sugerenciasList">
+        <div style="color:var(--text-3);font-size:.82rem;padding:4px 0">Cargando...</div>
+      </div>
+    </div>
+
+    <!-- Videos recientes -->
+    <div class="widget-box">
+      <h3 class="widget-title">Videos recientes</h3>
+      <div id="videosRecientesList">
+        <div style="color:var(--text-3);font-size:.82rem;padding:4px 0">Cargando...</div>
+      </div>
+    </div>
+
+  </aside>
+
+</div>
+
+<!-- ══ BOTTOM NAV ══ -->
+<nav class="bnav">
+  <div class="bnav-inner">
+    <a href="/"                  class="nbtn active"><i class="ri-home-5-fill"></i><span>Inicio</span></a>
+    <a href="explore.html"       class="nbtn"><i class="ri-search-line"></i><span>Buscar</span></a>
+    <a href="videos.html"        class="nbtn"><i class="ri-video-line"></i><span>Videos</span></a>
+    <a href="messages.html"      class="nbtn"><i class="ri-message-3-line"></i><span>Mensajes</span></a>
+    <a href="notifications.html" class="nbtn" id="bnNotifs"><i class="ri-notification-4-line"></i><span>Notifs</span></a>
+    <a href="#"                  class="nbtn" id="bnPerfil"><i class="ri-user-3-line"></i><span>Perfil</span></a>
   </div>
+</nav>
 
-  <!-- Modal imagen full -->
-  <div class="modal-overlay hidden" id="modalImg">
-    <button class="modal-close" onclick="cerrarModalImg()"><i class="ri-close-line"></i></button>
-    <div id="modalImgInner"></div>
+<!-- ══ MODAL POST AVANZADO ══ -->
+<div class="modal-overlay hidden" id="postModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3>Crear post</h3>
+      <button class="modal-close-btn" onclick="cerrarPostModal()"><i class="ri-close-line"></i></button>
+    </div>
+
+    <!-- Tabs tipo -->
+    <div class="post-type-tabs">
+      <button class="post-type-tab active" id="tab-normal"    onclick="setTipo('normal',this)"><i class="ri-file-text-line"></i> Normal</button>
+      <button class="post-type-tab"        id="tab-slideshow" onclick="setTipo('slideshow',this)"><i class="ri-image-2-line"></i> Slideshow</button>
+      <button class="post-type-tab"        id="tab-poll"      onclick="setTipo('poll',this)"><i class="ri-bar-chart-horizontal-line"></i> Encuesta</button>
+    </div>
+
+    <!-- Texto común -->
+    <textarea id="modalTexto" class="modal-textarea" placeholder="¿Qué quieres compartir?" rows="3" oninput="autoResizeTA(this)"></textarea>
+
+    <!-- ── Zona Normal ── -->
+    <div id="zonaNormal">
+      <label class="file-label" for="normalFile">
+        <i class="ri-image-add-line"></i> Añadir foto/video
+      </label>
+      <input type="file" id="normalFile" accept="image/*,video/mp4,video/webm" hidden onchange="onNormalFile(this)"/>
+      <div id="normalPrevBox"></div>
+      <div id="normalNSFWRow" class="nsfw-row" style="display:none">
+        <button class="nsfw-toggle" id="nsfwNormal" onclick="this.classList.toggle('on')">
+          <i class="ri-eye-off-line"></i> Marcar como NSFW
+        </button>
+        <span id="nsfwStatus" class="nsfw-status hidden"></span>
+      </div>
+    </div>
+
+    <!-- ── Zona Slideshow ── -->
+    <div id="zonaSlideshow" style="display:none">
+      <label class="file-label" for="slideFiles">
+        <i class="ri-images-line"></i> Añadir imágenes (máx 10)
+      </label>
+      <input type="file" id="slideFiles" accept="image/*" multiple hidden onchange="onSlideFiles(this)"/>
+      <div id="slidePrevGrid" class="slide-prev-grid"></div>
+
+      <label class="file-label" for="slideAudio" style="margin-top:8px">
+        <i class="ri-music-line"></i>
+        <span id="audioLabel">Añadir música (MP3, OGG...)</span>
+      </label>
+      <input type="file" id="slideAudio" accept="audio/*" hidden onchange="onSlideAudio(this)"/>
+
+      <div class="nsfw-row" style="margin-top:8px">
+        <button class="nsfw-toggle" id="nsfwSlide" onclick="this.classList.toggle('on')">
+          <i class="ri-eye-off-line"></i> Marcar como NSFW
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Zona Poll ── -->
+    <div id="zonaPoll" style="display:none">
+      <div id="pollList" class="poll-list">
+        <div class="poll-row">
+          <input class="poll-inp" placeholder="Opción 1" maxlength="60"/>
+          <button class="poll-rm" style="visibility:hidden" onclick="remPollOp(this)"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="poll-row">
+          <input class="poll-inp" placeholder="Opción 2" maxlength="60"/>
+          <button class="poll-rm" style="visibility:hidden" onclick="remPollOp(this)"><i class="ri-close-line"></i></button>
+        </div>
+      </div>
+      <button id="btnAddOp" class="btn-add-op" onclick="addPollOp()">
+        <i class="ri-add-line"></i> Añadir opción
+      </button>
+    </div>
+
+    <button id="btnPublicar" class="btn-publish" onclick="publicarPost()" style="width:100%;margin-top:14px">
+      <i class="ri-send-plane-fill"></i> Publicar
+    </button>
   </div>
+</div>
 
-  <!-- Modal comentarios -->
-  <div class="modal-overlay hidden" id="modalComents">
-    <div class="modal-box" id="modalCommentsBox"></div>
+<!-- ══ MODAL IMAGEN FULL ══ -->
+<div class="modal-overlay hidden" id="modalImgFull" onclick="cerrarImgFull()">
+  <button class="modal-close-btn" onclick="cerrarImgFull()" style="position:fixed;top:14px;right:14px;z-index:10">
+    <i class="ri-close-line"></i>
+  </button>
+  <div id="modalImgInner" onclick="event.stopPropagation()"></div>
+</div>
+
+<!-- ══ MODAL STICKER IA ══ -->
+<div class="modal-overlay hidden" id="modalSticker">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3><i class="ri-sparkling-2-line" style="color:var(--green)"></i> Sticker IA</h3>
+      <button class="modal-close-btn" onclick="cerrarModalSticker()"><i class="ri-close-line"></i></button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input id="stickerPromptInput" class="composer-input" style="flex:1;padding:10px 14px;border-radius:var(--radius-full)" placeholder="Describe tu sticker..."/>
+      <button id="btnGenerarSticker" class="btn-publish" onclick="generarStickers()" style="white-space:nowrap">
+        <i class="ri-sparkling-2-line"></i> Generar
+      </button>
+    </div>
+    <div id="stickerResults"></div>
+    <div id="stickerSeleccionado" class="hidden" style="margin-top:12px;text-align:center">
+      <button class="btn-publish" onclick="adjuntarStickerAPost()" style="width:100%">
+        <i class="ri-check-line"></i> Usar este sticker
+      </button>
+    </div>
   </div>
+</div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/index.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/index.js"></script>
 </body>
 </html>
