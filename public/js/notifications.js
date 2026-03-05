@@ -1,10 +1,17 @@
 const API   = "/api";
 const token = localStorage.getItem("fu_token");
 const yo    = JSON.parse(localStorage.getItem("fu_usuario") || "null");
-if (!token || !yo) window.location.href = "/login.html";
 
-document.getElementById("navPerfil").href = `profile.html?handle=${yo.handle}`;
-document.getElementById("bnPerfil")?.setAttribute("href", `profile.html?handle=${yo.handle}`);
+console.log("[notifs] token:", token ? "✅" : "❌ NULL");
+console.log("[notifs] yo:", yo ? yo.handle : "❌ NULL");
+
+if (!token || !yo) { window.location.href = "/login.html"; }
+
+/* ── Nav ── */
+const _navP = document.getElementById("navPerfil");
+const _bnP  = document.getElementById("bnPerfil");
+if (_navP) _navP.href = `profile.html?handle=${yo.handle}`;
+if (_bnP)  _bnP.href  = `profile.html?handle=${yo.handle}`;
 
 /* ── Sidebar user ── */
 (function () {
@@ -26,28 +33,39 @@ async function cargarNotificaciones() {
       <i class="ri-loader-4-line spin" style="font-size:2rem;color:var(--green)"></i>
       <h3>Cargando...</h3>
     </div>`;
+
+  console.log("[notifs] fetch →", `${API}/notifications`);
+
   try {
     const res = await fetch(`${API}/notifications`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.mensaje || `HTTP ${res.status}`);
-    }
-    const data = await res.json();
+
+    console.log("[notifs] status:", res.status);
+
+    const text = await res.text();
+    console.log("[notifs] body raw:", text.slice(0, 300));
+
+    let data;
+    try { data = JSON.parse(text); }
+    catch (_) { throw new Error("Respuesta no es JSON: " + text.slice(0, 100)); }
+
+    if (!res.ok) throw new Error(data.mensaje || `HTTP ${res.status}`);
 
     if (!data.length) {
       lista.innerHTML = `
         <div class="empty-state">
           <i class="ri-notification-off-line" style="font-size:3rem;color:var(--text-3)"></i>
           <h3>Sin notificaciones</h3>
-          <p>Cuando alguien interactúe contigo<br/>aparecerá aquí.</p>
+          <p>Cuando alguien interactúe contigo aparecerá aquí.</p>
         </div>`;
       return;
     }
 
     lista.innerHTML = data.map(n => renderNotif(n)).join("");
+
   } catch (e) {
+    console.error("[notifs] ERROR:", e);
     lista.innerHTML = `
       <div class="empty-state">
         <i class="ri-error-warning-line" style="font-size:3rem;color:var(--red)"></i>
@@ -58,7 +76,7 @@ async function cargarNotificaciones() {
 }
 
 /* ════════════════════════
-   RENDER NOTIF
+   RENDER
 ════════════════════════ */
 function renderNotif(n) {
   const tipos = {
@@ -70,23 +88,19 @@ function renderNotif(n) {
   };
 
   const cfg    = tipos[n.tipo] || { icon:"ri-notification-4-fill", css:"tipo-comment", label:"interactuó contigo" };
-  const origen = n.origen || {};   // ya viene populado: { nombre, handle, avatar, avatarTipo }
-  const post   = n.post   || {};   // populado: { texto, tipo }
+  const origen = n.origen || {};
+  const post   = n.post   || {};
   const leida  = n.leida ? "" : "no-leida";
 
   const avEl = origen.avatarTipo === "video"
-    ? `<video src="${origen.avatar||''}" autoplay loop muted playsinline
-           style="width:42px;height:42px;border-radius:50%;object-fit:cover"></video>`
-    : `<img src="${origen.avatar || getDefaultAv(origen.nombre)}"
-            style="width:42px;height:42px;border-radius:50%;object-fit:cover" alt=""/>`;
-
-  const destino = origen.handle
-    ? `profile.html?handle=${esc(origen.handle)}`
-    : "/";
+    ? `<video src="${origen.avatar||''}" autoplay loop muted playsinline style="width:42px;height:42px;border-radius:50%;object-fit:cover"></video>`
+    : `<img src="${origen.avatar || getDefaultAv(origen.nombre)}" style="width:42px;height:42px;border-radius:50%;object-fit:cover" alt=""/>`;
 
   const extracto = post.texto
-    ? `<span style="color:var(--text-3)"> · "${esc(post.texto.slice(0,60))}${post.texto.length>60?"…":""}"</span>`
+    ? `<span style="color:var(--text-3)"> · "${esc(post.texto.slice(0,60))}${post.texto.length > 60 ? "…" : ""}"</span>`
     : "";
+
+  const destino = origen.handle ? `profile.html?handle=${esc(origen.handle)}` : "/";
 
   return `
     <div class="notif-item ${leida}" onclick="irNotif('${destino}','${n._id}',this)">
@@ -98,9 +112,7 @@ function renderNotif(n) {
       </div>
       <div class="notif-body">
         <p class="notif-texto">
-          <strong>${esc(origen.nombre || "Alguien")}</strong>
-          ${cfg.label}
-          ${extracto}
+          <strong>${esc(origen.nombre || "Alguien")}</strong> ${cfg.label}${extracto}
         </p>
         <p class="notif-time">${tiempoRelativo(n.createdAt)}</p>
       </div>
@@ -113,13 +125,10 @@ function renderNotif(n) {
 async function irNotif(url, notifId, el) {
   if (el.classList.contains("no-leida")) {
     el.classList.remove("no-leida");
-    try {
-      // ✅ ruta correcta: /:id/leer
-      await fetch(`${API}/notifications/${notifId}/leer`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-    } catch (_) {}
+    fetch(`${API}/notifications/${notifId}/leer`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` }
+    }).catch(() => {});
   }
   window.location.href = url;
 }
@@ -129,17 +138,13 @@ async function leerTodas() {
   btn.disabled  = true;
   btn.innerHTML = '<i class="ri-loader-4-line spin"></i> Marcando...';
   try {
-    // ✅ ruta correcta: /leer
     const res = await fetch(`${API}/notifications/leer`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.mensaje || `HTTP ${res.status}`);
-    }
-    document.querySelectorAll(".notif-item.no-leida")
-      .forEach(el => el.classList.remove("no-leida"));
+    console.log("[notifs] leer-todas status:", res.status);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    document.querySelectorAll(".notif-item.no-leida").forEach(el => el.classList.remove("no-leida"));
   } catch (e) {
     alert("Error: " + e.message);
   } finally {
